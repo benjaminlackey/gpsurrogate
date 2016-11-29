@@ -1,6 +1,9 @@
 import numpy as np
 import scipy.optimize as optimize
 
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF, WhiteKernel, ConstantKernel
+
 #################################### Grids #####################################
 
 def uniform_random_samples(ndata, limits):
@@ -60,7 +63,50 @@ def latin_hypercube(Ndata, limits):
     return points
 
 
-##################### GPR class ########################
+########################## Wrappers for scikit-learn ###########################
+
+
+def generate_square_exponential_gp(params, data, hp0, limits, n_restarts_optimizer=9):
+    """Gaussian Process for n dimensional set of data.
+    
+    Parameters
+    ----------
+    params : array of shape (nparams, ndim).
+        Parameters of sampled data.
+    data : array of shape (nparams,).
+        Data at each of the sampled parameters.
+    hp0 : array of shape (ndim+2,)
+        Initial hyperparameter guess for optimizer.
+        Order is (sigma_f, ls_0, ls_1, ..., sigma_n).
+    limits : array of shape (ndim, 2)
+        Lower and upper bounds on the value of each hyperparameter.
+    n_restarts_optimizer : int
+        Number of random points in the hyperparameter space to restart optimization
+        routine for searching for the maximum log-likelihood.
+    """
+    # The constant term is sigma_f**2, but the parameter that you want to give it is sigma_f
+    const = ConstantKernel(hp0[0]**2, limits[0]**2)
+    # Length scales l_i (not l_i**2)
+    sqexp = RBF(hp0[1:-1], limits[1:-1])
+    # Noise term sigma_n (not sigma_n**2)
+    noise = WhiteKernel(hp0[-1], limits[-1])
+    kernel = const*sqexp + noise
+    
+    # Initialize the Gaussian Process
+    gp = GaussianProcessRegressor(kernel=kernel, n_restarts_optimizer=n_restarts_optimizer)
+    
+    # Optimize the hyperparameters by maximizing the log likelihood
+    gp.fit(params, data)
+    
+    return gp
+
+
+
+
+
+################################################################################
+##################### Ben's custom GPR code for learning #######################
+################################################################################
 
 class GaussianProcess(object):
     """

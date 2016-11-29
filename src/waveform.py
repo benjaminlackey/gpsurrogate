@@ -159,16 +159,18 @@ class Waveform(object):
 
 ############## Resampling and comparison functions ################
 
-def resample_uniform(h, npoints, spacing='linear', order=2):
+def resample_uniform(h, xi=None, xf=None, npoints=1000, spacing='linear', order=2):
     """Resample using log spacing.
     """
     
-    # Determin x values for resampling
-    xi, xf = h.x[0], h.x[-1]
+    # Determine x values for resampling
+    xinew = (h.x[0] if xi==None else xi)
+    xfnew = (h.x[-1] if xf==None else xf)
+    
     if spacing == 'linear':
-        xs = np.linspace(xi, xf, npoints)
+        xs = np.linspace(xinew, xfnew, npoints)
     elif spacing == 'log':
-        xs = np.logspace(np.log10(xi), np.log10(xf), npoints)
+        xs = np.logspace(np.log10(xinew), np.log10(xfnew), npoints)
     else:
         raise Exception, "Valid 'spacing' options: 'linear', 'log'."
     
@@ -318,7 +320,29 @@ def window_waveform(h, xon_end, xoff_start):
     return hwin
 
 
-def interpolate_time_of_frequency(h, order=3):
+def monotonic_increasing_array(y):
+    """Make array y monotonic.
+    Remove all elements that are less than previous largest value.
+    
+    Parameters
+    ----------
+    y : array
+    
+    Returns
+    -------
+    y_mono : array
+        Subset of array that is monotonic (y_mono[i+1]>y_mono[i].
+    i_mono : arrray
+        Indices for the elements in y_mono.
+    """
+    # If the element is not the largest, replace it with the previous largest value
+    y_acc = np.maximum.accumulate(y)
+    # Only keep the first unique element
+    y_mono, i_mono = np.unique(y_acc, return_index=True)
+    return y_mono, i_mono
+
+
+def interpolate_time_of_frequency(h, order=2):
     """Generate interpolating function for t(f).
     """
     # Calculate frequency at each data point
@@ -327,13 +351,14 @@ def interpolate_time_of_frequency(h, order=3):
     omegaoft = phaseoft.derivative(n=1)
     freq = omegaoft(time)/(2*np.pi)
     
-    # Find region where frequency is monotonically increasing, then construct t(f)
-    i_end_mono = next( (i for i in range(len(freq)-1) if freq[i]>=freq[i+1]), (len(freq)-1) )
+    # Delete elements that make f(t) non-monotonic.
+    # then interpolate t(f)
+    freq_mono, i_mono = monotonic_increasing_array(freq)
+    time_mono = time[i_mono]
     
-    # Interpolate the monotonic part
-    toffreq = interpolate.UnivariateSpline(freq[:i_end_mono], time[:i_end_mono], k=order, s=0)
+    time_of_freq = interpolate.UnivariateSpline(freq_mono, time_mono, k=order, s=0)
     
-    return toffreq
+    return time_of_freq
 
 
 def window_waveform_in_frequency_interval(h, fon_end, foff_start, foff_end):
@@ -410,5 +435,17 @@ def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000):
         axes.plot(times, np.abs(hs))
 
 
-
+def plot_waveforms_fd(ax1, ax2, waveforms, xi=None, xf=None, npoints=1000):
+    """
+    """
+    for h in waveforms:
+        hcopy = h.copy()
+        resample_uniform(hcopy, xi=xi, xf=xf, npoints=npoints, spacing='log', order=2)
+        
+        ax1.plot(hcopy.x, hcopy.amp)
+        ax1.set_xscale('log')
+        #ax1.set_yscale('log')
+        
+        ax2.plot(hcopy.x, hcopy.phase)
+        ax2.set_xscale('log')
 
