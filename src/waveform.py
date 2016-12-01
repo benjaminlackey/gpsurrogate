@@ -435,16 +435,18 @@ def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000):
         axes.plot(times, np.abs(hs))
 
 
-def plot_waveforms_fd(ax1, ax2, waveforms, xi=None, xf=None, npoints=1000):
+def plot_waveforms_fd(ax1, ax2, waveforms, xi=None, xf=None, npoints=1000, exp=False):
     """
     """
     for h in waveforms:
         hcopy = h.copy()
         resample_uniform(hcopy, xi=xi, xf=xf, npoints=npoints, spacing='log', order=2)
         
-        ax1.plot(hcopy.x, hcopy.amp)
+        if exp==False:
+            ax1.plot(hcopy.x, hcopy.amp)
+        else:
+            ax1.plot(hcopy.x, np.exp(hcopy.amp))
         ax1.set_xscale('log')
-        #ax1.set_yscale('log')
         
         ax2.plot(hcopy.x, hcopy.phase)
         ax2.set_xscale('log')
