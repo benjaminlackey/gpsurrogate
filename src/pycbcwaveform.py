@@ -47,7 +47,7 @@ def dimensionless_td_waveform(q=1.0,
                         distance=distance, inclination=inclination,
                         amplitude_order=amplitude_order, phase_order=phase_order, 
                         delta_t=delta_t, f_lower=f_lower, f_ref=f_lower)
-    
+                                            
     # Zero the start time and phase.
     hphys = wave.Waveform.from_hp_hc(np.array(hp.sample_times), np.array(hp), np.array(hc))
     hphys.add_x(-hphys.x[0])

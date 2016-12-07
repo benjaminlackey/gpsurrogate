@@ -331,7 +331,7 @@ def monotonic_increasing_array(y):
     Returns
     -------
     y_mono : array
-        Subset of array that is monotonic (y_mono[i+1]>y_mono[i].
+        Subset of array that is monotonic (y_mono[i+1]>y_mono[i]).
     i_mono : arrray
         Indices for the elements in y_mono.
     """
