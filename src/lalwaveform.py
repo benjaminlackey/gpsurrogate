@@ -43,6 +43,7 @@ def lalsim_td_waveform(long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
     if p['lambda2']:
         lalsimulation.SimInspiralWaveformParamsInsertTidalLambda2(lal_pars, p['lambda2'])
     
+    
     # Set Approximant (C enum structure) corresponding to approximant string
     lal_approx = lalsimulation.GetApproximantFromString(p['approximant'])
     

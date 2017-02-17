@@ -289,19 +289,59 @@ def dimensionless_to_physical_freq(hdim, mtot, dist):
 
 ############### Functions for windowing waveforms #####################
 
+## Add option to choose starting frequency (dx/dt/2pi) instead of starting x
+## Default should be first and last data point, so no windowing is done if not specified
+#def window_waveform(h, xon_end, xoff_start):
+#    """Take two waveforms that have already been aligned in time and phase
+#    and smoothly transition from h1 to h2 over the window [wi, wf].
+#    """
+#    
+#    
+#    def winoff(t, wi, wf):
+#        return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+#    
+#    def winon(t, wi, wf):
+#        return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+#    
+#    # searchsorted finds index of (sorted) time where point should be inserted,
+#    # pushing the later points to the right.
+#    # indices will be just to the right of the boundaries [wi, wf]:
+#    ion_end = np.searchsorted(h.x, xon_end)
+#    ioff_start = np.searchsorted(h.x, xoff_start)
+#    
+#    # Times (window on, middle, wondow off)
+#    xson = h.x[:ion_end]
+#    xsoff = h.x[ioff_start:]
+#    
+#    hwin = h.copy()
+#    hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
+#    hwin.amp[ioff_start:] *= winoff(xsoff, xoff_start, hwin.x[-1])
+#    
+#    return hwin
+
+def planck(z):
+    return 1.0/(np.exp(z)+1.0)
+
 # Add option to choose starting frequency (dx/dt/2pi) instead of starting x
 # Default should be first and last data point, so no windowing is done if not specified
-def window_waveform(h, xon_end, xoff_start):
-    """Take two waveforms that have already been aligned in time and phase
-    and smoothly transition from h1 to h2 over the window [wi, wf].
+def window_waveform(h, xon_end, xoff_start, win='planck'):
+    """Smoothly window on then off a waveform.
     """
-    
-    
-    def winoff(t, wi, wf):
-        return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-    
-    def winon(t, wi, wf):
-        return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+    if win=='hann':
+        def winon(t, wi, wf):
+            return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+        def winoff(t, wi, wf):
+            return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+    elif win=='planck':
+        def winon(t, t1, t2):
+            z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
+            return planck(z)
+        def winoff(t, t3, t4):
+            # Switch the order of first and second times relative to winon
+            z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
+            return planck(z)
+    else:
+        raise Exception, "Valid win options are 'hann' and 'planck'."
     
     # searchsorted finds index of (sorted) time where point should be inserted,
     # pushing the later points to the right.
@@ -361,16 +401,27 @@ def interpolate_time_of_frequency(h, order=2):
     return time_of_freq
 
 
-def window_waveform_in_frequency_interval(h, fon_end, foff_start, foff_end):
+#### This should just be a wrapper of window_waveform above, to avoid
+#### duplicating code.
+def window_waveform_in_frequency_interval(h, fon_end, foff_start, foff_end, win='planck'):
     """Take two waveforms that have already been aligned in time and phase
     and smoothly transition from h1 to h2 over the window [wi, wf].
     """
-    
-    def winoff(t, wi, wf):
-        return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-    
-    def winon(t, wi, wf):
-        return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+    if win=='hann':
+        def winon(t, wi, wf):
+            return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+        def winoff(t, wi, wf):
+            return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+    elif win=='planck':
+        def winon(t, t1, t2):
+            z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
+            return planck(z)
+        def winoff(t, t3, t4):
+            # Switch the order of first and second times relative to winon
+            z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
+            return planck(z)
+    else:
+        raise Exception, "Valid win options are 'hann' and 'planck'."
     
     toff = interpolate_time_of_frequency(h)
     xon_end = float(toff(fon_end))
@@ -421,7 +472,7 @@ def fourier_transform_waveform(h, dt):
 
 ##################### Functions for plotting waveforms ####################
 
-def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000):
+def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000, amp=True, hp=True, hc=False):
     axes.axhline(0.0, color='k', ls=':')
     
     for h in waveforms:
@@ -430,9 +481,12 @@ def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000):
         hcomp = h.interpolate_complex()
         times = np.linspace(xiplot, xfplot, npoints)
         hs = hcomp(times)
-        
-        axes.plot(times, np.real(hs))
-        axes.plot(times, np.abs(hs))
+        if amp:
+            axes.plot(times, np.abs(hs))
+        if hp:
+            axes.plot(times, np.real(hs))
+        if hc:
+            axes.plot(times, np.imag(hs))
 
 
 def plot_waveforms_fd(ax1, ax2, waveforms, xi=None, xf=None, npoints=1000, exp=False):
