@@ -81,13 +81,13 @@ def inner_product_phase(h1, h2):
 def empirical_interpolation_for_time_domain_waveform(waveforms, datatype):
     """Calculate empirical nodes and corresponding empirical interpolating functions
     from a set of reduced basis waveforms.
-    
+
     Parameters
     ----------
     waveforms : List like set of Waveform objects
         Could be HDF5WaveformSet
     datatype : string {'amp', 'phase'}
-    
+
     Returns
     -------
     empirical_node_indices : List of ints
@@ -98,7 +98,7 @@ def empirical_interpolation_for_time_domain_waveform(waveforms, datatype):
         0 at the other nodes T_i (for i!=j).
     """
     nwave = len(waveforms)
-    
+
     # Convert the list of Waveform objects to a list of complex numpy arrays
     if datatype == 'amp':
         wave_np = [waveforms[i].amp for i in range(nwave)]
@@ -106,13 +106,13 @@ def empirical_interpolation_for_time_domain_waveform(waveforms, datatype):
         wave_np = [waveforms[i].phase for i in range(nwave)]
     else:
         raise Exception, "datatype must be one of {'amp', 'phase'}."
-    
+
     # Determine the empirical nodes
     empirical_node_indices = eim.generate_empirical_nodes(wave_np)
-    
+
     # Determine the empirical interpolating functions B_j(t)
     B_j_np = eim.generate_interpolant_list(wave_np, empirical_node_indices)
-    
+
     # Convert the arrays to Waveform objects.
     xarr = waveforms[0].x
     B_j = []
@@ -125,13 +125,9 @@ def empirical_interpolation_for_time_domain_waveform(waveforms, datatype):
             B_j.append(wave.Waveform.from_amp_phase(xarr, np.zeros(len(xarr)), phase))
         else:
             raise Exception, "datatype must be one of {'amp', 'phase'}."
-    
+
     return empirical_node_indices, B_j
 
-
-################################################################################
-#       !!!  Put the code for doing the GPR interpolation here  !!!            #
-################################################################################
 
 
 ################################################################################
@@ -140,20 +136,20 @@ def empirical_interpolation_for_time_domain_waveform(waveforms, datatype):
 
 def reconstruct_amp_phase_difference(params, Bamp_j, Bphase_j, damp_gp_list, dphase_gp_list):
     """Calculate the reduced order model waveform. This is the online stage.
-    
+
     Parameters
     ----------
     params : 1d array
         Physical waveform parameters.
     Bamp_j : List of Waveform
-        List of the ampltude interpolants.
+        List of the amplitude interpolants.
     Bphase_j : List of Waveform
         List of the phase interpolants.
     amp_function_list : List of interpolating functions
         List of interpolating functions for the amplitude at the empirical_nodes.
     phase_function_list : List of arrays
         List of interpolating functions for the phase at the empirical_nodes.
-    
+
     Returns
     -------
     hinterp : TimeDomainWaveform
@@ -161,20 +157,19 @@ def reconstruct_amp_phase_difference(params, Bamp_j, Bphase_j, damp_gp_list, dph
     """
     namp_nodes = len(damp_gp_list)
     nphase_nodes = len(dphase_gp_list)
-    
+
     # Calculate waveform at nodes
     amp_at_nodes = np.array([damp_gp_list[j].predict(np.atleast_2d(params))[0] for j in range(namp_nodes)])
     phase_at_nodes = np.array([dphase_gp_list[j].predict(np.atleast_2d(params))[0] for j in range(nphase_nodes)])
-    
+
     # Get complex version of B_j's in array form
     Bamp_j_array = np.array([Bamp_j[j].amp for j in range(namp_nodes)])
     Bphase_j_array = np.array([Bphase_j[j].phase for j in range(nphase_nodes)])
-    
+
     # Evaluate waveform
     amp_interp = np.dot(amp_at_nodes, Bamp_j_array)
     phase_interp = np.dot(phase_at_nodes, Bphase_j_array)
-    
-    # Rewrite as TimeDomainWaveform 
+
+    # Rewrite as TimeDomainWaveform
     xarr = Bamp_j[0].x
     return wave.Waveform.from_amp_phase(xarr, amp_interp, phase_interp)
-

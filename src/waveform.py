@@ -1,5 +1,5 @@
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import copy
 
 import scipy.interpolate as interpolate
@@ -12,10 +12,10 @@ def complex_to_amp_phase(hcomplex):
     """
     # Calculate the amplitude
     amp = np.abs(hcomplex)
-    
+
     # Calculate the angle (between -pi and pi)
     phase_wrapped = np.angle(hcomplex)
-    
+
     # Unwrap the phase
     phase = np.unwrap(phase_wrapped)
 
@@ -26,23 +26,23 @@ class Waveform(object):
     """Generic class for either time-domain or frequency-domain waveforms.
     Can store (x, amp, phase), just (x, amp), just (x, phase), or custom set of data.
     """
-    
+
     ######### Create class ##########
     def __init__(self, data):
         """Array with named columns. First column is 'x'. Or, use a dictionary to make
         a list of named 1d arrays.
-        
+
         Parameters:
         ----------
         data : dictionary of equal length numpy arrays
         """
-        # Make a copy of the dictionary *and* a copy of 
+        # Make a copy of the dictionary *and* a copy of
         # its contents with deepcopy (not a reference).
         self.data = copy.deepcopy(data)
-    
+
     @classmethod
     def from_amp_phase(cls, x, amp, phase, remove_start_phase=False):
-        """Create Waveform from (x, amp, phase) data.        
+        """Create Waveform from (x, amp, phase) data.
         """
         data = {'x': x, 'amp': amp, 'phase': phase}
         h = Waveform(data)
@@ -53,58 +53,61 @@ class Waveform(object):
 
     @classmethod
     def from_complex(cls, x, hcomplex, remove_start_phase=False):
-        """Create Waveform from (x, hcomplex) data.        
+        """Create Waveform from (x, hcomplex) data.
         """
         amp, phase = complex_to_amp_phase(hcomplex)
         return cls.from_amp_phase(x, amp, phase, remove_start_phase=remove_start_phase)
-    
+
     @classmethod
     def from_hp_hc(cls, x, hplus, hcross, remove_start_phase=False):
-        """Create Waveform from (x, hp+ihc) data.        
+        """Create Waveform from (x, hp+ihc) data.
         """
         hcomplex = hplus+1.0j*hcross
         return cls.from_complex(x, hcomplex, remove_start_phase=remove_start_phase)
-    
+
     @classmethod
     def from_array(cls, x, y, yname='y'):
-        """Create Waveform from (x, y) data.        
+        """Create Waveform from (x, y) data.
         """
         data = {'x': x, yname: y}
         return cls(data)
-    
+
     ### Getters and setters for most common arrays: x, amp, phase ###
-    
+
     @property
     def x(self):
         """Can call this with h.x"""
         return self.data['x']
-    
+
     @x.setter
     def x(self, xarr):
         self.data['x'] = xarr
-        
+
     @property
     def amp(self):
         return self.data['amp']
-    
+
     @amp.setter
     def amp(self, amparr):
         self.data['amp'] = amparr
-    
+
     @property
     def phase(self):
         return self.data['phase']
-    
+
     @phase.setter
     def phase(self, phasearr):
         self.data['phase'] = phasearr
-    
+
+    def __len__(self):
+        return len(self.x)
+
     ########## copy Waveform ########
     def copy(self):
         """Copy the Waveform so you don't overwrite the original.
         """
         return Waveform(self.data)
-    
+
     ########## Inserting data #########
     def add_data(self, y, yname='y'):
         """Add the array y to the data dictionary.
@@ -116,7 +119,7 @@ class Waveform(object):
         """Add x to the 'x' data.
         """
         self.data['x'] += x
-        
+
     def add_phase(self, phi=None, remove_start_phase=False):
         """Add phi to the phase,
         or zero the phase at the start.
@@ -127,13 +130,13 @@ class Waveform(object):
         # Shift the phase to be 0.0 at the first data point
         if remove_start_phase:
             self.data['phase'] += -self.data['phase'][0]
-    
+
     ############# Interpolating data ##############
     def interpolate(self, yname, order=2):
         """Interpolate y(x) with polynomial of order order.
         """
         return interpolate.UnivariateSpline(self.data['x'], self.data[yname], k=order, s=0)
-    
+
     def interpolate_complex(self, order=2, ampname='amp', phasename='phase'):
         """Interpolate complex waveform by interpolating amp(x) and phase(x).
         """
@@ -152,7 +155,7 @@ class Waveform(object):
             if key != 'x':
                 key_resamp = self.interpolate(key, order=order)(xs)
                 self.data[key] = key_resamp
-    
+
         # Replace x with new array xs after you are done using it for interpolation
         self.data['x'] = xs
 
@@ -160,86 +163,92 @@ class Waveform(object):
 ############## Resampling and comparison functions ################
 
 def resample_uniform(h, xi=None, xf=None, npoints=1000, spacing='linear', order=2):
-    """Resample using log spacing.
+    """Resample waveform using uniform-linear or oniform-log spacing.
     """
-    
+
     # Determine x values for resampling
     xinew = (h.x[0] if xi==None else xi)
     xfnew = (h.x[-1] if xf==None else xf)
-    
+
     if spacing == 'linear':
         xs = np.linspace(xinew, xfnew, npoints)
     elif spacing == 'log':
+        if xinew <= 0.0: raise Exception, "xi must be >0 if using 'log' spacing."
         xs = np.logspace(np.log10(xinew), np.log10(xfnew), npoints)
     else:
         raise Exception, "Valid 'spacing' options: 'linear', 'log'."
-    
+
     # Do resampling
     h.resample(xs, order=order)
 
 
-def subtract_waveform_phase(h1, h2, npoints=1000, spacing='linear'):
+def waveform_phase_difference(h1, h2, xi=None, xf=None, npoints=1000, spacing='linear'):
     """Evaluate Phi_1(x) - Phi_2(x).
-    
+
     Parameters
     ----------
     h1, h2 : Waveform
     npoints : int, optional
         Number of evenly spaced points at which to evaluate phase difference
-    
+
     Returns
     -------
     Waveform object with fields 'x' and 'phase'
     """
-    # Bounds [xi, xf] are the minimum and maximum values of x the two waveforms have in common.
-    xi = max(h1.x[0], h2.x[0])
-    xf = min(h1.x[-1], h2.x[-1])
+    # Default choice of [xi, xf] are the minimum and maximum values of x
+    # the two waveforms have in common.
+    xinew = (max(h1.x[0], h2.x[0]) if xi==None else xi)
+    xfnew = (min(h1.x[-1], h2.x[-1]) if xf==None else xf)
     if spacing == 'linear':
-        xs = np.linspace(xi, xf, npoints)
+        xs = np.linspace(xinew, xfnew, npoints)
     elif spacing == 'log':
-        xs = np.logspace(np.log10(xi), np.log10(xf), npoints)
+        if xinew <= 0.0: raise Exception, "xi must be >0 if using 'log' spacing."
+        xs = np.logspace(np.log10(xinew), np.log10(xfnew), npoints)
     else:
         raise Exception, "Valid 'spacing' options: 'linear', 'log'."
 
     h1phaseint = h1.interpolate('phase')
     h2phaseint = h2.interpolate('phase')
-    
+
     phase1 = h1phaseint(xs)
     phase2 = h2phaseint(xs)
     return Waveform({'x': xs, 'phase': phase1-phase2})
 
 
-def waveform_amplitude_ratio(h1, h2, npoints=1000, spacing='linear'):
+def waveform_amplitude_ratio(h1, h2, xi=None, xf=None, npoints=1000, spacing='linear'):
     """Evaluate A_1(x) / A_2(x).
-        
-        Parameters
-        ----------
-        h1, h2 : Waveform
-        npoints : int, optional
-        Number of evenly spaced points at which to evaluate phase difference
-        
-        Returns
-        -------
-        Waveform object with fields 'x' and 'amp'
-        """
-    # Bounds [xi, xf] are the minimum and maximum values of x the two waveforms have in common.
-    xi = max(h1.x[0], h2.x[0])
-    xf = min(h1.x[-1], h2.x[-1])
+
+    Parameters
+    ----------
+    h1, h2 : Waveform
+    npoints : int, optional
+    Number of evenly spaced points at which to evaluate phase difference
+
+    Returns
+    -------
+    Waveform object with fields 'x' and 'amp'
+    """
+    #!!!!!!
+    # You should check for zeros in the amplitude for h2.
+    #!!!!!!
+    # Default choice of [xi, xf] are the minimum and maximum values of x
+    # the two waveforms have in common.
+    xinew = (max(h1.x[0], h2.x[0]) if xi==None else xi)
+    xfnew = (min(h1.x[-1], h2.x[-1]) if xf==None else xf)
     if spacing == 'linear':
-        xs = np.linspace(xi, xf, npoints)
+        xs = np.linspace(xinew, xfnew, npoints)
     elif spacing == 'log':
-        xs = np.logspace(np.log10(xi), np.log10(xf), npoints)
+        if xinew <= 0.0: raise Exception, "xi must be >0 if using 'log' spacing."
+        xs = np.logspace(np.log10(xinew), np.log10(xfnew), npoints)
     else:
         raise Exception, "Valid 'spacing' options: 'linear', 'log'."
-    
+
     h1ampint = h1.interpolate('amp')
     h2ampint = h2.interpolate('amp')
-    
+
     amp1 = h1ampint(xs)
     amp2 = h2ampint(xs)
     return Waveform({'x': xs, 'amp': amp1/amp2})
-
-
 
 
 ####### Convert between physical and dimensionless units #########
@@ -247,13 +256,13 @@ def waveform_amplitude_ratio(h1, h2, npoints=1000, spacing='linear'):
 def physical_to_dimensionless_time(hphys, mtot, dist):
     """Convert time-domain waveform from physical units of strain and time (s),
     to dimensionless units rescaled by the total mass and distance.
-    
+
     Parameters
     ----------
     hphys : Waveform
     mtot : Total mass of binary in solar masses
     dist : Distance in Mpc
-    
+
     Returns
     -------
     hdim : Waveform
@@ -287,194 +296,184 @@ def dimensionless_to_physical_freq(hdim, mtot, dist):
 
 
 
-############### Functions for windowing waveforms #####################
-
-## Add option to choose starting frequency (dx/dt/2pi) instead of starting x
-## Default should be first and last data point, so no windowing is done if not specified
-#def window_waveform(h, xon_end, xoff_start):
-#    """Take two waveforms that have already been aligned in time and phase
-#    and smoothly transition from h1 to h2 over the window [wi, wf].
-#    """
-#    
-#    
-#    def winoff(t, wi, wf):
-#        return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-#    
-#    def winon(t, wi, wf):
-#        return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-#    
-#    # searchsorted finds index of (sorted) time where point should be inserted,
-#    # pushing the later points to the right.
-#    # indices will be just to the right of the boundaries [wi, wf]:
-#    ion_end = np.searchsorted(h.x, xon_end)
-#    ioff_start = np.searchsorted(h.x, xoff_start)
-#    
-#    # Times (window on, middle, wondow off)
-#    xson = h.x[:ion_end]
-#    xsoff = h.x[ioff_start:]
-#    
-#    hwin = h.copy()
-#    hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
-#    hwin.amp[ioff_start:] *= winoff(xsoff, xoff_start, hwin.x[-1])
-#    
-#    return hwin
-
-def planck(z):
-    return 1.0/(np.exp(z)+1.0)
-
-# Add option to choose starting frequency (dx/dt/2pi) instead of starting x
-# Default should be first and last data point, so no windowing is done if not specified
-def window_waveform(h, xon_end, xoff_start, win='planck'):
-    """Smoothly window on then off a waveform.
-    """
-    if win=='hann':
-        def winon(t, wi, wf):
-            return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-        def winoff(t, wi, wf):
-            return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-    elif win=='planck':
-        def winon(t, t1, t2):
-            z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
-            return planck(z)
-        def winoff(t, t3, t4):
-            # Switch the order of first and second times relative to winon
-            z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
-            return planck(z)
-    else:
-        raise Exception, "Valid win options are 'hann' and 'planck'."
-    
-    # searchsorted finds index of (sorted) time where point should be inserted,
-    # pushing the later points to the right.
-    # indices will be just to the right of the boundaries [wi, wf]:
-    ion_end = np.searchsorted(h.x, xon_end)
-    ioff_start = np.searchsorted(h.x, xoff_start)
-    
-    # Times (window on, middle, wondow off)
-    xson = h.x[:ion_end]
-    xsoff = h.x[ioff_start:]
-    
-    hwin = h.copy()
-    hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
-    hwin.amp[ioff_start:] *= winoff(xsoff, xoff_start, hwin.x[-1])
-    
-    return hwin
-
-
-def monotonic_increasing_array(y):
-    """Make array y monotonic.
-    Remove all elements that are less than previous largest value.
-    
-    Parameters
-    ----------
-    y : array
-    
-    Returns
-    -------
-    y_mono : array
-        Subset of array that is monotonic (y_mono[i+1]>y_mono[i]).
-    i_mono : arrray
-        Indices for the elements in y_mono.
-    """
-    # If the element is not the largest, replace it with the previous largest value
-    y_acc = np.maximum.accumulate(y)
-    # Only keep the first unique element
-    y_mono, i_mono = np.unique(y_acc, return_index=True)
-    return y_mono, i_mono
-
-
-def interpolate_time_of_frequency(h, order=2):
-    """Generate interpolating function for t(f).
-    """
-    # Calculate frequency at each data point
-    time = h.x
-    phaseoft = h.interpolate('phase', order=order)
-    omegaoft = phaseoft.derivative(n=1)
-    freq = omegaoft(time)/(2*np.pi)
-    
-    # Delete elements that make f(t) non-monotonic.
-    # then interpolate t(f)
-    freq_mono, i_mono = monotonic_increasing_array(freq)
-    time_mono = time[i_mono]
-    
-    time_of_freq = interpolate.UnivariateSpline(freq_mono, time_mono, k=order, s=0)
-    
-    return time_of_freq
-
-
-#### This should just be a wrapper of window_waveform above, to avoid
-#### duplicating code.
-def window_waveform_in_frequency_interval(h, fon_end, foff_start, foff_end, win='planck'):
-    """Take two waveforms that have already been aligned in time and phase
-    and smoothly transition from h1 to h2 over the window [wi, wf].
-    """
-    if win=='hann':
-        def winon(t, wi, wf):
-            return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-        def winoff(t, wi, wf):
-            return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-    elif win=='planck':
-        def winon(t, t1, t2):
-            z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
-            return planck(z)
-        def winoff(t, t3, t4):
-            # Switch the order of first and second times relative to winon
-            z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
-            return planck(z)
-    else:
-        raise Exception, "Valid win options are 'hann' and 'planck'."
-    
-    toff = interpolate_time_of_frequency(h)
-    xon_end = float(toff(fon_end))
-    xoff_start = float(toff(foff_start))
-    xoff_end = float(toff(foff_end))
-    
-    # searchsorted finds index of (sorted) time where point should be inserted,
-    # pushing the later points to the right.
-    # indices will be just to the right of the boundaries [wi, wf]:
-    ion_end = np.searchsorted(h.x, xon_end)
-    ioff_start = np.searchsorted(h.x, xoff_start)
-    ioff_end = np.searchsorted(h.x, xoff_end)
-    
-    # Times (window on, middle, wondow off)
-    xson = h.x[:ion_end]
-    xsoff = h.x[ioff_start:ioff_end]
-    
-    hwin = h.copy()
-    hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
-    hwin.amp[ioff_start:ioff_end] *= winoff(xsoff, xoff_start, xoff_end)
-    hwin.amp[ioff_end:] *= 0.0
-    
-    return hwin
+# ############### Functions for windowing waveforms #####################
+#
+# def planck(z):
+#     return 1.0/(np.exp(z)+1.0)
+#
+# # Add option to choose starting frequency (dx/dt/2pi) instead of starting x
+# # Default should be first and last data point, so no windowing is done if not specified
+# def window_waveform(h, xon_end, xoff_start, win='planck'):
+#     """Smoothly window on then off a waveform.
+#     """
+#     if win=='hann':
+#         def winon(t, wi, wf):
+#             return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+#         def winoff(t, wi, wf):
+#             return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+#     elif win=='planck':
+#         def winon(t, t1, t2):
+#             z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
+#             return planck(z)
+#         def winoff(t, t3, t4):
+#             # Switch the order of first and second times relative to winon
+#             z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
+#             return planck(z)
+#     else:
+#         raise Exception, "Valid win options are 'hann' and 'planck'."
+#
+#     # searchsorted finds index of (sorted) time where point should be inserted,
+#     # pushing the later points to the right.
+#     # indices will be just to the right of the boundaries [wi, wf]:
+#     ion_end = np.searchsorted(h.x, xon_end)
+#     ioff_start = np.searchsorted(h.x, xoff_start)
+#
+#     # Times (window on, middle, wondow off)
+#     xson = h.x[:ion_end]
+#     xsoff = h.x[ioff_start:]
+#
+#     hwin = h.copy()
+#     hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
+#     hwin.amp[ioff_start:] *= winoff(xsoff, xoff_start, hwin.x[-1])
+#
+#     return hwin
+#
+#
+# def monotonic_increasing_array(y):
+#     """Make array y monotonic by
+#     removing all elements that are less than the previous largest value.
+#     Useful for dealing with numerical errors that cause a slowly increasing
+#     function to be slightly non-monotonic.
+#
+#     Parameters
+#     ----------
+#     y : array
+#
+#     Returns
+#     -------
+#     y_mono : array
+#         Subset of array that is monotonic (y_mono[i+1]>y_mono[i]).
+#     i_mono : arrray
+#         Indices for the elements in y_mono.
+#     """
+#     # If the element is not the largest, replace it with the previous largest value
+#     y_acc = np.maximum.accumulate(y)
+#     # Only keep the first unique element
+#     y_mono, i_mono = np.unique(y_acc, return_index=True)
+#     return y_mono, i_mono
+#
+#
+# def interpolate_time_of_frequency(h, order=2):
+#     """Generate interpolating function for t(f).
+#     """
+#     # Calculate frequency at each data point
+#     time = h.x
+#     phaseoft = h.interpolate('phase', order=order)
+#     omegaoft = phaseoft.derivative(n=1)
+#     freq = omegaoft(time)/(2*np.pi)
+#
+#     # Delete elements that make f(t) non-monotonic.
+#     # then interpolate t(f)
+#     freq_mono, i_mono = monotonic_increasing_array(freq)
+#     time_mono = time[i_mono]
+#
+#     time_of_freq = interpolate.UnivariateSpline(freq_mono, time_mono, k=order, s=0)
+#
+#     return time_of_freq
+#
+#
+# #### This should just be a wrapper of window_waveform above, to avoid
+# #### duplicating code.
+# def window_waveform_in_frequency_interval(h, fon_end, foff_start, foff_end, win='planck'):
+#     """Take two waveforms that have already been aligned in time and phase
+#     and smoothly transition from h1 to h2 over the window [wi, wf].
+#     """
+#     if win=='hann':
+#         def winon(t, wi, wf):
+#             return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+#         def winoff(t, wi, wf):
+#             return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
+#     elif win=='planck':
+#         def winon(t, t1, t2):
+#             z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
+#             return planck(z)
+#         def winoff(t, t3, t4):
+#             # Switch the order of first and second times relative to winon
+#             z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
+#             return planck(z)
+#     else:
+#         raise Exception, "Valid win options are 'hann' and 'planck'."
+#
+#     toff = interpolate_time_of_frequency(h)
+#     xon_end = float(toff(fon_end))
+#     xoff_start = float(toff(foff_start))
+#     xoff_end = float(toff(foff_end))
+#
+#     # searchsorted finds index of (sorted) time where point should be inserted,
+#     # pushing the later points to the right.
+#     # indices will be just to the right of the boundaries [wi, wf]:
+#     ion_end = np.searchsorted(h.x, xon_end)
+#     ioff_start = np.searchsorted(h.x, xoff_start)
+#     ioff_end = np.searchsorted(h.x, xoff_end)
+#
+#     # Times (window on, middle, wondow off)
+#     xson = h.x[:ion_end]
+#     xsoff = h.x[ioff_start:ioff_end]
+#
+#     hwin = h.copy()
+#     hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
+#     hwin.amp[ioff_start:ioff_end] *= winoff(xsoff, xoff_start, xoff_end)
+#     hwin.amp[ioff_end:] *= 0.0
+#
+#     return hwin
 
 
 ########################## Fourier transform waveform ##########################
 
-def fourier_transform(data, dt):
-    """Core part of the Fourier transform.
+# def fourier_transform(data, dt):
+#     """Core part of the Fourier transform.
+#     """
+#     npoints = len(data)
+#     data_tilde = dt*np.fft.fft(data)
+#     freqs = np.arange(npoints)/(npoints*dt)
+#     return freqs, data_tilde
+#
+#
+# def fourier_transform_waveform(h, dt):
+#     """Currently requires waveform to already be uniformly sampled with
+#     interval dt.
+#     !!! This is somewhat rediculous, so allow resampling with interval dt. !!!
+#     """
+#     hresamp = h.interpolate_complex()(h.x)
+#     npoints = len(hresamp)
+#     freqs, htilde = fourier_transform(hresamp, dt)
+#     return Waveform.from_complex(freqs, htilde)
+
+def fourier_transform_uniform_sampled_waveform(h):
+    """Fourier transform a uniformly sampled waveform.
+    If possible, pad the waveform so its length is a power of 2.
     """
-    npoints = len(data)
+    dt = h.x[1]-h.x[0]
+    npoints = len(h.x)
+
+    # Put data in complex format
+    data = h.amp * np.exp(1.0j*h.phase)
+
+    # Do the Fourier transform
     data_tilde = dt*np.fft.fft(data)
     freqs = np.arange(npoints)/(npoints*dt)
-    return freqs, data_tilde
 
-
-def fourier_transform_waveform(h, dt):
-    """Currently requires waveform to already be uniformly sampled with 
-    interval dt.
-    !!! This is somewhat rediculous, so allow resampling with interval dt. !!!
-    """
-    hresamp = h.interpolate_complex()(h.x)
-    npoints = len(hresamp)
-    freqs, htilde = fourier_transform(hresamp, dt)
-    return Waveform.from_complex(freqs, htilde)
-
+    # Convert data to Waveform object
+    return Waveform.from_complex(freqs, data_tilde)
 
 
 ##################### Functions for plotting waveforms ####################
 
-def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000, amp=True, hp=True, hc=False):
-    axes.axhline(0.0, color='k', ls=':')
-    
+def plot_waveforms(waveforms, xi=-np.inf, xf=np.inf, npoints=1000, amp=True, hp=True, hc=False):
+    """
+    """
+    fig, axes = plt.subplots(1, figsize=(16, 3))
+
     for h in waveforms:
         xiplot = max(xi, h.x[0])
         xfplot = min(xf, h.x[-1])
@@ -488,20 +487,84 @@ def plot_waveforms(axes, waveforms, xi=-np.inf, xf=np.inf, npoints=1000, amp=Tru
         if hc:
             axes.plot(times, np.imag(hs))
 
+    axes.axhline(0.0, color='k', ls=':')
+    return fig, axes
 
-def plot_waveforms_fd(ax1, ax2, waveforms, xi=None, xf=None, npoints=1000, exp=False):
+
+def plot_waveforms_fd(waveforms, exp=False):
+    """Plot amplitudes and phases of the waveforms.
     """
-    """
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(16, 6))
+
     for h in waveforms:
         hcopy = h.copy()
-        resample_uniform(hcopy, xi=xi, xf=xf, npoints=npoints, spacing='log', order=2)
-        
+
         if exp==False:
             ax1.plot(hcopy.x, hcopy.amp)
         else:
             ax1.plot(hcopy.x, np.exp(hcopy.amp))
         ax1.set_xscale('log')
-        
+
         ax2.plot(hcopy.x, hcopy.phase)
         ax2.set_xscale('log')
 
+    ax1.set_ylabel('Amplitude')
+    ax2.set_ylabel('Phase')
+    ax2.set_xlabel('Frequency')
+    fig.subplots_adjust(hspace=0.05)
+
+    return fig, (ax1, ax2)
+
+
+def plot_waveforms_fd_resample(waveforms, xi=None, xf=None, npoints=1000, exp=False):
+    """Plot amplitudes and phases of the waveforms.
+    """
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(16, 6))
+
+    for h in waveforms:
+        hcopy = h.copy()
+        if hcopy.x[0]<=0 and xi==None:
+            # Don't use x=0 for log spacing
+            print 'Not plotting x=0 on log plot.'
+            xi=hcopy.x[1]
+        resample_uniform(hcopy, xi=xi, xf=xf, npoints=npoints, spacing='log', order=2)
+
+        if exp==False:
+            ax1.plot(hcopy.x, hcopy.amp)
+        else:
+            ax1.plot(hcopy.x, np.exp(hcopy.amp))
+        ax1.set_xscale('log')
+
+        ax2.plot(hcopy.x, hcopy.phase)
+        ax2.set_xscale('log')
+
+    ax1.set_ylabel('Amplitude')
+    ax2.set_ylabel('Phase')
+    ax2.set_xlabel('Frequency')
+    fig.subplots_adjust(hspace=0.05)
+
+    return fig, (ax1, ax2)
+
+
+def plot_waveform_difference_fd(h1, h2, xi=None, xf=None, npoints=1000):
+    """Plots of A_1/A_2 - 1 and Phi_1 - Phi_2.
+    """
+    fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(16, 6))
+    amp_ratio = waveform_amplitude_ratio(h1, h2, xi=xi, xf=xf, npoints=npoints, spacing='log')
+    phi_diff = waveform_phase_difference(h1, h2, xi=xi, xf=xf, npoints=npoints, spacing='log')
+
+    ax1.plot(amp_ratio.x, amp_ratio.amp-1.0)
+    ax1.set_xscale('log')
+
+    ax2.plot(phi_diff.x, phi_diff.phase)
+    ax2.set_xscale('log')
+
+    ax1.axhline(0, ls=':', c='k', lw=1)
+    ax2.axhline(0, ls=':', c='k', lw=1)
+
+    ax1.set_ylabel(r'$A_1/A_2 - 1$')
+    ax2.set_ylabel(r'$\Phi_1-\Phi_2$')
+    ax2.set_xlabel('Frequency')
+    fig.subplots_adjust(hspace=0.05)
+
+    return fig, (ax1, ax2)

@@ -1,6 +1,7 @@
 import numpy as np
 import scipy.optimize as optimize
 import copy
+import h5py
 
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import RBF, Matern, WhiteKernel, ConstantKernel
@@ -114,6 +115,100 @@ def get_hyperparameters(gp):
     return hp
 
 
+def reasonable_hyperparameters_range(data, limits, sigma_f_factor=[0.1, 4.0], sigma_n_factor=[1.0e-5, 0.1],
+                                     length_scale_factor=[0.1, 4.0]):
+    """Guesses for the range of hyperparameter values.
+
+    sigma_f [at least, most] sigma_f_factor times the largest deviation of data from zero.
+    sigma_n [at least, most] sigma_n_factor times the largest deviation of data from zero.
+    length scales [at least, most] length_scale_factor times the range of values in each dimension.
+    """
+    data_max = np.abs(data).max()
+
+    sigma_f_range = [[sigma_f_factor[0]*data_max, sigma_f_factor[1]*data_max]]
+    sigma_n_range = [[sigma_n_factor[0]*data_max, sigma_n_factor[1]*data_max]]
+
+    length_scale_ranges = []
+    for i in range(len(limits)):
+        ximin, ximax = limits[i, 0], limits[i, 1]
+        interval = ximax - ximin
+        li_range = [length_scale_factor[0]*interval, sigma_f_factor[1]*interval]
+        length_scale_ranges.append(li_range)
+
+    hyper_limits = np.array(sigma_f_range + length_scale_ranges + sigma_n_range)
+    # Arithmetic average:
+    #hp0 = np.array([(hyper_limits[i, 0]+hyper_limits[i, 1])/2.0 for i in range(len(hyper_limits))])
+    # Geometric average:
+    hp0 = np.array([(hyper_limits[i, 0]*hyper_limits[i, 1])**(1.0/2.0) for i in range(len(hyper_limits))])
+    return hp0, hyper_limits
+
+
+def save_gaussian_process_regression_list(filename, gp_list, kernel_type):
+    """
+    Save the information needed to reconstruct a list of
+    GaussianProcessRegressor objects as an hdf5 file.
+
+    Parameters
+    ----------
+    filename : string
+        hdf5 filename
+    gp_list : List of GaussianProcessRegressor objects
+    kernel_type : 'squaredexponential', 'matern32', 'matern52'
+    """
+    f = h5py.File(filename)
+
+    ngp = len(gp_list)
+    for i in range(ngp):
+        # Create group for each GaussianProcessRegressor object
+        groupname = 'gp_'+str(i)
+        group = f.create_group(groupname)
+        # write necessary data to reconstruct gp
+        gp = gp_list[i]
+        #group['kernel_type'] = [kernel_type]
+        # a single string can't be stored as a data set
+        # (although you could make it a single element list).
+        # Store the string as an attribute instead.
+        group.attrs['kernel_type'] = kernel_type
+        group['hyperparameters'] = get_hyperparameters(gp)
+        group['points'] = gp.X_train_
+        group['data'] = gp.y_train_
+
+    f.close()
+
+
+def load_gaussian_process_regression_list(filename):
+    """
+    Load a list of GaussianProcessRegressor objects from an hdf5 file.
+
+    Parameters
+    ----------
+    filename : string
+        hdf5 filename
+
+    Returns
+    -------
+    gp_list : List of GaussianProcessRegressor objects
+    """
+    f = h5py.File(filename)
+    groups = f.keys()
+    ngp = len(groups)
+
+    gp_list = []
+    for i in range(ngp):
+        groupname = 'gp_'+str(i)
+        #kernel_type = f[groupname]['kernel_type'][:]
+        kernel_type = f[groupname].attrs['kernel_type']
+        hp0 = f[groupname]['hyperparameters']
+        points = f[groupname]['points']
+        data = f[groupname]['data']
+        gp = generate_gp(points, data, hp0, fixed=True, kernel_type=kernel_type)
+        gp_list.append(gp)
+
+    f.close()
+
+    return gp_list
+
+
 #####################     Selecting new points with GPR    #####################
 
 
@@ -172,7 +267,7 @@ def sample_n_new_points_with_fixed_hyperparameters(n_new, points, limits, hp0, k
         print i,
         # Find the best location for the new point
         point_new, gp = sample_new_point_with_fixed_hyperparameters(points_updated, limits, hp0, kernel_type,
-                                                                    nsamples=100000)
+                                                                    nsamples=nsamples)
 
         # Add the new point to the list of updated points
         points_updated = np.concatenate((points_updated, np.atleast_2d(point_new)))
