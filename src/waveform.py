@@ -146,6 +146,11 @@ class Waveform(object):
             return ampoft(t)*np.exp(1.0j*phaseoft(t))
         return comp
 
+    def complex(self):
+        """Extract the data in complex format.
+        """
+        return self.amp*np.exp(1.0j*self.phase)
+
     ########### Resampling data ############
     def resample(self, xs, order=2):
         """Resample all the data fields at the points xs.
@@ -295,159 +300,7 @@ def dimensionless_to_physical_freq(hdim, mtot, dist):
     return hphys
 
 
-
-# ############### Functions for windowing waveforms #####################
-#
-# def planck(z):
-#     return 1.0/(np.exp(z)+1.0)
-#
-# # Add option to choose starting frequency (dx/dt/2pi) instead of starting x
-# # Default should be first and last data point, so no windowing is done if not specified
-# def window_waveform(h, xon_end, xoff_start, win='planck'):
-#     """Smoothly window on then off a waveform.
-#     """
-#     if win=='hann':
-#         def winon(t, wi, wf):
-#             return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-#         def winoff(t, wi, wf):
-#             return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-#     elif win=='planck':
-#         def winon(t, t1, t2):
-#             z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
-#             return planck(z)
-#         def winoff(t, t3, t4):
-#             # Switch the order of first and second times relative to winon
-#             z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
-#             return planck(z)
-#     else:
-#         raise Exception, "Valid win options are 'hann' and 'planck'."
-#
-#     # searchsorted finds index of (sorted) time where point should be inserted,
-#     # pushing the later points to the right.
-#     # indices will be just to the right of the boundaries [wi, wf]:
-#     ion_end = np.searchsorted(h.x, xon_end)
-#     ioff_start = np.searchsorted(h.x, xoff_start)
-#
-#     # Times (window on, middle, wondow off)
-#     xson = h.x[:ion_end]
-#     xsoff = h.x[ioff_start:]
-#
-#     hwin = h.copy()
-#     hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
-#     hwin.amp[ioff_start:] *= winoff(xsoff, xoff_start, hwin.x[-1])
-#
-#     return hwin
-#
-#
-# def monotonic_increasing_array(y):
-#     """Make array y monotonic by
-#     removing all elements that are less than the previous largest value.
-#     Useful for dealing with numerical errors that cause a slowly increasing
-#     function to be slightly non-monotonic.
-#
-#     Parameters
-#     ----------
-#     y : array
-#
-#     Returns
-#     -------
-#     y_mono : array
-#         Subset of array that is monotonic (y_mono[i+1]>y_mono[i]).
-#     i_mono : arrray
-#         Indices for the elements in y_mono.
-#     """
-#     # If the element is not the largest, replace it with the previous largest value
-#     y_acc = np.maximum.accumulate(y)
-#     # Only keep the first unique element
-#     y_mono, i_mono = np.unique(y_acc, return_index=True)
-#     return y_mono, i_mono
-#
-#
-# def interpolate_time_of_frequency(h, order=2):
-#     """Generate interpolating function for t(f).
-#     """
-#     # Calculate frequency at each data point
-#     time = h.x
-#     phaseoft = h.interpolate('phase', order=order)
-#     omegaoft = phaseoft.derivative(n=1)
-#     freq = omegaoft(time)/(2*np.pi)
-#
-#     # Delete elements that make f(t) non-monotonic.
-#     # then interpolate t(f)
-#     freq_mono, i_mono = monotonic_increasing_array(freq)
-#     time_mono = time[i_mono]
-#
-#     time_of_freq = interpolate.UnivariateSpline(freq_mono, time_mono, k=order, s=0)
-#
-#     return time_of_freq
-#
-#
-# #### This should just be a wrapper of window_waveform above, to avoid
-# #### duplicating code.
-# def window_waveform_in_frequency_interval(h, fon_end, foff_start, foff_end, win='planck'):
-#     """Take two waveforms that have already been aligned in time and phase
-#     and smoothly transition from h1 to h2 over the window [wi, wf].
-#     """
-#     if win=='hann':
-#         def winon(t, wi, wf):
-#             return 0.5*(1.0 - np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-#         def winoff(t, wi, wf):
-#             return 0.5*(1.0 + np.cos( (np.pi*(t-wi))/(wf-wi) ) )
-#     elif win=='planck':
-#         def winon(t, t1, t2):
-#             z = (t2-t1)/(t-t1) + (t2-t1)/(t-t2)
-#             return planck(z)
-#         def winoff(t, t3, t4):
-#             # Switch the order of first and second times relative to winon
-#             z = (t3-t4)/(t-t3) + (t3-t4)/(t-t4)
-#             return planck(z)
-#     else:
-#         raise Exception, "Valid win options are 'hann' and 'planck'."
-#
-#     toff = interpolate_time_of_frequency(h)
-#     xon_end = float(toff(fon_end))
-#     xoff_start = float(toff(foff_start))
-#     xoff_end = float(toff(foff_end))
-#
-#     # searchsorted finds index of (sorted) time where point should be inserted,
-#     # pushing the later points to the right.
-#     # indices will be just to the right of the boundaries [wi, wf]:
-#     ion_end = np.searchsorted(h.x, xon_end)
-#     ioff_start = np.searchsorted(h.x, xoff_start)
-#     ioff_end = np.searchsorted(h.x, xoff_end)
-#
-#     # Times (window on, middle, wondow off)
-#     xson = h.x[:ion_end]
-#     xsoff = h.x[ioff_start:ioff_end]
-#
-#     hwin = h.copy()
-#     hwin.amp[:ion_end] *= winon(xson, hwin.x[0], xon_end)
-#     hwin.amp[ioff_start:ioff_end] *= winoff(xsoff, xoff_start, xoff_end)
-#     hwin.amp[ioff_end:] *= 0.0
-#
-#     return hwin
-
-
 ########################## Fourier transform waveform ##########################
-
-# def fourier_transform(data, dt):
-#     """Core part of the Fourier transform.
-#     """
-#     npoints = len(data)
-#     data_tilde = dt*np.fft.fft(data)
-#     freqs = np.arange(npoints)/(npoints*dt)
-#     return freqs, data_tilde
-#
-#
-# def fourier_transform_waveform(h, dt):
-#     """Currently requires waveform to already be uniformly sampled with
-#     interval dt.
-#     !!! This is somewhat rediculous, so allow resampling with interval dt. !!!
-#     """
-#     hresamp = h.interpolate_complex()(h.x)
-#     npoints = len(hresamp)
-#     freqs, htilde = fourier_transform(hresamp, dt)
-#     return Waveform.from_complex(freqs, htilde)
 
 def fourier_transform_uniform_sampled_waveform(h):
     """Fourier transform a uniformly sampled waveform.
@@ -498,14 +351,23 @@ def plot_waveforms_fd(waveforms, exp=False):
 
     for h in waveforms:
         hcopy = h.copy()
+        freq = hcopy.x
+        amp = hcopy.amp
+        phase = hcopy.phase
+
+        # Get rid of samples with f<=0
+        posfreq = freq>0
+        freq = freq[posfreq]
+        amp = amp[posfreq]
+        phase = phase[posfreq]
 
         if exp==False:
-            ax1.plot(hcopy.x, hcopy.amp)
+            ax1.plot(freq, amp)
         else:
-            ax1.plot(hcopy.x, np.exp(hcopy.amp))
+            ax1.plot(freq, np.exp(amp))
         ax1.set_xscale('log')
 
-        ax2.plot(hcopy.x, hcopy.phase)
+        ax2.plot(freq, phase)
         ax2.set_xscale('log')
 
     ax1.set_ylabel('Amplitude')
