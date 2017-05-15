@@ -1,8 +1,13 @@
 import numpy as np
 import scipy.integrate as integrate
 
+from constants import *
 import waveform as wave
+import waveformset as ws
 import empiricalinterpolation as eim
+import taylorf2
+import gaussianprocessregression as gpr
+import pycbc.types
 
 ################################################################################
 #                Arithmetic for amplitude of Waveform objects                  #
@@ -173,3 +178,182 @@ def reconstruct_amp_phase_difference(params, Bamp_j, Bphase_j, damp_gp_list, dph
     # Rewrite as TimeDomainWaveform
     xarr = Bamp_j[0].x
     return wave.Waveform.from_amp_phase(xarr, amp_interp, phase_interp)
+
+
+################################################################################
+#                              GPSurrogate class                               #
+################################################################################
+
+def physical_to_pycbc_frequency_series(freq, h_plus, h_cross):
+    """Convert numpy arrays to pycbc frequency series.
+    """
+    delta_f = freq[1]-freq[0]
+    hp_fs = pycbc.types.FrequencySeries(h_plus, delta_f=delta_f)
+    hc_fs = pycbc.types.FrequencySeries(h_cross, delta_f=delta_f)
+    return hp_fs, hc_fs
+
+
+class GPSurrogate(object):
+    def __init__(self, Bamp, Bphase, damp_gp_list, dphase_gp_list):
+        # Lists of interpolating functions
+        self.Bamp = Bamp
+        self.Bphase = Bphase
+        # Lists of GPR functions
+        self.damp_gp_list = damp_gp_list
+        self.dphase_gp_list = dphase_gp_list
+        # Waveform samples
+        self.mf = self.Bamp[0].x
+        self.mf_a = self.Bamp[0].x[0]
+        self.mf_b = self.Bamp[0].x[-1]
+
+    @classmethod
+    def load(cls, Bamp_filename, Bphase_filename, damp_gp_filename, dphase_gp_filename):
+        """Load surrogate model from 4 hdf5 data files.
+        """
+        Bamp = ws.HDF5WaveformSet(Bamp_filename)
+        Bphase = ws.HDF5WaveformSet(Bphase_filename)
+        damp_gp_list = gpr.load_gaussian_process_regression_list(damp_gp_filename)
+        dphase_gp_list = gpr.load_gaussian_process_regression_list(dphase_gp_filename)
+        return GPSurrogate(Bamp, Bphase, damp_gp_list, dphase_gp_list)
+
+    ############# Evaluate waveform quantities in geometric units #############
+
+    def geometric_reference_waveform(self, params, npoints=10000):
+        """Reference TaylorF2 waveform in geometric units
+        evaluated at the same times as the surrogate of the difference.
+        """
+        q, s1, s2, lambda1, lambda2 = params
+        h_ref = taylorf2.dimensionless_taylorf2_waveform(
+            mf=self.mf, q=q,
+            spin1z=s1, spin2z=s2,
+            lambda1=lambda1, lambda2=lambda2)
+
+        # Reference waveform has zero starting phase
+        h_ref.add_phase(remove_start_phase=True)
+        return h_ref
+
+    def amp_phase_difference(self, params):
+        """Evaluate the surrogates for the differences \Delta\Phi and \Delta\ln A.
+        """
+        return reconstruct_amp_phase_difference(
+            params, self.Bamp, self.Bphase,
+            self.damp_gp_list, self.dphase_gp_list)
+
+    def geometric_waveform(self, params):
+        """Combine the reference waveform and surrogates for the differences.
+        """
+        # Surrogate of \Delta\Phi and \Delta\ln A
+        h_diff_sur = self.amp_phase_difference(params)
+        # Reference waveform
+        h_ref = self.geometric_reference_waveform(params)
+        # Surrogate of A and \Phi
+        h_sur = h_ref.copy()
+        h_sur.amp *= np.exp(h_diff_sur.amp)
+        h_sur.phase += h_diff_sur.phase
+        return h_sur
+
+    ################### Evaluate waveform in physical units ##################
+
+    def physical_waveform_zero_inclination(
+        self, mass1=None, mass2=None,
+        spin1z=None, spin2z=None,
+        lambda1=None, lambda2=None,
+        distance=None):
+        """Waveform in physical units with zero inclination.
+        Useful when you want a Waveform object without re-decomposing
+        into amplitude and phase. This is cheap to evaluate.
+
+        Check parameters and convert them to be used by the surrogate waveform model.
+        """
+
+        ################# Check parameter range #################
+        if spin1z < -0.7 or spin1z > 0.7 or spin2z < -0.7 or spin2z > 0.7:
+            raise ValueError('Valid spins: spin1z in [-0.7, 0.7], spin2z in [-0.7, 0.7]')
+        if lambda1 < 0 or lambda1 > 10000 or lambda2 < 0 or lambda2 > 10000:
+            raise ValueError('Valid tidal parameter range: lambda1 in [0, 10000], lambda2 in [0, 10000]')
+
+        # If mass1 is not the larger mass, swap (mass1, mass2), (spin1z, spin2z), and (lambda1, lambda2)
+        if mass1 < mass2:
+            mass1, mass2 = mass2, mass1
+            spin1z, spin2z = spin2z, spin1z
+            lambda1, lambda2 = lambda2, lambda1
+
+        if mass2 < 1.0:
+            raise ValueError('Mass of less massive star must be >= 1M_sun.')
+
+        q = mass2/mass1
+        if q < 1.0/3.0 or q > 1.0:
+            raise ValueError('Valid mass ratio range: q in [1/3, 1].')
+
+        ########## Evaluate waveform #########
+        mtot = mass1 + mass2
+        params = np.array([q, spin1z, spin2z, lambda1, lambda2])
+        h_geom = self.geometric_waveform(params)
+        h_phys = wave.dimensionless_to_physical_freq(h_geom, mtot, distance)
+        return h_phys
+
+    def physical_waveform_lal(
+        self, mass1=None, mass2=None,
+        spin1z=None, spin2z=None,
+        lambda1=None, lambda2=None,
+        distance=None, inclination=None,
+        f_min=None, f_max=None, delta_f=None,
+        f_ref=None, phi_ref=None):
+        """Waveform in lalsimulation format with data in arrays.
+        !!!! TODO: phi_ref is the phase at f_ref. These are not currently set. !!!!
+
+        Parameters
+        ----------
+        **kwargs : All arguments of self.physical_waveform_zero_inclination
+        """
+        ################# Check parameter range #################
+        mtot = mass1 + mass2
+        mf_min = f_to_mf(f_min, mtot)
+        mf_max = f_to_mf(f_max, mtot)
+        if mf_min < self.mf_a or mf_min > self.mf_b:
+            raise ValueError('f_min or f_max outside allowed range.')
+
+        ########## Evaluate waveform using LALSimulation convention #########
+        #    --Uniformly spaced frequencies in [0, f_max).
+        #    --Data is zero below max(f_min, first data point in h_geom) and
+        #     zero above min(f_max, last data point in h_geom).
+
+        h_phys = self.physical_waveform_zero_inclination(
+            mass1=mass1, mass2=mass2,
+            spin1z=spin1z, spin2z=spin2z,
+            lambda1=lambda1, lambda2=lambda2,
+            distance=distance)
+
+        # Initialize arrays. The output is zero below f_min.
+        freq = np.arange(0.0, f_max, delta_f)
+        h_plus = np.zeros(len(freq), dtype=complex)
+        h_cross = np.zeros(len(freq), dtype=complex)
+
+        # Find the nonzero elements
+        f_min_nonzero = max(f_min, h_phys.x[0])
+        f_max_nonzero = min(f_max, h_phys.x[-1])
+        # Can't compare arrays with 'and'. Have to use bitwise '&' instead.
+        i_nonzero = np.where((freq>=f_min_nonzero) & (freq<=f_max_nonzero))
+        freq_nonzero = freq[i_nonzero]
+
+        # Amplitude and phase in the nonzero region
+        amp = h_phys.interpolate('amp')(freq_nonzero)
+        phase = h_phys.interpolate('phase')(freq_nonzero)
+
+        inc_plus = 0.5*(1.0+np.cos(inclination)**2)
+        inc_cross = np.cos(inclination)
+
+        h_plus[i_nonzero] = inc_plus * 0.5*amp*np.exp(1.0j*phase)
+        h_cross[i_nonzero] = inc_cross * 0.5*amp*np.exp(1.0j*(phase+np.pi/2.0))
+        return freq, h_plus, h_cross
+
+    def physical_waveform_pycbc(self, **kwargs):
+        """Waveform in pycbc format
+
+        Parameters
+        ----------
+        **kwargs : All arguments of self.physical_waveform_lal
+        """
+        freq, h_plus, h_cross = self.physical_waveform_lal(**kwargs)
+        hp_fs, hc_fs = physical_to_pycbc_frequency_series(freq, h_plus, h_cross)
+        return hp_fs, hc_fs

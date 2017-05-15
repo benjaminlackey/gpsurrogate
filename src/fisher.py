@@ -260,3 +260,90 @@ class NumericalFisher(object):
 
     def plot_fisher_integrand(i, j):
         pass
+
+
+################################################################################
+#            Functions for converting between standard parameters              #
+#                    and Fisher matrix parameters.                             #
+################################################################################
+
+
+# Mchirp and eta do not depend on which mass (m1 or m2) is greater.
+# Going backwards requires a choice for which mass is greater.
+def mchirp_of_m1_m2(m1, m2):
+    return (m1*m2)**(3.0/5.0) / (m1+m2)**(1.0/5.0)
+
+def eta_of_m1_m2(m1, m2):
+    return (m1*m2) / (m1+m2)**2.0
+
+def eta_of_q(q):
+    """Takes either big Q=m_1/m_2 or little q=m_2/m_1 and returns
+    symmetric mass ratio eta.
+    """
+    return q / (1.0 + q)**2
+
+def big_and_small_q_of_eta(eta):
+    bigq = (1.0-2.0*eta + np.sqrt(1.0-4.0*eta))/(2.0*eta)
+    smallq = (1.0-2.0*eta - np.sqrt(1.0-4.0*eta))/(2.0*eta)
+
+    return bigq, smallq
+
+def m1_of_mchirp_eta(mchirp, eta):
+    """m1 is always the more massive star (the primary)
+    """
+    return (1.0/2.0)*mchirp*eta**(-3.0/5.0) * (1.0 + np.sqrt(1.0-4.0*eta))
+
+
+def m2_of_mchirp_eta(mchirp, eta):
+    """m2 is always the less massive star (the secondary)
+    """
+    return (1.0/2.0)*mchirp*eta**(-3.0/5.0) * (1.0 - np.sqrt(1.0-4.0*eta))
+
+def ssym_of_s1_s2(s1, s2):
+    return 0.5*(s1+s2)
+
+def santisym_of_s1_s2(s1, s2):
+    return 0.5*(s1-s2)
+
+def s1_s2_of_pe_params(ssym, santi):
+    s1 = ssym + santi
+    s2 = ssym - santi
+    return s1, s2
+
+def lamtilde_of_eta_lam1_lam2(eta, lam1, lam2):
+    """$\tilde\Lambda(\eta, \Lambda_1, \Lambda_2)$.
+    Lambda_1 is assumed to correspond to the more massive (primary) star m_1.
+    Lambda_2 is for the secondary star m_2.
+    """
+    return (8.0/13.0)*((1.0+7.0*eta-31.0*eta**2)*(lam1+lam2) + np.sqrt(1.0-4.0*eta)*(1.0+9.0*eta-11.0*eta**2)*(lam1-lam2))
+
+
+def deltalamtilde_of_eta_lam1_lam2(eta, lam1, lam2):
+    """This is the definition found in Les Wade's paper.
+    Les has factored out the quantity \sqrt(1-4\eta). It is different from Marc Favata's paper.
+    $\delta\tilde\Lambda(\eta, \Lambda_1, \Lambda_2)$.
+    Lambda_1 is assumed to correspond to the more massive (primary) star m_1.
+    Lambda_2 is for the secondary star m_2.
+    """
+    return (1.0/2.0)*(
+                      np.sqrt(1.0-4.0*eta)*(1.0 - 13272.0*eta/1319.0 + 8944.0*eta**2/1319.0)*(lam1+lam2)
+                      + (1.0 - 15910.0*eta/1319.0 + 32850.0*eta**2/1319.0 + 3380.0*eta**3/1319.0)*(lam1-lam2)
+                      )
+
+def lam1_lam2_of_pe_params(eta, lamt, dlamt):
+    """lam1 is for the the primary mass m_1.
+    lam2 is for the the secondary mass m_2.
+    m_1 >= m2.
+    """
+
+    a = (8.0/13.0)*(1.0+7.0*eta-31.0*eta**2)
+    b = (8.0/13.0)*np.sqrt(1.0-4.0*eta)*(1.0+9.0*eta-11.0*eta**2)
+    c = (1.0/2.0)*np.sqrt(1.0-4.0*eta)*(1.0 - 13272.0*eta/1319.0 + 8944.0*eta**2/1319.0)
+    d = (1.0/2.0)*(1.0 - 15910.0*eta/1319.0 + 32850.0*eta**2/1319.0 + 3380.0*eta**3/1319.0)
+
+    den = (a+b)*(c-d) - (a-b)*(c+d)
+
+    lam1 = ( (c-d)*lamt - (a-b)*dlamt )/den
+    lam2 = (-(c+d)*lamt + (a+b)*dlamt )/den
+
+    return lam1, lam2

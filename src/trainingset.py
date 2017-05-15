@@ -4,7 +4,7 @@ import waveform as wave
 import waveformset as ws
 from lalwaveform import dimensionless_td_waveform, dimensionless_fd_waveform
 import window
-
+import taylorf2
 
 ################################   Utilities   #################################
 
@@ -215,27 +215,36 @@ def td_waveform_to_conditioned_fd_waveform_difference_with_fd(
     """Generate a time-domain waveform, then condition and Fourier transform it.
     Then subtract a frequency-damain reference waveform.
     """
-    h = dimensionless_td_waveform(approximant=approximant, q=q,
-                spin1x=spin1x, spin1y=spin1y, spin1z=spin1z,
-                spin2x=spin2x, spin2y=spin2y, spin2z=spin2z,
-                lambda1=lambda1, lambda2=lambda2,
-                mf_min=f_min, delta_tbym=delta_t, amplitude_order=amplitude_order)
+    h = dimensionless_td_waveform(
+        approximant=approximant, q=q,
+        spin1x=spin1x, spin1y=spin1y, spin1z=spin1z,
+        spin2x=spin2x, spin2y=spin2y, spin2z=spin2z,
+        lambda1=lambda1, lambda2=lambda2,
+        mf_min=f_min, delta_tbym=delta_t, amplitude_order=amplitude_order)
 
-    h_cond = condition_waveform(h,
-                winon_i, winon_f, winoff_i, winoff_f,
-                n_ext,
-                trunc_i, trunc_f, npoints=npoints,
-                win=win, f_coalescence=f_coalescence, remove_start_phase=remove_start_phase)
+    h_cond = condition_waveform(
+        h,
+        winon_i, winon_f, winoff_i, winoff_f,
+        n_ext,
+        trunc_i, trunc_f, npoints=npoints,
+        win=win, f_coalescence=f_coalescence, remove_start_phase=remove_start_phase)
 
     # Generate FD wavefrom between trunc_i and trunc_f with same parameters
-    h_ref = dimensionless_fd_waveform(approximant='TaylorF2',
-                q=q,
-                spin1x=spin1x, spin1y=spin1y, spin1z=spin1z,
-                spin2x=spin2x, spin2y=spin2y, spin2z=spin2z,
-                lambda1=lambda1, lambda2=lambda2,
-                mf_min=trunc_i, mf_max=trunc_f, delta_mf=ref_delta_f)
+    mf = np.logspace(np.log10(trunc_i), np.log10(trunc_f), npoints)
+    h_ref = taylorf2.dimensionless_taylorf2_waveform(
+        mf=mf, q=q,
+        spin1x=spin1x, spin1y=spin1y, spin1z=spin1z,
+        spin2x=spin2x, spin2y=spin2y, spin2z=spin2z,
+        lambda1=lambda1, lambda2=lambda2)
 
-    wave.resample_uniform(h_ref, npoints=npoints, spacing='log', order=2)
+    # h_ref = dimensionless_fd_waveform(approximant='TaylorF2',
+    #             q=q,
+    #             spin1x=spin1x, spin1y=spin1y, spin1z=spin1z,
+    #             spin2x=spin2x, spin2y=spin2y, spin2z=spin2z,
+    #             lambda1=lambda1, lambda2=lambda2,
+    #             mf_min=trunc_i, mf_max=trunc_f, delta_mf=ref_delta_f)
+
+    #wave.resample_uniform(h_ref, npoints=npoints, spacing='log', order=2)
 
     h_ref.add_phase(remove_start_phase=remove_start_phase)
 
