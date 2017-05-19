@@ -140,12 +140,12 @@ def empirical_interpolation_for_time_domain_waveform(waveforms, datatype):
 ################################################################################
 
 def reconstruct_amp_phase_difference(params, Bamp_j, Bphase_j, damp_gp_list, dphase_gp_list):
-    """Calculate the reduced order model waveform. This is the online stage.
+    """Calculate the surrogate of dh.
 
     Parameters
     ----------
     params : 1d array
-        Physical waveform parameters.
+        Waveform parameters.
     Bamp_j : List of Waveform
         List of the amplitude interpolants.
     Bphase_j : List of Waveform
@@ -157,8 +157,8 @@ def reconstruct_amp_phase_difference(params, Bamp_j, Bphase_j, damp_gp_list, dph
 
     Returns
     -------
-    hinterp : TimeDomainWaveform
-        Reduced order model waveform
+    dh : Waveform
+        Surrogate of dh.
     """
     namp_nodes = len(damp_gp_list)
     nphase_nodes = len(dphase_gp_list)
@@ -233,7 +233,17 @@ class GPSurrogate(object):
         return h_ref
 
     def amp_phase_difference(self, params):
-        """Evaluate the surrogates for the differences \Delta\Phi and \Delta\ln A.
+        """Evaluate the surrogates for the differences \Delta\ln A and \Delta\Phi.
+
+        Parameters
+        ----------
+        params : 1d array
+            Waveform parameters.
+
+        Returns
+        -------
+        dh : Waveform
+            Waveform object with dh.amp = ln(A/A_F2) and dh.phase = DeltaPhi.
         """
         return reconstruct_amp_phase_difference(
             params, self.Bamp, self.Bphase,
@@ -309,9 +319,8 @@ class GPSurrogate(object):
         ################# Check parameter range #################
         mtot = mass1 + mass2
         mf_min = f_to_mf(f_min, mtot)
-        mf_max = f_to_mf(f_max, mtot)
-        if mf_min < self.mf_a or mf_min > self.mf_b:
-            raise ValueError('f_min or f_max outside allowed range.')
+        if mf_min < self.mf_a:
+            raise ValueError('f_min='+str(f_min)+' < minimum frequency in surrogate ('+str(mf_to_f(self.mf_a, mtot))+').')
 
         ########## Evaluate waveform using LALSimulation convention #########
         #    --Uniformly spaced frequencies in [0, f_max).

@@ -123,3 +123,30 @@ class HDF5WaveformSet(object):
         """
         nwave = len(self)
         return np.array([self.get_waveform(i, data='parameters') for i in range(nwave)])
+
+
+def join_waveform_sets(filename1, filename2, filename_join):
+    """Join two HDF5WaveformSets together into a new HDF5WaveformSet.
+    """
+    h_set1 = ws.HDF5WaveformSet(filename1)
+    h_set2 = ws.HDF5WaveformSet(filename2)
+    h_join = ws.HDF5WaveformSet(filename_join)
+
+    j = 0
+    # Write the waveforms in h_set1 to h_join
+    for i in range(len(h_set1)):
+        h = h_set1.get_waveform(i, data='waveform')
+        p = h_set1.get_waveform(i, data='parameters')
+        h_join.set_waveform(j, h, p)
+        j += 1
+
+    # Append the waveforms in h_set2 to h_join
+    for i in range(len(h_set2)):
+        h = h_set2.get_waveform(i, data='waveform')
+        p = h_set2.get_waveform(i, data='parameters')
+        h_join.set_waveform(j, h, p)
+        j += 1
+
+    h_set1.close()
+    h_set2.close()
+    h_join.close()
