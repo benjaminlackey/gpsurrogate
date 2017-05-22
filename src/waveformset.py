@@ -125,12 +125,25 @@ class HDF5WaveformSet(object):
         return np.array([self.get_waveform(i, data='parameters') for i in range(nwave)])
 
 
+################ Functions for constructing a HDF5WaveformSet ##################
+
+
+def waveform_set_from_list(filename, h_list, params_list):
+    """Generate a HDF5WaveformSet from a list of waveforms and their parameters.
+    """
+    h_set = HDF5WaveformSet(filename)
+    # Write the waveforms to h_set
+    for i in range(len(h_list)):
+        h_set.set_waveform(i, h_list[i], params_list[i])
+    h_set.close()
+
+
 def join_waveform_sets(filename1, filename2, filename_join):
     """Join two HDF5WaveformSets together into a new HDF5WaveformSet.
     """
-    h_set1 = ws.HDF5WaveformSet(filename1)
-    h_set2 = ws.HDF5WaveformSet(filename2)
-    h_join = ws.HDF5WaveformSet(filename_join)
+    h_set1 = HDF5WaveformSet(filename1)
+    h_set2 = HDF5WaveformSet(filename2)
+    h_join = HDF5WaveformSet(filename_join)
 
     j = 0
     # Write the waveforms in h_set1 to h_join
