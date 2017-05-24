@@ -1,3 +1,9 @@
+from time import time
+import numpy as np
+import scipy.optimize as optimize
+import gaussianprocessregression as gpr
+
+
 def find_minimum(func, limits, nbasinjumps=20, nfun_eval_per_basin=15):
     """Find the minimum of func within the range given by limits.
     Uses basinhopping to jump between local minima, and 'L-BFGS-B' to find local minimum.
@@ -29,7 +35,6 @@ def find_minimum(func, limits, nbasinjumps=20, nfun_eval_per_basin=15):
     nparams = len(limits)
     xi_limits = np.array([[0., 1.]]*nparams)
 
-    #xi0 = 0.5*np.ones(nparams)
     # Initial guess uniformly distributed in parameter space
     xi0 = np.random.uniform(low=0.0, high=1.0, size=nparams)
 
@@ -74,7 +79,7 @@ def find_minimum(func, limits, nbasinjumps=20, nfun_eval_per_basin=15):
     return x_min, f_min, np.array(points), func_scaled.i
 
 
-def objective_function(point, sigma_dphase_gp_list):
+def rms_phase_error(point, sigma_dphase_gp_list):
     """Objective function to *MAXIMIZE* when searching for new training set points.
     This is the root-mean-squared error estimate of the phase at the empirical nodes F^phi_j.
     """
@@ -104,9 +109,8 @@ class UncertaintySampling(object):
         self.new_points = None
         self.new_errors = None
 
-    def update_amp_phase_uncertainties(self):
+    def update_uncertainties(self):
         """Update the list of GPR functions for evaluating
-        DeltalnA(f; x) at the empirical nodes F^amp_j and
         DeltaPhi(f; x) at the empirical nodes F^phi_j.
         This uses all available points (original_points+new_points).
         """
@@ -129,11 +133,13 @@ class UncertaintySampling(object):
     def negative_error(self, params):
         """The function you want to minimize.
         """
-        neg_err = -objective_function(params, self.sigma_dphase_list)
+        neg_err = -rms_phase_error(params, self.sigma_dphase_list)
         return neg_err
 
     def maximize_error(self, nbasinjumps=20, nfun_eval_per_basin=15, verbose=True):
-
+        """Maximize the error function by minimizing its negative with
+        the basinjumping minimization algorithm.
+        """
         t0 = time()
 
         point_new, fmin, points_eval, neval = find_minimum(
@@ -150,8 +156,11 @@ class UncertaintySampling(object):
         return point_new, err_new
 
     def add_new_points(self, npoints, **kwargs):
+        """Add a new point at the maximum value of the error function.
+        """
         for i in range(npoints):
-            self.update_amp_phase_uncertainties()
+            print i, 
+            self.update_uncertainties()
             point_new, err_new = self.maximize_error(**kwargs)
 
             if self.new_points is None and self.new_errors is None:

@@ -132,7 +132,7 @@ def reasonable_hyperparameters_range(data, limits, sigma_f_factor=[0.1, 4.0], si
     for i in range(len(limits)):
         ximin, ximax = limits[i, 0], limits[i, 1]
         interval = ximax - ximin
-        li_range = [length_scale_factor[0]*interval, sigma_f_factor[1]*interval]
+        li_range = [length_scale_factor[0]*interval, length_scale_factor[1]*interval]
         length_scale_ranges.append(li_range)
 
     hyper_limits = np.array(sigma_f_range + length_scale_ranges + sigma_n_range)

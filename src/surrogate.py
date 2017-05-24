@@ -194,7 +194,7 @@ def physical_to_pycbc_frequency_series(freq, h_plus, h_cross):
 
 
 class GPSurrogate(object):
-    def __init__(self, Bamp, Bphase, damp_gp_list, dphase_gp_list):
+    def __init__(self, mf_amp, mf_phase, Bamp, Bphase, damp_gp_list, dphase_gp_list):
         # Lists of interpolating functions
         self.Bamp = Bamp
         self.Bphase = Bphase
@@ -202,6 +202,8 @@ class GPSurrogate(object):
         self.damp_gp_list = damp_gp_list
         self.dphase_gp_list = dphase_gp_list
         # Waveform samples
+        self.mf_amp = mf_amp
+        self.mf_phase = mf_phase
         self.mf = self.Bamp[0].x
         self.mf_a = self.Bamp[0].x[0]
         self.mf_b = self.Bamp[0].x[-1]
@@ -214,7 +216,9 @@ class GPSurrogate(object):
         Bphase = ws.HDF5WaveformSet(Bphase_filename)
         damp_gp_list = gpr.load_gaussian_process_regression_list(damp_gp_filename)
         dphase_gp_list = gpr.load_gaussian_process_regression_list(dphase_gp_filename)
-        return GPSurrogate(Bamp, Bphase, damp_gp_list, dphase_gp_list)
+        mf_amp = Bamp.parameters()[:, 0]
+        mf_phase = Bphase.parameters()[:, 0]
+        return GPSurrogate(mf_amp, mf_phase, Bamp, Bphase, damp_gp_list, dphase_gp_list)
 
     ############# Evaluate waveform quantities in geometric units #############
 
