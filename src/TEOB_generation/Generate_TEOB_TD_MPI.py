@@ -437,9 +437,58 @@ def main():
     comm.Barrier()
     if rank == 0: print '=============================================================='
 
-    # FIXME: add consolidation of data step
-    # load up .npy and save as hdf5
-    
+    # Load all .npy and save as hdf5
+    if rank == 0:
+        print 'Loading npy files for all configurations'
+
+        # FIXME: add git branch and hash
+        # how to find build directory? then can use git rev-parse HEAD
+        generation_str = \
+        '''
+        approximant = %s
+        M = %g
+        fs = %g
+        iota = %g
+        f_min = %g
+        distance = %g
+
+        Using lalsimulation version %s
+        ''' % (approximant, M, fs, iota, f_min, distance, LS.LALSIMULATION_VERSION)
+
+        print 'Outputting interpolated data as HDF5'
+        outfname = 'TEOB_dataI.hdf5'
+        fh5 = h5py.File(outfname, 'w')
+        fh5.create_dataset('configurations', data=cfgs)
+        fh5.create_dataset('configurations_keys', data=['q', 'chi1', 'chi2', 'lambda1', 'lambda2'])
+        fh5.create_dataset('grid', data=grid)
+        fh5.attrs['Description'] = np.string_('TEOB TD data')
+        fh5.attrs['GenerationSettings'] = generation_str
+
+        data_keys_name = ['amp', 'phi']
+        basename = '%s/TEOB_TD'%(tmpdir)
+        fh5.create_dataset('data_keys_name', data=data_keys_name)
+        for i in tqdm(np.arange(n)):
+            if verbose:
+                print 'Loading data for waveform %d of %d with index %d.' %(i,n,cfgs[i])
+            # Data has already been interpolated onto target grid
+            f = '%s_%d.npy'%(basename, i)
+            try:
+                data = np.load(f)
+                grp = fh5.create_group('h_'+str(i))
+                for j in range(len(data_keys_name)):
+                # create one data set for each quantity
+                # each data set includes data as a function of
+                # time and physical parameter(s)
+                    if np.isnan(data[j]).any():
+                        print '*'*80
+                        print '*** Warning: dataset %d for quantity %s contains one or more nans! ***' %(i, data_keys_name[j])
+                        print data[j]
+                        print '*'*80
+                    grp.create_dataset(data_keys_name[j], data=data[j])
+            except Exception as e:
+                print 'Loading %s failed. Skipping configuration.' % (f)
+
+        fh5.close()
     
     print '=============================================================='
     print 'All Done!'
