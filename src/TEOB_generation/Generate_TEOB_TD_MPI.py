@@ -26,21 +26,25 @@ import romspline
 
 from tqdm import *
 
-# Q: Andrea, do we want 'TEOBv2' or 'TEOBv4'?
-# Q: Is the head of TEOBBNS fine?
+# Q: Andrea, do we want 'TEOBv2' or 'TEOBv4'? Both, but start with TEOBv4
+# Q: Is the head of TEOBBNS fine? Yes
+# Q: I get nans when calling SimUniversalRelationlambda3TidalVSlambda2Tidal and similar functions with lambda = 0; Andrea knows about this; needs to fix domain of validity of universal relations
+
 
 # Ben
-# Q: which distance, inclination do you want me to use?
-# Q: which total mass do you want me to use?
+# Q: which distance, inclination do you want me to use?: d=1, iota=0
+# Q: which total mass do you want me to use? M=2Msun DOn't
 # Q: Do you want both hp, hc; since the wf is aligned, there is no need to store both.
 # Q: why is tstart needed? shouldn't we just align at the peak of h22?
 
-# Q: Is a common time grid needed? I think not and will return 
-    # either a romspline grid for each cfg (but that may be too slow to generate)
-    # or data interpolated onto a common romspline grid, but using zeros instead of extrapolation)
-    # or the TD amplitude, phase data on a suitable grid
-    # or the raw data
+# Q: Is a common time grid needed? Yes
+    # output the TD amplitude and phase data on a suitable grid (either romspline, or const phase grid); use using zeros instead of extrapolation
+    
 
+# Could fix mass of smaller object to 1Msun and keep f_min_Hz fixed; this would mean that
+# the wf starts at a higher Mf and would require hybridization; this would be computationally cheaper
+# Ben would like to avoid this
+# So, for the time being I can just fix Mtot=2Msun and f_min_Hz=8Hz
 
 
 #------------------------------------------------------------------------------
@@ -192,8 +196,40 @@ def compute_corners_from_domain(d):
                                                 for lambda2 in d.get_lambda2()]
 
 #------------------------------------------------------------------------------
+def time_grid_for_longest_waveform(Mtot, f_min, outfile, deg=3, abstol=5e-5):
+    # positive aligned spins and equal mass-ratio increase the length of the waveform in time
+    # high lambda also makes the wf shorter, so use lambda ~ 0 here.
+    
+    m1, m2 = Mtot/2.0, Mtot/2.0
+    s1z, s2z = +0.9, +0.9 # this is more than we want to cover in spin
+    lambda1, lambda2, = 0.1, 0.1
+    t, hp, hc = spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
+                        f_min,
+                        distance=1.0, inclination=0.0, delta_t=1.0/16384.0,
+                        approximant='TEOBv4', verbose=False)
+    # post-process TD data
+    h = hp - 1j * hc
+    amp = np.abs(h)
+    phi = np.unwrap(np.angle(h))
+    
+    # use a phase romspline for a common grid for amplitude and phase
+    spline_phi = romspline.ReducedOrderSpline(t, phi, verbose=True, deg=deg,
+                                              tol=abstol, rel=False)
+
+    print 'Generation of phase romspline finished.'
+    print 'Size of romspline', spline_phi.size
+    print 'Compression factor of romspline', spline_phi.compression
+    print 'Resulting spline points in time', spline_phi.X
+
+    phiI = ip.InterpolatedUnivariateSpline(t, phi)
+    ampI = ip.InterpolatedUnivariateSpline(t, amp)
+
+    #np.save('./time_grid_debug.npy', [t, hp, hc, amp, phi, spline_phi.X])
+    np.save(outfile, spline_phi.X)
+
+#------------------------------------------------------------------------------
 def example_waveform():
-    m1, m2 = 1.4, 1.4
+    m1, m2 = 3.0, 1.0
     s1z, s2z = 0.1, 0.1
     lambda1, lambda2, = 2000, 2000
     f_min = 40.0 # O(2min) per waveform
@@ -201,11 +237,12 @@ def example_waveform():
                         f_min,
                         distance=1.0, inclination=0.0, delta_t=1.0/16384.0,
                         approximant='TEOBv4', verbose=True)
+    return t, hp, hc
 
 #------------------------------------------------------------------------------
 def TEOB_process_array_TD(i, M, 
             q, chi1, chi2, lambda1, lambda2,
-            f_min, iota, outdir, F_out, comm,
+            f_min, iota, outdir, grid, comm,
             fs, distance, approximant='TEOBv4',
             allow_skip=True, verbose=True):
     '''
@@ -231,14 +268,19 @@ def TEOB_process_array_TD(i, M,
                                 f_min,
                                 distance=distance, inclination=iota, 
                                 delta_t=1.0/fs,
-                                approximant=approximant, verbose=verbose)
+                                approximant=approximant, verbose=False)
 
-        #FIXME: F_out is currently not used; decide what to output
-        
+        # Compute amplitude and phase and interpolate onto romspline grid
+        h = hp - 1j * hc
+        amp = np.abs(h)
+        phi = np.unwrap(np.angle(h))
+        phiI = ip.InterpolatedUnivariateSpline(t, phi, k=3, ext='zeros')
+        ampI = ip.InterpolatedUnivariateSpline(t, amp, k=3, ext='zeros')
+
         # Save waveform quantities
-        data_save = np.array([t, hp, hc])
+        #data_save = np.array([t, hp, hc])
+        data_save = np.array([ampI(grid), phiI(grid)])
         np.save(outdir+config_str, data_save)
-
 
         if verbose:
             print '*** TEOB_process_array_TD finished for parameters:', args
@@ -305,10 +347,6 @@ def main():
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     nprocs = comm.Get_size()
-    
-    # write function that computes corner cfgs for a specific 5D domain
-    # write function that reads list of configs from txt or npy
-    # then iterate over these lists and produce wfs (in parallel)
 
     opts = parse_args()
 
@@ -336,19 +374,26 @@ def main():
 
     os.chdir(outdir)
 
+    # COmpute corners of specified 5D domain
     q_min, chi1_min, chi2_min, lambda1_min, lambda2_min = opts['params']['min_vals']
     q_max, chi1_max, chi2_max, lambda1_max, lambda2_max = opts['params']['max_vals']    
     d = domain()
     d.set_q(q_min, q_max)
     d.set_chi1(chi1_min, chi1_max)
     d.set_chi2(chi2_min, chi2_max)
-    # FIXME: Andrea: I get nans when calling SimUniversalRelationlambda3TidalVSlambda2Tidal and similar functions with lambda = 0
     d.set_lambda1(lambda1_min, lambda1_max)
     d.set_lambda2(lambda2_min, lambda2_max)
     cfgs = compute_corners_from_domain(d) # 2^5 = 32 corner points
+    
+    # FIXME: write function that reads list of configs from txt or npy
 
-    # FIXME: F_out
-    F_out = None
+    g_filename = 'time_grid_M%.fMsun_fmin%.fHz.npy' % (M, f_min)
+    if rank == 0 and not os.path.isfile(g_filename):
+        # Generate sparse time grid
+        print 'Computing target sparse time grid, chosen based on total mass and f_min.'
+        time_grid_for_longest_waveform(M, f_min, outdir+g_filename, deg=3, abstol=5e-5)
+    comm.Barrier()
+    grid = np.load(g_filename) # Now read it back in for all tasks
 
 
     n = len(cfgs)
@@ -372,7 +417,7 @@ def main():
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
         TEOB_process_array_TD(i, M, 
                     q, chi1, chi2, lambda1, lambda2,
-                    f_min, iota, tmpdir, F_out, comm,
+                    f_min, iota, tmpdir, grid, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
 
@@ -384,7 +429,7 @@ def main():
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
         TEOB_process_array_TD(i, M, 
                     q, chi1, chi2, lambda1, lambda2,
-                    f_min, iota, tmpdir, F_out, comm,
+                    f_min, iota, tmpdir, grid, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
 
@@ -393,6 +438,8 @@ def main():
     if rank == 0: print '=============================================================='
 
     # FIXME: add consolidation of data step
+    # load up .npy and save as hdf5
+    
     
     print '=============================================================='
     print 'All Done!'

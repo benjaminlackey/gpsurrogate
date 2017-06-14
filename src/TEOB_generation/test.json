@@ -1,9 +1,9 @@
 {
     "outdir": "./",
     "domain": "TD",
-    "Total_mass_MSUN": 2.8,
+    "Total_mass_MSUN": 2.0,
     "Sampling_rate_Hz": 16384.0,
-    "f_min": 40.0,
+    "f_min": 100.0,
     "iota": 0.0,
     "distance_MPC": 1,
     "random" : false,
@@ -12,7 +12,7 @@
     "approximant": "TEOBv4",
 
     "params": {
-        "min_vals": [1.0, -0.2, -0.2, 0.1, 0.1],
-        "max_vals": [3.0, 0.2, 0.2, 3000.0, 3000.0]
+        "min_vals": [1.0, -0.4, -0.4, 0.1, 0.1],
+        "max_vals": [3.0, 0.4, 0.4, 3000.0, 3000.0]
     }
 }
