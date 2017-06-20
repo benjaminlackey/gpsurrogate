@@ -426,8 +426,17 @@ def main():
     d.set_lambda1(lambda1_min, lambda1_max)
     d.set_lambda2(lambda2_min, lambda2_max)
     cfgs = compute_corners_from_domain(d) # 2^5 = 32 corner points
-    
+
     # FIXME: write function that reads list of configs from txt or npy
+
+
+    # Adhoc 1-parameter family for tests of smoothness
+    q = 0.6
+    spin1z_arr = np.linspace(-0.7, 0.7, 51)
+    spin2z = 0.2
+    lambda1 = 2000.0
+    lambda2 = 1000.0
+    cfgs = [(q, spin1z, spin2z, lambda1, lambda2) for spin1z in spin1z_arr]
 
     # we are not using a fixed grid anymore
     # g_filename = 'time_grid_M%.fMsun_fmin%.fHz.npy' % (M, f_min)
