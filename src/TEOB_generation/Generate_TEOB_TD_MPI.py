@@ -26,6 +26,8 @@ import romspline
 
 from tqdm import *
 
+# MP June 2017
+
 # Q: Andrea, do we want 'TEOBv2' or 'TEOBv4'? Both, but start with TEOBv4
 # Q: Is the head of TEOBBNS fine? Yes
 # Q: I get nans when calling SimUniversalRelationlambda3TidalVSlambda2Tidal and similar functions with lambda = 0; Andrea knows about this; needs to fix domain of validity of universal relations
@@ -33,13 +35,11 @@ from tqdm import *
 
 # Ben
 # Q: which distance, inclination do you want me to use?: d=1, iota=0
-# Q: which total mass do you want me to use? M=2Msun DOn't
+# Q: which total mass do you want me to use? M=2Msun
 # Q: Do you want both hp, hc; since the wf is aligned, there is no need to store both.
 # Q: why is tstart needed? shouldn't we just align at the peak of h22?
 
-# Q: Is a common time grid needed? Yes
-    # output the TD amplitude and phase data on a suitable grid (either romspline, or const phase grid); use using zeros instead of extrapolation
-    
+# Q: Is a common time grid needed? No
 
 # Could fix mass of smaller object to 1Msun and keep f_min_Hz fixed; this would mean that
 # the wf starts at a higher Mf and would require hybridization; this would be computationally cheaper
@@ -196,7 +196,48 @@ def compute_corners_from_domain(d):
                                                 for lambda2 in d.get_lambda2()]
 
 #------------------------------------------------------------------------------
+def pts_per_cycle_function(x, n=1.0, a=10.0, sigma=0.01):
+    """
+    A function providing a constant numer of points per cycle in the inspiral
+    with an increase close to merger.
+    The functional form is motivated by comparing against romspline grids for the phase
+    and smoothing the data, fitting the shape "by eye".
+    Input: x = phi - phi_c
+    """
+    return n + a*np.exp(sigma*x)
+
+#------------------------------------------------------------------------------
+def Generate_phase_grid(t, phi):
+    """
+    Using raw time and phase data, construct a grid that has
+    a specific number of points per cycle.
+    """
+    # Make sure that the phase data is monotonically increasing
+    # This is required for the spline interpolation below
+    tm, phim = monotonically_increasing_timeseries(t, -phi)
+
+    i = 0
+    phi_max = max(phim)
+    phi_g = [phim[i]]
+
+    while phi_g[i] < phi_max:
+        p = pts_per_cycle_function(phi_g[i] - phi_max, n=1.0, a=10.0, sigma=0.01)
+        phi_new = phi_g[i] + 2*np.pi / p
+        phi_g.append(phi_new)
+        i += 1
+    phase_grid = np.array(phi_g[:-1])
+
+    # Compute time values from spline of original data
+    t_grid = spline(phim, tm)(phase_grid)
+
+    return t_grid, phase_grid
+
+#------------------------------------------------------------------------------
 def time_grid_for_longest_waveform(Mtot, f_min, outfile, deg=3, abstol=5e-5):
+    # Note: This function is no longer used
+    # 1) this is very slow for long waveforms (O(day))
+    # 2) Ben wants the data to start exactly at f_min.
+    #
     # positive aligned spins and equal mass-ratio increase the length of the waveform in time
     # high lambda also makes the wf shorter, so use lambda ~ 0 here.
     
@@ -242,7 +283,7 @@ def example_waveform():
 #------------------------------------------------------------------------------
 def TEOB_process_array_TD(i, M, 
             q, chi1, chi2, lambda1, lambda2,
-            f_min, iota, outdir, grid, comm,
+            f_min, iota, outdir, comm,
             fs, distance, approximant='TEOBv4',
             allow_skip=True, verbose=True):
     '''
@@ -270,16 +311,17 @@ def TEOB_process_array_TD(i, M,
                                 delta_t=1.0/fs,
                                 approximant=approximant, verbose=False)
 
-        # Compute amplitude and phase and interpolate onto romspline grid
+        # Compute amplitude and phase and interpolate onto a sparse grid
         h = hp - 1j * hc
         amp = np.abs(h)
         phi = np.unwrap(np.angle(h))
-        phiI = ip.InterpolatedUnivariateSpline(t, phi, k=3, ext='zeros')
         ampI = ip.InterpolatedUnivariateSpline(t, amp, k=3, ext='zeros')
+        
+        t_grid, phase_grid = Generate_phase_grid(t, phi)
+        amp_on_grid = ampI(t_grid)
 
         # Save waveform quantities
-        #data_save = np.array([t, hp, hc])
-        data_save = np.array([ampI(grid), phiI(grid)])
+        data_save = np.array([t_grid, phase_grid, amp_on_grid])
         np.save(outdir+config_str, data_save)
 
         if verbose:
@@ -355,7 +397,7 @@ def main():
     fs = opts['Sampling_rate_Hz']
     f_min = opts['f_min']
     iota = opts['iota']
-    distance = opts['distance_MPC']*1e6*lal.PC_SI
+    distance = opts['distance_MPC']*1e6
     approximant = str(opts['approximant'])
     
     try:
@@ -374,7 +416,7 @@ def main():
 
     os.chdir(outdir)
 
-    # COmpute corners of specified 5D domain
+    # Compute corners of specified 5D domain
     q_min, chi1_min, chi2_min, lambda1_min, lambda2_min = opts['params']['min_vals']
     q_max, chi1_max, chi2_max, lambda1_max, lambda2_max = opts['params']['max_vals']    
     d = domain()
@@ -387,14 +429,14 @@ def main():
     
     # FIXME: write function that reads list of configs from txt or npy
 
-    g_filename = 'time_grid_M%.fMsun_fmin%.fHz.npy' % (M, f_min)
-    if rank == 0 and not os.path.isfile(g_filename):
-        # Generate sparse time grid
-        print 'Computing target sparse time grid, chosen based on total mass and f_min.'
-        time_grid_for_longest_waveform(M, f_min, outdir+g_filename, deg=3, abstol=5e-5)
-    comm.Barrier()
-    grid = np.load(g_filename) # Now read it back in for all tasks
-
+    # we are not using a fixed grid anymore
+    # g_filename = 'time_grid_M%.fMsun_fmin%.fHz.npy' % (M, f_min)
+    # if rank == 0 and not os.path.isfile(g_filename):
+    #     # Generate sparse time grid
+    #     print 'Computing target sparse time grid, chosen based on total mass and f_min.'
+    #     time_grid_for_longest_waveform(M, f_min, outdir+g_filename, deg=3, abstol=5e-5)
+    # comm.Barrier()
+    # grid = np.load(g_filename) # Now read it back in for all tasks
 
     n = len(cfgs)
     if rank == 0: print 'Total number of configurations', n
@@ -417,7 +459,7 @@ def main():
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
         TEOB_process_array_TD(i, M, 
                     q, chi1, chi2, lambda1, lambda2,
-                    f_min, iota, tmpdir, grid, comm,
+                    f_min, iota, tmpdir, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
 
@@ -429,7 +471,7 @@ def main():
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
         TEOB_process_array_TD(i, M, 
                     q, chi1, chi2, lambda1, lambda2,
-                    f_min, iota, tmpdir, grid, comm,
+                    f_min, iota, tmpdir, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
 
@@ -460,7 +502,7 @@ def main():
         fh5 = h5py.File(outfname, 'w')
         fh5.create_dataset('configurations', data=cfgs)
         fh5.create_dataset('configurations_keys', data=['q', 'chi1', 'chi2', 'lambda1', 'lambda2'])
-        fh5.create_dataset('grid', data=grid)
+        #fh5.create_dataset('grid', data=grid)
         fh5.attrs['Description'] = np.string_('TEOB TD data')
         fh5.attrs['GenerationSettings'] = generation_str
 
@@ -470,7 +512,6 @@ def main():
         for i in tqdm(np.arange(n)):
             if verbose:
                 print 'Loading data for waveform %d of %d with index %d.' %(i,n,cfgs[i])
-            # Data has already been interpolated onto target grid
             f = '%s_%d.npy'%(basename, i)
             try:
                 data = np.load(f)
