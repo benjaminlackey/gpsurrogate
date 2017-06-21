@@ -441,7 +441,7 @@ def main():
             os.makedirs(outdir)
         if not os.path.exists(tmpdir):
             os.makedirs(tmpdir)
-
+    comm.Barrier()
     os.chdir(outdir)
 
     # Compute corners of specified 5D domain
