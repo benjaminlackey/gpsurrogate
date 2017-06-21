@@ -28,6 +28,9 @@ from tqdm import *
 
 # MP June 2017
 
+#------------------------------------------------------------------------------
+# Choices
+
 # Q: Andrea, do we want 'TEOBv2' or 'TEOBv4'? Both, but start with TEOBv4
 # Q: Is the head of TEOBBNS fine? Yes
 # Q: I get nans when calling SimUniversalRelationlambda3TidalVSlambda2Tidal and similar functions with lambda = 0; Andrea knows about this; needs to fix domain of validity of universal relations
@@ -205,6 +208,31 @@ def pts_per_cycle_function(x, n=1.0, a=10.0, sigma=0.01):
     Input: x = phi - phi_c
     """
     return n + a*np.exp(sigma*x)
+
+#------------------------------------------------------------------------------
+def monotonically_increasing_timeseries(t, v, return_idx=False):
+    """
+Return the part of a timeseries where the independent and dependent
+variables are not monotonically increasing from the start of the data
+    """
+    idx_t = np.where(np.diff(t) < 0)[0]
+    idx_v = np.where(np.diff(v) < 0)[0]
+
+    if len(idx_t) == 0:
+        idx_t = len(t)
+    else:
+        idx_t = idx_t[0]
+    if len(idx_v) == 0:
+        idx_v = len(v)
+    else:
+        idx_v = idx_v[0]
+
+    i = min(idx_t, idx_v)
+
+    if return_idx:
+        return i
+    else:
+        return t[:i], v[:i]
 
 #------------------------------------------------------------------------------
 def Generate_phase_grid(t, phi):
