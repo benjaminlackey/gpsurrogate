@@ -256,8 +256,11 @@ def Generate_phase_grid(t, phi):
         i += 1
     phase_grid = np.array(phi_g[:-1])
 
+    # Remove points where the phase does not increase monotonically
+    idx_ok = np.where(np.diff(phim) > 0)
+
     # Compute time values from spline of original data
-    t_grid = spline(phim, tm)(phase_grid)
+    t_grid = spline(phim[idx_ok], tm[idx_ok])(phase_grid)
 
     return t_grid, phase_grid
 
@@ -352,6 +355,10 @@ def TEOB_process_array_TD(i, M,
         # Save waveform quantities
         data_save = np.array([t_grid, phase_grid, amp_on_grid])
         np.save(outdir+config_str, data_save)
+        # Save raw data for debugging
+        config_str_raw = 'TEOB_TD_%d_raw.npy'%i
+        data_save_raw = np.array([t, phi, amp])
+        np.save(outdir+config_str_raw, data_save_raw)
 
         if verbose:
             print '*** TEOB_process_array_TD finished for parameters:', args
