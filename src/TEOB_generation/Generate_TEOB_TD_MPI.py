@@ -12,6 +12,7 @@ from subprocess import check_call
 import scipy
 import scipy.interpolate as ip
 from scipy import optimize
+from scipy.interpolate import InterpolatedUnivariateSpline as spline
 
 import os.path
 import h5py
