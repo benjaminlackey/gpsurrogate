@@ -348,8 +348,13 @@ def TEOB_process_array_TD(i, M,
         amp = np.abs(h)
         phi = np.unwrap(np.angle(h))
         ampI = ip.InterpolatedUnivariateSpline(t, amp, k=3, ext='zeros')
-        
+ 
+        # Compute phase grid with variable number of points per cycle
         t_grid, phase_grid = Generate_phase_grid(t, phi)
+
+        # use only non-zero amplitude data for constructing spline
+        idx = np.where(amp > 0.0)
+        ampI = spline(t[idx], amp[idx], k=3, ext='zeros')
         amp_on_grid = ampI(t_grid)
 
         # Save waveform quantities
