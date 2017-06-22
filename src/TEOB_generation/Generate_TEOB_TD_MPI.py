@@ -556,7 +556,7 @@ def main():
         fh5.attrs['Description'] = np.string_('TEOB TD data')
         fh5.attrs['GenerationSettings'] = generation_str
 
-        data_keys_name = ['amp', 'phi']
+        data_keys_name = ['t', 'phi', 'amp']
         basename = '%s/TEOB_TD'%(tmpdir)
         fh5.create_dataset('data_keys_name', data=data_keys_name)
         for i in tqdm(np.arange(n)):
