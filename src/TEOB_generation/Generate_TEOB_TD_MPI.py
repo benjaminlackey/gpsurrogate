@@ -458,6 +458,7 @@ def main():
     os.chdir(outdir)
 
     if opts['cfgfile']:
+        cfgfile = opts['cfgfile']
         print 'Loading configurations from textfile', cfgfile
         cfgs = np.loadtxt(cfgfile)
         if cfgs.shape[1] != 5:
