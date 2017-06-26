@@ -334,7 +334,7 @@ def TEOB_process_array_TD(i, M,
         return
     try:
         print 'Generate wf:', args
-
+        print q
         m1 = M * q/(1.0+q)
         m2 = M * 1.0/(1.0+q)
         t, hp, hc = spin_tidal_eob(m1, m2, chi1, chi2, lambda1, lambda2,
@@ -468,25 +468,22 @@ def main():
     d.set_lambda2(lambda2_min, lambda2_max)
     cfgs = compute_corners_from_domain(d) # 2^5 = 32 corner points
 
-    # FIXME: write function that reads list of configs from txt or npy
-
-
-    # Adhoc 1-parameter family for tests of smoothness
-    q = 0.6
-    spin1z_arr = np.linspace(-0.7, 0.7, 51)
-    spin2z = 0.2
-    lambda1 = 2000.0
-    lambda2 = 1000.0
-    cfgs = [(q, spin1z, spin2z, lambda1, lambda2) for spin1z in spin1z_arr]
-
-    # we are not using a fixed grid anymore
-    # g_filename = 'time_grid_M%.fMsun_fmin%.fHz.npy' % (M, f_min)
-    # if rank == 0 and not os.path.isfile(g_filename):
-    #     # Generate sparse time grid
-    #     print 'Computing target sparse time grid, chosen based on total mass and f_min.'
-    #     time_grid_for_longest_waveform(M, f_min, outdir+g_filename, deg=3, abstol=5e-5)
-    # comm.Barrier()
-    # grid = np.load(g_filename) # Now read it back in for all tasks
+    if opts['cfgfile']:
+        print 'Loading configurations from textfile', cfgfile
+        cfgs = np.loadtxt(cfgfile)
+        if cfgs.shape[1] != 5:
+            raise ValueError("Expected configurations in file %s to contain 5 columns "
+            +"(q, spin1z, spin2z, lambda1, lambda2)."%cfgfile)
+        if np.min(cfgs.T[0]) > 1.0:
+            raise ValueError("Expected in file %s mass-ratio <= 1"%cfgfile)
+    else:
+        print 'Using adhoc 1-parameter family for tests of smoothness'
+        q = 0.6
+        spin1z_arr = np.linspace(-0.7, 0.7, 51)
+        spin2z = 0.2
+        lambda1 = 2000.0
+        lambda2 = 1000.0
+        cfgs = [(q, spin1z, spin2z, lambda1, lambda2) for spin1z in spin1z_arr]
 
     n = len(cfgs)
     if rank == 0: print 'Total number of configurations', n
@@ -507,8 +504,9 @@ def main():
         i = j*nprocs + rank
         if (rank == 0) and verbose: print 'Chunk %d out of %d.' %(j,m)
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
+        # Note: We expect q <= 1. TEOB_process_array_TD() uses the opposite convention.
         TEOB_process_array_TD(i, M, 
-                    q, chi1, chi2, lambda1, lambda2,
+                    1.0/q, chi1, chi2, lambda1, lambda2,
                     f_min, iota, tmpdir, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
@@ -520,7 +518,7 @@ def main():
     if (i < n):
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
         TEOB_process_array_TD(i, M, 
-                    q, chi1, chi2, lambda1, lambda2,
+                    1.0/q, chi1, chi2, lambda1, lambda2,
                     f_min, iota, tmpdir, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
@@ -552,7 +550,6 @@ def main():
         fh5 = h5py.File(outfname, 'w')
         fh5.create_dataset('configurations', data=cfgs)
         fh5.create_dataset('configurations_keys', data=['q', 'chi1', 'chi2', 'lambda1', 'lambda2'])
-        #fh5.create_dataset('grid', data=grid)
         fh5.attrs['Description'] = np.string_('TEOB TD data')
         fh5.attrs['GenerationSettings'] = generation_str
 
