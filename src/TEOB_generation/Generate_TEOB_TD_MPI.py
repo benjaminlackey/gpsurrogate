@@ -457,17 +457,6 @@ def main():
     comm.Barrier()
     os.chdir(outdir)
 
-    # Compute corners of specified 5D domain
-    q_min, chi1_min, chi2_min, lambda1_min, lambda2_min = opts['params']['min_vals']
-    q_max, chi1_max, chi2_max, lambda1_max, lambda2_max = opts['params']['max_vals']    
-    d = domain()
-    d.set_q(q_min, q_max)
-    d.set_chi1(chi1_min, chi1_max)
-    d.set_chi2(chi2_min, chi2_max)
-    d.set_lambda1(lambda1_min, lambda1_max)
-    d.set_lambda2(lambda2_min, lambda2_max)
-    cfgs = compute_corners_from_domain(d) # 2^5 = 32 corner points
-
     if opts['cfgfile']:
         print 'Loading configurations from textfile', cfgfile
         cfgs = np.loadtxt(cfgfile)
@@ -476,6 +465,17 @@ def main():
             +"(q, spin1z, spin2z, lambda1, lambda2)."%cfgfile)
         if np.min(cfgs.T[0]) > 1.0:
             raise ValueError("Expected in file %s mass-ratio <= 1"%cfgfile)
+    elif opts['corners']:
+        print 'Computing corners of specified 5D domain'
+        q_min, chi1_min, chi2_min, lambda1_min, lambda2_min = opts['params']['min_vals']
+        q_max, chi1_max, chi2_max, lambda1_max, lambda2_max = opts['params']['max_vals']    
+        d = domain()
+        d.set_q(q_min, q_max)
+        d.set_chi1(chi1_min, chi1_max)
+        d.set_chi2(chi2_min, chi2_max)
+        d.set_lambda1(lambda1_min, lambda1_max)
+        d.set_lambda2(lambda2_min, lambda2_max)
+        cfgs = compute_corners_from_domain(d) # 2^5 = 32 corner points
     else:
         print 'Using adhoc 1-parameter family for tests of smoothness'
         q = 0.6
