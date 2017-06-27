@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+########################## 2d error plots ##############################
 def max_error_2d_projection_plot(axes, x, y, error, threshold=None,
                                  x_label='x', y_label='y', colorbar=None, colorbarlabel='error'):
     """2d plot of the errors.
@@ -15,7 +16,7 @@ def max_error_2d_projection_plot(axes, x, y, error, threshold=None,
     # Sort errors so largest errors are plotted on top of smaller errors
     error_params = np.array([error, x, y]).T
     error_params_sort = error_params[error_params[:, 0].argsort()]
-    
+
     # Remove points below threshold
     if threshold!=None:
         ep = error_params_sort[error_params_sort[:, 0]>=threshold]
@@ -35,13 +36,13 @@ def max_error_2d_projection_plot(axes, x, y, error, threshold=None,
         cb = plt.colorbar(mappable=sc, ax=axes)
         cb.set_label(label=colorbarlabel, fontsize=18)
         cb.ax.tick_params(labelsize=14)
-    
+
     # buffers for plot
     xmin, xmax = x.min(), x.max()
     ymin, ymax = y.min(), y.max()
     bufx = 0.05*(xmax - xmin)
     bufy = 0.05*(ymax - ymin)
-    
+
     axes.set_xlim([xmin-bufx, xmax+bufx])
     axes.set_ylim([ymin-bufy, ymax+bufy])
     axes.set_xlabel(x_label)
@@ -91,3 +92,87 @@ def error_2d_triangle_plot(params, error, labels, threshold=None, figsize=(10, 1
     fig.subplots_adjust(hspace=0.0, wspace=0.0)
 
     return fig, ax
+
+#################### 1d cross section plots ###########################
+
+def plot_1d_amp_phase_variation(ax_amp, ax_phase, sur, params, xi, xlow, xhigh, nx, mfs, legend=True):
+    """Plot amplitude(1parameter) and phase(1parameter) as the single parameter is varied.
+    Do this for all the frequencies mfs.
+
+    Parameters
+    ----------
+    params : 1d array
+        Point in full parameter space where the 1d slice should pass through
+    xi : int
+        Index of the parameter you want to vary
+    xlow, xhigh, nx : bounds and number of samples for the feature
+    mfs : 1d array
+        Frequencies at which to plot the 1d variation.
+    """
+    xs = np.linspace(xlow, xhigh, nx)
+    ps = np.array([params for j in range(len(xs))])
+    for j in range(len(xs)):
+        ps[j, xi] = xs[j]
+
+    dhs = [sur.amp_phase_difference(p) for p in ps]
+
+    amp_list = []
+    phase_list = []
+    for i in range(len(dhs)):
+        amps = dhs[i].interpolate('amp')(mfs)
+        phases = dhs[i].interpolate('phase')(mfs)
+        amp_list.append(amps)
+        phase_list.append(phases)
+    amp_array = np.array(amp_list).T
+    phase_array = np.array(phase_list).T
+
+    for j in range(len(mfs)):
+        ax_amp.plot(xs, amp_array[j], label=mfs[j])
+
+    for j in range(len(mfs)):
+        ax_phase.plot(xs, phase_array[j])
+
+    if legend:
+        ax_amp.legend(ncol=2, frameon=False)
+
+
+def plot_all_1d_slices(sur, params, limits, labels, mfs, nx=20):
+    """Plot amplitude(1parameter) and phase(1parameter) as the single parameter is varied.
+    Repeat this for all parameters.
+
+    Parameters
+    ----------
+    params : 1d array
+        Point in full parameter space where the 1d slice should pass through
+    xi : int
+        Index of the parameter you want to vary
+    xlow, xhigh, nx : bounds and number of samples for the feature
+    mfs : 1d array
+        Frequencies at which to plot the 1d variation.
+    """
+    nparams = len(limits)
+    fig, ax = plt.subplots(2, nparams, figsize=(min(8*nparams, 20), 6))
+    title = '{:.3}, {:.2}, {:.2}, {:.1f}, {:.1f}'.format(params[0], params[1], params[2], params[3], params[4])
+    fig.suptitle(title)
+    for xi in range(nparams):
+        ax1 = ax[0, xi]
+        ax2 = ax[1, xi]
+        xlow = limits[xi, 0]
+        xhigh = limits[xi, 1]
+        if xi==0:
+            legend = True
+            ax1.set_ylabel(r'$\ln(A/A_{\rm F2})$')
+            ax2.set_ylabel(r'$\Phi-\Phi_{\rm F2}$')
+        else:
+            legend = False
+        plot_1d_amp_phase_variation(ax1, ax2, sur, params, xi, xlow, xhigh, nx, mfs, legend=legend)
+        ax1.minorticks_on()
+        ax2.minorticks_on()
+        ax1.xaxis.set_ticklabels([])
+        ax2.set_xlabel(labels[xi])
+        # Manually rotate every single label
+        for label in ax2.get_xticklabels():
+            label.set_rotation(45)
+    fig.subplots_adjust(hspace=0.0, wspace=0.25)
+
+    
