@@ -1,0 +1,13 @@
+{
+    "outdir": "/work/mpuer/projects/gpsurrogate/set1/40Hz/train_uncsamp/",
+    "domain": "TD",
+    "Total_mass_MSUN": 2.0,
+    "Sampling_rate_Hz": 16384.0,
+    "f_min": 40.0,
+    "iota": 0.0,
+    "distance_MPC": 1.0,
+    "random" : false,
+    "verbose": false,
+    "approximant": "TEOBv4",
+    "cfgfile": "/home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/uncsamp_from_lhd_trainset_5cols.txt"
+}
