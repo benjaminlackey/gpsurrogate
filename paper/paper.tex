@@ -114,6 +114,27 @@ $x_j^i$ (not bold) for feature $j$ of example $i$.}
 %% ________________________________________________________
 \section{Introduction}
 
+The inspiral and merger of binary neutron star (BNS) systems is one of the primary targets for second generation gravitational-wave (GW) detectors such as Advanced LIGO (aLIGO), Virgo, and KAGRA which are now making routine detections of binary black hole (BBH) systems or will begin in the next few years. Available rates estimates indicate that there should be 0.4--400 events per year when aLIGO reaches its design sensitivity [[cite]]. From the nondetection of BNS events in aLIGO's first observing run (O1) the 90\% upper limit is still consistent with the upper end of this range [[O1UpperLimits]]. However, continued nondetection will begin to narrow down this range.
+
+The primary quantities of interest for BNS merger observations are the sky position, masses, spins, and tidal parameters. These parameters are measured by matched-filtering of the GW data with waveform models, and require highly accurate waveform models to reliably measure the parameters with minimal systematic errors. [[Review of systematic error BNS papers...]] Previous work on estimating the tidal parameters, for example, has shown that even phase uncertainties of several radians, as is present in current 3.5-post-Newtonian waveform models, leads to systematic errors that are as large as the statistical errors [[cite]] and this also biases the recovered NS equation of state as well [[cite]]. Uncertainties in the PN waveform model also lead to significant biases in the recovered masses and spins as well [[cite]]. [[What about sky position? Does it matter?]]
+
+The effective one body (EOB) formalism and numerical relativity (NR) simulations, on the other hand, have shown significantly smaller uncertainties for BNS systems in their respective ranges of validity than PN waveforms. For the inspiral, EOB waveforms have total phase uncertainties of $\sim 1$~rad as compared to PN waveforms with phase uncertainties of $\sim 10$~rad as determined by the variation from freedom within each formalism [[explain better. show your plot for this.]]. NR simulations of BNS systems now claim phase errors of less than 1~rad during the last $\sim 10$ orbits through merger [[cite]]. 
+
+Unfortunately, available codes for generating EOB waveforms for BNS systems can take anywhere from 10 minutes to a day to evaluate for a single waveform with a starting GW frequency of 10Hz [[cite]].  
+
+These quantities are measured with Bayesian parameter estimation algorithms such as Markov-chain Monte Carlo and nested sampling.
+
+Previous work on surrogate models has focused mainly on compressing the waveform parameter space into a linear combination of a small number of basis functions using either greedy methods [[cite]] or singular value decomposition [[cite]]. Significantly less work has been performed on optimally sampling waveforms so that the coefficients of these linear combinations of waveforms can be chosen through fitting or interpolation with the fewest number of waveform evaluations. Standard techniques such as tensor spline or Chebyshev interpolation require waveforms evaluated on a rectangular grid, and this suffers from the curse of dimensionality; for $N$ points per dimension $d$,  $N^d$ waveforms are needed. For the 5-dimensional problem here, this is somewhat unfeasable. Recent work on optimally choosing waveforms for both EOB [[cite GPRpaper]] and NR [[cite CaltechPrecessing]] waveforms has shown that there are sufficiently accurate alternatives to grid-based interpolation that do not suffer from the curse of dimensionality.
+
+In this paper, we will develop methods to construct surrogate models from EOB and NR waveform codes that accurately reproduce waveforms from this high-dimensional parameter space, using as few waveform evaluations as possible. We will construct frequency-domain surrogates of the amplitude and phase.
+
+
+--Overview of what was done in nonspinning BNS surrogate paper, and the improvements used for constructing aligned-spin surrogate. 
+
+--Advantages of using frequency domain surrogate (and why you didn't use it in last paper).
+
+
+[[A notable effect that has not been included is the spin induced quadrupole moment of each NS.]] 
 
 
 We organize the paper as follows. In Section...

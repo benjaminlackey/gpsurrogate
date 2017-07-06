@@ -322,7 +322,7 @@ def fourier_transform_uniform_sampled_waveform(h):
 
 ##################### Functions for plotting waveforms ####################
 
-def plot_waveforms(waveforms, xi=-np.inf, xf=np.inf, npoints=1000, amp=True, hp=True, hc=False):
+def plot_waveforms(waveforms, xi=-np.inf, xf=np.inf, npoints=10000, amp=True, hp=True, hc=False):
     """
     """
     fig, axes = plt.subplots(1, figsize=(16, 3))
@@ -378,7 +378,7 @@ def plot_waveforms_fd(waveforms, exp=False):
     return fig, (ax1, ax2)
 
 
-def plot_waveforms_fd_resample(waveforms, xi=None, xf=None, npoints=1000, exp=False):
+def plot_waveforms_fd_resample(waveforms, xi=None, xf=None, npoints=10000, exp=False):
     """Plot amplitudes and phases of the waveforms.
     """
     fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(16, 6))
@@ -408,7 +408,7 @@ def plot_waveforms_fd_resample(waveforms, xi=None, xf=None, npoints=1000, exp=Fa
     return fig, (ax1, ax2)
 
 
-def plot_waveform_difference_fd(h1, h2, xi=None, xf=None, npoints=1000):
+def plot_waveform_difference_fd(h1, h2, xi=None, xf=None, npoints=10000):
     """Plots of A_1/A_2 - 1 and Phi_1 - Phi_2.
     """
     fig, (ax1, ax2) = plt.subplots(2, sharex=True, figsize=(16, 6))
