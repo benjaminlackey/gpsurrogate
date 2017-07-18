@@ -27,29 +27,7 @@ import romspline
 
 from tqdm import *
 
-# MP June 2017
-
-#------------------------------------------------------------------------------
-# Choices
-
-# Q: Andrea, do we want 'TEOBv2' or 'TEOBv4'? Both, but start with TEOBv4
-# Q: Is the head of TEOBBNS fine? Yes
-# Q: I get nans when calling SimUniversalRelationlambda3TidalVSlambda2Tidal and similar functions with lambda = 0; Andrea knows about this; needs to fix domain of validity of universal relations
-
-
-# Ben
-# Q: which distance, inclination do you want me to use?: d=1, iota=0
-# Q: which total mass do you want me to use? M=2Msun
-# Q: Do you want both hp, hc; since the wf is aligned, there is no need to store both.
-# Q: why is tstart needed? shouldn't we just align at the peak of h22?
-
-# Q: Is a common time grid needed? No
-
-# Could fix mass of smaller object to 1Msun and keep f_min_Hz fixed; this would mean that
-# the wf starts at a higher Mf and would require hybridization; this would be computationally cheaper
-# Ben would like to avoid this
-# So, for the time being I can just fix Mtot=2Msun and f_min_Hz=8Hz
-
+# MP 06-07, 2017
 
 #------------------------------------------------------------------------------
 def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
@@ -141,12 +119,9 @@ def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
     
     # Extract time array from lalsimulation's structures
     tstart = hp.epoch.gpsSeconds + hp.epoch.gpsNanoSeconds*1.0e-9 
-    # Q: why is this needed? shouldn't we just align at the peak?
     ts = tstart + hp.deltaT*np.arange(hp.data.length)
     
     return ts, hp.data.data, hc.data.data
-    #return wave.Waveform.from_hp_hc(ts, hp.data.data, hc.data.data)
-
 
 #------------------------------------------------------------------------------
 class domain:
@@ -262,6 +237,12 @@ def Generate_phase_grid(t, phi):
     # Compute time values from spline of original data
     t_grid = spline(phim[idx_ok], tm[idx_ok])(phase_grid)
 
+    # Add points beyond where ceased to be monotonic
+    if len(tm) < len(t):
+        idx_nm = np.where(t > tm[-1])[0]
+        t_grid = np.concatenate([t_grid, t[idx_nm]])
+        phase_grid = np.concatenate([phase_grid, -phi[idx_nm]])
+    
     return t_grid, phase_grid
 
 #------------------------------------------------------------------------------
