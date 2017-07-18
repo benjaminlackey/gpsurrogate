@@ -9,6 +9,8 @@
     "random" : false,
     "verbose": false,
     "approximant": "TEOBv4",
+    "cfgfile": "",
+    "corners": "",
 
     "params": {
         "min_vals": [1.0, -0.4, -0.4, 0.1, 0.1],
