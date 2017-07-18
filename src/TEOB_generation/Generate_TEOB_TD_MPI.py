@@ -246,6 +246,44 @@ def Generate_phase_grid(t, phi):
     return t_grid, phase_grid
 
 #------------------------------------------------------------------------------
+def Generate_phase_grid_extrapolate(t, phi):
+    """
+    Using raw time and phase data, construct a grid that has
+    a specific number of points per cycle.
+    """
+    # Make sure that the phase data is monotonically increasing
+    # This is required for the spline interpolation below
+    tm, phim = monotonically_increasing_timeseries(t, -phi)
+
+    i = 0
+    phi_max = max(phim)
+    phi_g = [phim[i]]
+
+    while phi_g[i] < phi_max:
+        p = pts_per_cycle_function(phi_g[i] - phi_max, n=1.0, a=10.0, sigma=0.01)
+        phi_new = phi_g[i] + 2*np.pi / p
+        phi_g.append(phi_new)
+        i += 1
+    phase_grid = np.array(phi_g[:-1])
+
+    # Remove points where the phase does not increase monotonically
+    idx_ok = np.where(np.diff(phim) > 0)
+
+    # Compute time values from spline of original data
+    t_grid = spline(phim[idx_ok], tm[idx_ok])(phase_grid)
+
+    # Add points beyond where phase ceased to be monotonic
+    if len(tm) < len(t):
+        # extrapolate phase
+        # cubic extrapolation is more accurate; linear extrapolation would be safer
+        phiI = spline(tm[idx_ok], phim[idx_ok], k=3, ext=0)
+        idx_nm = np.where(t > tm[-1])[0]
+        t_grid = np.concatenate([t_grid, t[idx_nm]])
+        phase_grid = np.concatenate([phase_grid, phiI(t[idx_nm])])
+    
+    return t_grid, phase_grid
+
+#------------------------------------------------------------------------------
 def time_grid_for_longest_waveform(Mtot, f_min, outfile, deg=3, abstol=5e-5):
     # Note: This function is no longer used
     # 1) this is very slow for long waveforms (O(day))
@@ -331,7 +369,7 @@ def TEOB_process_array_TD(i, M,
         ampI = ip.InterpolatedUnivariateSpline(t, amp, k=3, ext='zeros')
  
         # Compute phase grid with variable number of points per cycle
-        t_grid, phase_grid = Generate_phase_grid(t, phi)
+        t_grid, phase_grid = Generate_phase_grid_extrapolate(t, phi)
 
         # use only non-zero amplitude data for constructing spline
         idx = np.where(amp > 0.0)
