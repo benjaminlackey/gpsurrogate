@@ -149,18 +149,18 @@ References~\cite{Hinderer:2016eia,Steinhoff:2016rfi} built upon the aligned-spin
 \begin{equation}
 \Delta_u = \Delta_u^{\textrm{pm}} + \Delta_u^{\textrm{DT}}\,,
 \end{equation}
-where $\Delta_u^{\textrm{pm}}$ is the 4PN-accurate point-mass term of the underlying BBH EOB model of Ref.~\cite{Bohe:2016gbl} (see Eq.~(2.2) therein) and $\Delta_u^{\textrm{DT}}$ is the contribution due to dynamical tides. We consider the general case of a binary that may consist of two neutron stars; if either component of the binary is a black hole, then vanishing values of the tidal polarizabilities are employed in the formulas below. Let $A$ and $B$ be the body labels. Let $M^{A,B}$ be the mass of either body and $M=M^A+M^B$ be the total mass of the binary.  Explicitly, including quadrupolar and octupolar tidal effects, we have
+where $\Delta_u^{\textrm{pm}}$ is the 4PN-accurate point-mass term of the underlying BBH EOB model of Ref.~\cite{Bohe:2016gbl} (see Eq.~(2.2) therein) and $\Delta_u^{\textrm{DT}}$ is the contribution due to dynamical tides. We consider the general case of a binary that may consist of two neutron stars; if either component of the binary is a black hole, then vanishing values of the tidal polarizabilities are employed in the formulas below. Let $A$ and $B$ be the body labels. Let $M_{A,B}$ be the mass of either body and $M=M_A+M_B$ be the total mass of the binary.  Explicitly, including quadrupolar and octupolar tidal effects, we have
 \begin{widetext}
 \begin{align}
- \Delta_u^{\textrm{DT}} =&  - 3\,\Lambda_{2,\textrm{dyn}}^{A}(u)\,u^6\frac{X_B}{X_A} \left[ 1 + \frac{5}{2} X_Au + \left(3 + \frac{1}{8}X_A + \frac{337}{28} X_A^2\right)u^2 \right]\nonumber\\
- &- 15\,\Lambda_{3,\textrm{dyn}}^{A}(u)\,u^8 \frac{X_B}{X_A}\left[1 + \left(-2 + \frac{15}{2}X_A\right)u + \left(\frac{8}{3} - \frac{311}{24}X_A + \frac{110}{3}X_A^2\right) u^2\right] + (A \leftrightarrow B)\,,
+ \Delta_u^{\textrm{DT}} =&  - 3\,\Lambda_{2,\textrm{dyn}}^{A}(u)X_A^4 X_B\,u^6  \left[ 1 + \frac{5}{2} X_Au + \left(3 + \frac{1}{8}X_A + \frac{337}{28} X_A^2\right)u^2 \right]\nonumber\\
+ &- 15\,\Lambda_{3,\textrm{dyn}}^{A}(u)X_A^6X_B\,u^8 \left[1 + \left(-2 + \frac{15}{2}X_A\right)u + \left(\frac{8}{3} - \frac{311}{24}X_A + \frac{110}{3}X_A^2\right) u^2\right] + (A \leftrightarrow B)\,,
 \end{align}
 \end{widetext}
-where $X_{A,B}=M^{A,B}/M$, $u=1/r$ is the inverse of the ($M$-rescaled) EOB radial coordinate, $\Lambda_{2,\textrm{dyn}}^{A,B}(u)$ are the dimensionless quadrupolar dynamical tidal polarizabilities, and $\Lambda_{3,\textrm{dyn}}^{A,B}(u)$ are the dimensionless octupolar dynamical tidal polarizabilities. Within the dynamical tides model, the tidal polarizabilities are not constant, but rather depend on the orbital separation and on the values of the $f$-mode frequencies. In particular, the dimensionless dynamical polarizabilities read
+where $X_{A,B}=M_{A,B}/M$, $u=1/r$ is the inverse of the ($M$-rescaled) EOB radial coordinate, $\Lambda_{2,\textrm{dyn}}^{A,B}(u)$ are the dimensionless quadrupolar dynamical tidal polarizabilities, and $\Lambda_{3,\textrm{dyn}}^{A,B}(u)$ are the dimensionless octupolar dynamical tidal polarizabilities. Within the dynamical tides model, the tidal polarizabilities are not constant, but rather depend on the orbital separation and on the values of the $f$-mode frequencies. In particular, the dimensionless dynamical polarizabilities read
 \begin{equation}
-\Lambda_{\ell,\textrm{dyn}}^{A,B}(u)=\frac{2}{(2\ell-1)!!}k^{A,B}_{\ell}\hat{k}^{A,B}_{\ell\,\textrm{dyn}}(u;\omega_{0\ell}^{A,B})\left(\frac{R_{A,B}}{M}\right)^{2\ell+1}\,,
+\Lambda_{\ell,\textrm{dyn}}^{A,B}(u)=\frac{2}{(2\ell-1)!!}\frac{k^{A,B}_{\ell}}{C_{A,B}^{2\ell+1}}\hat{k}_{\ell\,\textrm{dyn}}(u;\omega_{0\ell}^{A,B})\,,
 \end{equation}
-where $k^{A,B}_{\ell}$ is the tidal Love number and $R_{A,B}$ is the neutron star radius. Here $\hat{k}^{A,B}_{\ell\,\textrm{dyn}}(u;\omega_{0\ell}^{A,B})$ is the separation-dependent, dimensionless enhancement factor given in Eq.~(11) of Ref.~\cite{Dietrich:2017feu}, which depends on the value of the $f$-mode angular frequency of the $2^\ell$-th multipole, $\omega_{0\ell}^{A,B}$. 
+where $k^{A,B}_{\ell}$ is the tidal Love number and $C_{A,B}=R_{A,B}/M_{A,B}$ is the neutron star compactness, with $R_{A,B}$ the neutron star radius. Here $\hat{k}_{\ell\,\textrm{dyn}}(u;\omega_{0\ell}^{A,B})$ is the separation-dependent, dimensionless enhancement factor given in Eq.~(11) of Ref.~\cite{Dietrich:2017feu}, which depends on the value of the $f$-mode $2^\ell$-pole angular frequency, $\omega_{0\ell}^{A,B}$. 
 
 Tidal effects also enter the dissipative part of the model. In particular, the point-mass $\ell=2,3$ inspiral-plunge waveform modes are corrected by tidal terms
 \begin{equation}
