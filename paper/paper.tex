@@ -182,10 +182,14 @@ h_{\ell m}^{\textrm{insp-plunge}} = h_{\ell m}^{\textrm{pm}} + h_{\ell m}^{\text
 \end{equation} 
 where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}. The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the GW flux (Eqs.~(5) and (6) in Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived.
 
-Let us now discuss the construction of the full waveform. The Hamiltonian equations of motion with the above radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics up to some end time $t=t_{\textrm{match}}^{22}$ that we now define. Let $t_{\textrm{peak}}^{\textrm{amp}}$ be the time when the amplitude of the $(\ell,m)=(2,2)$ mode $|h_{22}^{\textrm{insp-plunge}}|$ is maximum, and let $t_{\textrm{peak}}^{\textrm{freq}}$ be the time when the inspiral-plunge GW frequency $\omega_{22}^{\textrm{insp-plunge}}$ is maximum. We then choose the stopping condition to be the earliest of these two times,
+Let us now discuss the construction of the full waveform. The Hamiltonian equations of motion with the above radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a part in $10^7$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$.  
+
+Let $t_{\textrm{peak}}^{\textrm{amp}}$ be the earliest time when the amplitude of the $(\ell,m)=(2,2)$ mode $|h_{22}^{\textrm{insp-plunge}}|$ peaks, and let $t_{\textrm{peak}}^{\textrm{freq}}$ be the time when the inspiral-plunge GW frequency $\omega_{22}^{\textrm{insp-plunge}}$ is maximum. Then
 \begin{equation}
 t_{\textrm{match}}^{22} = \min \left(t_{\textrm{peak}}^{\textrm{amp}},t_{\textrm{peak}}^{\textrm{freq}}\right)\,.\label{tmatch}
 \end{equation}
+If $|h_{22}^{\textrm{insp-plunge}}|$  does not peak, then we choose $t_{\textrm{peak}}^{\textrm{amp}}$ to be the earliest time when $\partial_t |h_{22}^{\textrm{insp-plunge}}|$ reaches a minimum after having reached a peak.
+
 In the BBH model, nonquasicircular corrections to the inspiral-plunge signal guarantee that the waveform peaks at a prescribed time and has prescribed amplitude and frequency, hence $t_{\textrm{match}}^{22}=t_{\textrm{peak}}^{\textrm{amp}}$. Here, however, we do not impose such corrections because of limited input from NR BNS simulations, therefore we have little control over the behavior of Eq.~(\ref{hlminspplunge}) in the late inspiral. This motivates our choice of $t_{\textrm{match}}^{22}$ in Eq.~(\ref{tmatch}), with the goal of reducing to the BBH prescription in the non-tidal limit and avoiding non-monotonic growth of the GW frequency in the late inspiral. To help bracket the stopping time, we exploit a fit for the (2,2)-mode peak frequency of NR BNS simulations~\cite{Bernuzzi:2015rla} to estimate the final orbital frequency of the EOB inspiral-plunge dynamics. %When such frequency is being approached (to within some tolerance), we stop the numerical evolution if a peak in the orbital frequency is detected or if the binary stops to monotonically plunge, similarly to what is done in the BBH case. 
 In our model we only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
 
@@ -193,41 +197,47 @@ Ref.~\cite{Dietrich:2017feu} carried out comprehensive comparisons of this model
 
 \subsection{Post-merger waveform}
 
-We model the post-merger GW emission that tapers to zero amplitude in terms of analytic functions for the amplitude $A_{22}^{\textrm{post-mrg}}(t)$ and phase $\phi^{\textrm{post-mrg}}(t)$ such that $h_{22}^{\textrm{post-mrg}}(t) = A_{22}^{\textrm{post-mrg}}(t) \exp{[i\phi_{22}^{\textrm{post-mrg}}(t)]}$. For the amplitude, we use the merger-ringdown prescription of the underlying SEOBNRv4 BBH model~\cite{Bohe:2016gbl}. Explicitly,
-\begin{equation}
-A_{22}^{\textrm{post-mrg}}(t)=\nu \tilde{A}_{22}(t; \nu, S_1, S_2)e^{-(t-t^{22}_{\textrm{match}})/\tau_{220}}\,,
-\end{equation}
-where $\nu=M_A M_B/M^2$ is the symmetric mass ratio. $\tilde{A}_{22}(t; \nu, S_1, S_2)$ is the analytic function given in Ref.~\cite{Bohe:2016gbl} (Eq.~(2.12))
-\begin{equation}
-\tilde{A}_{22}(t; \nu, S_1, S_2) = c_1^2\tanh[c_1^f(t-t_{\textrm{match}}^{22})+c_2^f]+c_2^c.
-\end{equation}
-The coefficients $c_{1,2}^f=c_{1,2}^f(\nu, S_1, S_2)$ are given by the fitting functions Eqs.~(2.13) and~(2.14) of Ref.~\cite{Bohe:2016gbl}, and the coefficients $c_1^c$ and $c_2^c$ are fixed by requiring that the waveform amplitude be continuous and smooth at $t^{22}_{\textrm{match}}$. $\tau_{220}$ is the decay time of the least-damped quasinormal mode of the remnant BH that forms after the BBH merger, and is given in terms of the total mass and angular momentum of the system at $t^{22}_{\rm match}$ using the fitting formula Eq.~(E2) of Ref.~\cite{Berti:2005ys}.
-
-The phase is defined by requiring that the GW frequency have the constant value determined by the final inspiral frequency at $t_{\textrm{match}}^{22}$. Explicitly, this linear phase evolution reads
+We model the post-merger GW emission that tapers to zero amplitude in terms of analytic functions for the amplitude $A_{22}^{\textrm{post-mrg}}(t)$ and phase $\phi^{\textrm{post-mrg}}(t)$ such that $h_{22}^{\textrm{post-mrg}}(t) = A_{22}^{\textrm{post-mrg}}(t) \exp{[i\phi_{22}^{\textrm{post-mrg}}(t)]}$. For the amplitude, we define the following linear extension of the inspiral-plunge amplitude
 \begin{align}
-\phi_{22}^{\textrm{post-mrg}}(t)&=\omega_{22}^{\textrm{insp-plunge}}(t_{\textrm{match}}^{22})(t-t_{\textrm{match}}^{22})\nonumber\\
-&+\phi_{22}^{\textrm{inspiral-plunge}}(t_{\textrm{match}}^{22})\,
+\hat{A}(t)=\left\{\begin{array}{ll}
+|h_{22}^{\textrm{insp-plunge}}(t)|, & t \leq t^{22}_{\textrm{match}}\,, \\
+a + b (t-t^{22}_{\textrm{match}}) , & t > t^{22}_{\textrm{match}}\,,
+\end{array}\right.
 \end{align}
-where $\phi_{22}^{\textrm{inspiral-plunge}}$ is the phase of $h_{22}^{\textrm{insp-plunge}}$. 
+where $a=|h_{22}^{\textrm{insp-plunge}}(t^{22}_{\textrm{match}})|$ and $b=\partial_t |h_{22}^{\textrm{insp-plunge}}(t^{22}_{\textrm{match}})|$.
+Then we introduce the tapering function \begin{equation}
+W(t) = \frac{1}{1+\exp{[-(t- t^{22}_{\textrm{match}}-15M)/\tau]}}\,,
+\end{equation}
+with $\tau=\pi/(2\omega_{\textrm{match}})$ for $\omega_{\textrm{match}} =\omega_{22}^{\textrm{insp-plunge}}(t^{22}_{\textrm{insp-plunge}})$. The amplitude at all times is then given by $|h_{22}(t)|=\hat{A}(t)W(t)$.
 
-Although this post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. \red{[[Maybe we want plots of these two waveforms if there's enough space?]]} A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations. 
+Let $\phi_{22}^{\textrm{inspiral-plunge}}$ be the phase of $h_{22}^{\textrm{insp-plunge}}$. We define a time $t_{\textrm{freq}}=t^{22}_{\textrm{insp-plunge}}-20M$. The phase at all times is given by
+\begin{align}
+\phi_{22}(t)=\left\{\begin{array}{ll}
+\phi_{22}^{\textrm{inspiral-plunge}}(t), & t \leq t_{\textrm{freq}}\,, \\
+\phi_{\textrm{freq}} + \omega_{\textrm{match}}(t-t_{\textrm{freq}})  & \\
++\frac{\Delta\omega^2}{\dot{\omega}_{\textrm{freq}}} [\exp{(-\dot{\omega}_{\textrm{freq}}(t-t_{\textrm{freq}})/\Delta\omega)}-1]\,,& t > t_{\textrm{freq}}\,,
+\end{array}\right.
+\end{align}
+where $\phi_{\textrm{freq}}=_{22}^{\textrm{inspiral-plunge}}(t_{\textrm{freq}})$, $\Delta\omega=\omega_{\textrm{match}} - \omega_{\textrm{freq}}$, $\omega_{\textrm{freq}}=\omega_{22}^{\textrm{insp-plunge}}(t_{\textrm{freq}})$, and $\dot{\omega}_{\textrm{freq}}=\partial_t\omega_{22}^{\textrm{insp-plunge}}(t_{\textrm{freq}})$.
+
+Although this post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations.
 
 
 \subsection{Approximation of higher-order tidal effects}
 
-As described above, an aligned-spin EOB waveform with dynamical tides depends on 11 intrinsic parameters: the mass ratio $q=M_B/M_A\leq1$, the two dimensionless components of the spins along the Newtonian orbital angular momentum $-1 \leq S_{A,B} \leq 1$, the two adiabatic quadrupolar tidal polarizabilities $\Lambda_2^{A,B}$, the two adiabatic octupolar tidal polarizabilities $\Lambda_3^{A,B}$, and the four $\ell=2,3$ fundamental $f$-mode angular frequencies $\omega_{0\ell}^{A,B}$. To reduce the dimensionality of the intrinsic parameter space, we exploit nearly EOS-independent fits for the higher-order effects in terms of $\Lambda_2$ usually referred to as universal relations. In particular, Eq.~(60) of Ref.~\cite{Yagi:2013sva} provides a fit for $\Lambda_3$ as a function of $\Lambda_2$ with an accuracy of about 10\%, depending on the EOS. This relation has been fit for a sample of EOSs and for tidal parameters in the range $1 \leq \Lambda_2\leq10^6$. This formula, however, diverges at small values of $\Lambda_2$, so we replace it with a polynomial function that vanishes at $\Lambda_2 = 0$. We require this extension to be continuous and smooth at $\Lambda_2 = 10^{-2}$, and to fit the universal relation in the range $10^{-5}\leq\Lambda_2\leq10^{-2}$. The exact relation we use is
+As described above, an aligned-spin EOB waveform with dynamical tides depends on 11 intrinsic parameters: the mass ratio $q=M_B/M_A\leq1$, the two dimensionless components of the spins along the Newtonian orbital angular momentum $-1 \leq S_{A,B} \leq 1$, the two adiabatic quadrupolar tidal polarizabilities $\Lambda_2^{A,B}$, the two adiabatic octupolar tidal polarizabilities $\Lambda_3^{A,B}$, and the four $\ell=2,3$ fundamental $f$-mode angular frequencies $\omega_{0\ell}^{A,B}$. To reduce the dimensionality of the intrinsic parameter space, we exploit nearly EOS-independent fits for the higher-order effects in terms of $\Lambda_2$ usually referred to as universal relations. In particular, Eq.~(60) of Ref.~\cite{Yagi:2013sva} provides a fit for $\Lambda_3$ as a function of $\Lambda_2$ with an accuracy of about 10\%, depending on the EOS. This relation has been fit for a sample of EOSs and for tidal parameters in the range $1 \leq \Lambda_2\leq10^6$. This formula, however, diverges at small values of $\Lambda_2$, so we replace it with a polynomial function that vanishes at $\Lambda_2 = 0$. We require this extension to be continuous at $\Lambda_2 = 10^{-2}$, and to fit the universal relation in the range $10^{-5}\leq\Lambda_2\leq10^{-2}$. The exact relation we use is
 \begin{equation}
 \Lambda_3 = \left\{\begin{array}{ll}
 \Lambda_2 (f + g \Lambda_2 + h \Lambda_2^2)\, , & 0 \leq \Lambda_2 \leq 10^{-2} \\
 e^{a + b \xi + c \xi^2 + d \xi^3 + e \xi^4}\, , & \Lambda_2>10^{-2}
 \end{array}\right.,
 \end{equation}
-where $\xi = \ln\Lambda_2$, $\{a, b, c, d, e\} = \{-1.15, 1.18, 2.51\times 10^{-2}, -1.31\times 10^{-3}, 2.52\times 10^{-5}\}$ from Ref.~\cite{Yagi:2013sva}, and $\{f, g, h\}=\{0.441, -34.6, 1760\}$.
+where $\xi = \ln\Lambda_2$, $\{a, b, c, d, e\} = \{-1.15, 1.18, 2.51\times 10^{-2}, -1.31\times 10^{-3}, 2.52\times 10^{-5}\}$ from Ref.~\cite{Yagi:2013sva}, and $\{f, g, h\}=\{0.4406491912035266, -34.63232296075433,1762.112913125107\}$.
 
-Eq. (3.5) of Ref.~\cite{Chan:2014kua} gives relations for $\omega_{02}$ as a function of $\Lambda_2$ and $\omega_{03}$ as a function of $\Lambda_3$ to within a few percent error. For $\omega_{02}$, the fitting range used by Ref.~\cite{Chan:2014kua} was $1\leq \xi \leq 9$, and outside this range we require continuity. The relation we use is then
+Eq. (3.5) of Ref.~\cite{Chan:2014kua} gives relations for $\omega_{02}$ as a function of $\Lambda_2$ and $\omega_{03}$ as a function of $\Lambda_3$ to within a few percent error. For $\omega_{02}$, the fitting range used by Ref.~\cite{Chan:2014kua} was $0\leq \xi \leq 9$, and outside this range we require continuity. The relation we use is then
 \begin{equation}
 \omega_{02} = \left\{\begin{array}{ll}
-f\, , & \xi < 1 \\
+f\, , & \xi < 0 \\
 a + b\xi + c\xi^2 + d\xi^3 + e\xi^4\, , & 1 \le \xi \le 9 \\
 g\, , & \xi > 9
 \end{array}\right.,
