@@ -3,6 +3,7 @@ import h5py
 
 import scipy.interpolate as interpolate
 import scipy.optimize as optimize
+import scipy.stats as stats
 
 import waveform as wave
 import waveformset as ws
@@ -153,97 +154,6 @@ class ConditionedWaveform(object):
         return h_ref, dh
 
 
-# def condition_eob_waveform(
-#     h, params, delta_t,
-#     winon_i, winon_f,
-#     n_ext,
-#     trunc_i, trunc_f, npoints=10000,
-#     win='planck', plots=False):
-#     """Generate a conditioned Frequency-domain waveform from an EOB waveform with arbitrary time samples.
-#     0. Resample the waveform.
-#     1. Window the beginning and end.
-#     2. Pad the end with zeros so all the waveforms in the training set have the exact same time samples.
-#     3. Fourier transform the waveform.
-#     4. Time shift waveform so t=0 corresponds to maximum amplitude.
-#     5. Resample the waveform, truncating the beginning and end to remove the windowing effect.
-#
-#     Parameters
-#     ----------
-#     h : Waveform
-#         Uniformly sampled waveform.
-#     winon_i : Initial frequency of on window.
-#     winon_f : Final frequency of on window.
-#     winoff_i : Initial frequency of off window.
-#     winoff_f : Final frequency of off window. Should be less than the ending frequency of the waveform h.
-#     n_ext : int
-#         Number of samples for the extended (padded) waveform.
-#         All training set waveforms should have the same time samples.
-#         A power of 2 will make the Fourier transform efficient.
-#         If the phase of the Fourier-transformed waveform doesn't look correctly unwrapped,
-#         increase n_ext so that delta_f will be smaller.
-#     trunc_i : Initial frequency of the truncated waveform after Fourier transforming.
-#     trunc_f : Final frequency of the truncated waveform after Fourier transforming.
-#     npoints : int
-#         number of logarithmically-spaced samples for the final conditioned waveform.
-#     win : 'hann' or 'planck'
-#         Type of window to use.
-#
-#     Returns
-#     -------
-#     h_tilde : Waveform
-#         The conditioned, Fourier-transformed, and resampled waveform.
-#     """
-#     condition = ConditionedWaveform(h)
-#
-#     # 0. Resample the waveform
-#     condition.resample_uniform(delta_t)
-#
-#     # 1. Window the waveform
-#     condition.window_freq_on(winon_i, winon_f, win=win)
-#     #condition.window_freq_off(winoff_i, winoff_f, win=win)
-#     if plots:
-#         #wave.plot_waveforms([condition.h], npoints=100000)
-#         #wave.plot_waveforms([condition.h], xi=h.x[-1]-1000, npoints=10000)
-#         fig, ax = wave.plot_waveforms([condition.h], hc=True, xi=h.x[-1]-1000, npoints=10000)
-#         title = '{:.3}, {:.3}, {:.3}, {:.1f}, {:.1f}'.format(params[0], params[1], params[2], params[3], params[4])
-#         ax.set_title(title)
-#         ax.minorticks_on()
-#
-#     # 2. Extend the waveform
-#     condition.extend_with_zeros(n_ext)
-#     #wave.plot_waveforms([condition.h], npoints=100000)
-#
-#     # 3. Fourier transform
-#     condition.fourier_transform()
-#
-#     # 4. Time shift to set the time of maximum amplitude to t=0.
-#     condition.zero_coalescence_time_in_frequency_domain(max_amp=True)
-#     #condition.zero_coalescence_time_in_frequency_domain(f_coalescence=0.01)
-#
-#     # 5. Resample and truncate waveform
-#     condition.log_spaced_in_frequency_domain(trunc_i, trunc_f, npoints=npoints)
-#
-#     # Zero the start phase of the truncated waveform
-#     condition.h.add_phase(remove_start_phase=True)
-#     hcond = condition.h
-#
-#     # Compare with TaylorF2
-#     hf2, dh = condition.difference_with_taylorf2(params)
-#
-#     if plots:
-#         fig, (ax1, ax2) = wave.plot_waveforms_fd([dh])
-#         ax1.set_ylabel(r'$\ln(A/A_{\rm F2})$')
-#         ax2.set_ylabel(r'$\Phi-\Phi_{\rm F2}$')
-#         ax2.set_xlabel(r'$Mf$')
-#         ax1.minorticks_on()
-#         ax2.minorticks_on()
-#         ax1.grid(which='both')
-#         ax2.grid(which='both')
-#         ax1.set_ylim(-6., 0.5)
-#
-#     return hcond, hf2, dh
-
-
 def moving_average_geometric_range(fs, ys, dfbyf):
     """Moving average of ys with corresponding frequencies fs.
     Average at f is taken over the geometric range [f(1-dfbyf), f(1+dfbyf)].
@@ -283,10 +193,26 @@ def difference_with_taylorf2(h, params):
     return h_ref, dh
 
 
+def subtract_linear_fit(dh, fi, ff):
+    """Subtract a linear fit from the waveform phase.
+    Line is fit in the interval (fi, ff).
+    """
+    # Indices for interval (fi, ff)
+    fit_i = np.where((dh.x>=fi) & (dh.x<=ff))
+    freq = dh.x[fit_i]
+    dphase = dh.phase[fit_i]
+    # Fit line
+    slope, intercept, r_value, p_value, std_err = stats.linregress(freq, dphase)
+    # Equation for line for all frequencies in dh
+    y_fit = intercept + slope*dh.x
+    # Subtract the fit
+    dh.phase -= y_fit
+
+
 def condition_eob_waveform(
-    h, params, delta_t,
+    h, params, delta_t, n_ext,
     winon_i, winon_f,
-    n_ext,
+    fit_i, fit_f,
     trunc_i, trunc_f, npoints=10000,
     win='planck',
     filter_dfbyf_amp=None, filter_dfbyf_phase=None,
@@ -307,16 +233,16 @@ def condition_eob_waveform(
         Uniformly sampled waveform.
     winon_i : Initial frequency of on window.
     winon_f : Final frequency of on window.
-    winoff_i : Initial frequency of off window.
-    winoff_f : Final frequency of off window. Should be less than the ending frequency of the waveform h.
+    fit_i : Initial frequency for fitting \Delta\Phi to straight line.
+    fit_f : Final frequency for fitting \Delta\Phi to straight line.
+    trunc_i : Initial frequency of the truncated waveform after Fourier transforming.
+    trunc_f : Final frequency of the truncated waveform after Fourier transforming.
     n_ext : int
         Number of samples for the extended (padded) waveform.
         All training set waveforms should have the same time samples.
         A power of 2 will make the Fourier transform efficient.
         If the phase of the Fourier-transformed waveform doesn't look correctly unwrapped,
         increase n_ext so that delta_f will be smaller.
-    trunc_i : Initial frequency of the truncated waveform after Fourier transforming.
-    trunc_f : Final frequency of the truncated waveform after Fourier transforming.
     npoints : int
         number of logarithmically-spaced samples for the final conditioned waveform.
     win : 'hann' or 'planck'
@@ -348,10 +274,6 @@ def condition_eob_waveform(
     # Fourier transform
     condition.fourier_transform()
 
-    # Time shift to set the time of maximum amplitude to t=0.
-    condition.zero_coalescence_time_in_frequency_domain(max_amp=True)
-    #condition.zero_coalescence_time_in_frequency_domain(f_coalescence=0.01)
-
     # Resample Fourier transformed waveform with log-spacing to compress it.
     # Start at winon_i instead of 0 since you can't take the log of 0.
     htilde = condition.h
@@ -359,6 +281,9 @@ def condition_eob_waveform(
 
     # Compare with TaylorF2.
     hf2, dh = difference_with_taylorf2(htilde, params)
+
+    # Match start with TaylorF2
+    subtract_linear_fit(dh, fit_i, fit_f)
 
     # Filter dh with moving average.
     # Use different window widths for amplitude and phase.
@@ -372,18 +297,12 @@ def condition_eob_waveform(
         phase_filt = dh.phase
     dh_filt = wave.Waveform.from_amp_phase(dh.x, amp_filt, phase_filt)
 
-    # Resample and truncate dh_filt
+    # Resample and truncate dh_filt then zero starting phase
     wave.resample_uniform(dh_filt, xi=trunc_i, xf=trunc_f, npoints=npoints, spacing='log', order=2)
+    dh_filt.phase -= dh_filt.phase[0]
+    # Resample TaylorF2
     wave.resample_uniform(hf2, xi=trunc_i, xf=trunc_f, npoints=npoints, spacing='log', order=2)
-    #wave.resample_uniform(htilde, xi=trunc_i, xf=trunc_f, npoints=npoints, spacing='log', order=2)
-
-    # Zero the start phase of the truncated waveform
-    dh_filt.add_phase(remove_start_phase=True)
-    hf2.add_phase(remove_start_phase=True)
-    #htilde.add_phase(remove_start_phase=True)
-
-    # The filtered h.
-    # Reconstruct this from hf2 and the filtered dh.
+    # Reconstruct h from hf2 and the filtered dh.
     h_filt = wave.Waveform.from_amp_phase(dh_filt.x, hf2.amp*np.exp(dh_filt.amp), dh_filt.phase+hf2.phase)
 
     if plots:
@@ -491,14 +410,13 @@ def condition_eob_training_set(
 
 def condition_eob_training_set_from_list(
     h_list, params, h_filename, dh_filename,
-    delta_t,
+    delta_t, n_ext,
     winon_i, winon_f,
-    n_ext,
+    fit_i, fit_f,
     trunc_i, trunc_f, npoints=10000,
     win='planck',
     filter_dfbyf_amp=None, filter_dfbyf_phase=None,
-    plots=False,
-    mtot=2.0, distance=1.0):
+    plots=False):
     """Make a conditioned WaveformSet with waveforms from h_list, params.
     """
     # WaveformSet objects for conditioned waveforms
@@ -510,21 +428,15 @@ def condition_eob_training_set_from_list(
         print i,
         h = h_list[i]
         p = params[i]
-        # h_cond, hf2, dh = condition_eob_waveform(
-        #     h, p, delta_t,
-        #     winon_i, winon_f,
-        #     n_ext,
-        #     trunc_i, trunc_f, npoints=npoints,
-        #     win=win, plots=plots)
         h_cond, hf2, dh = condition_eob_waveform(
-            h, p, delta_t,
+            h, p, delta_t, n_ext,
             winon_i, winon_f,
-            n_ext,
+            fit_i, fit_f,
             trunc_i, trunc_f, npoints=npoints,
             win=win,
             filter_dfbyf_amp=filter_dfbyf_amp,
             filter_dfbyf_phase=filter_dfbyf_phase,
-            plots=False)
+            plots=plots)
 
         h_ts.set_waveform(i, h_cond, p)
         dh_ts.set_waveform(i, dh, p)
