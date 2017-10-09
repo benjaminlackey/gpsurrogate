@@ -318,6 +318,7 @@ def TEOB_process_array_TD(i, M,
             q, chi1, chi2, lambda1, lambda2,
             f_min, iota, outdir, comm,
             fs, distance, approximant='TEOBv4',
+            use_Nyquist_grid_near_merger=True,
             allow_skip=True, verbose=True):
     '''
     Helper function for workers
@@ -358,9 +359,26 @@ def TEOB_process_array_TD(i, M,
         ampI = spline(t[idx], amp[idx], k=3, ext='zeros')
         amp_on_grid = ampI(t_grid)
 
-        # Save waveform quantities
-        data_save = np.array([t_grid, phase_grid, amp_on_grid])
-        np.save(outdir+config_str, data_save)
+        if use_Nyquist_grid_near_merger:
+            t_trans = -1000.0 * M_sec
+            # Take t_grid grid data up until t_trans
+            idx_sparse = np.where(t_grid < t_trans)
+            # Take Nyquist grid from t_trans onwards
+            idx_dense = np.where(t >= t_trans)
+
+            # Combine the sparse inspiral grid with the Nyquist grid
+            t_glued = np.concatenate([t_grid[idx_sparse], t[idx_dense]])
+            amp_glued = np.concatenate([amp_on_grid[idx_sparse], amp[idx_dense]])
+            phi_glued = np.concatenate([phase_grid[idx_sparse], -phi[idx_dense]])
+
+            # Save waveform quantities
+            data_save = np.array([t_glued, phi_glued, amp_glued])
+            np.save(outdir+config_str, data_save)
+        else:
+            # Save waveform quantities
+            data_save = np.array([t_grid, phase_grid, amp_on_grid])
+            np.save(outdir+config_str, data_save)
+
         # Save raw data for debugging
         config_str_raw = 'TEOB_TD_%d_raw.npy'%i
         data_save_raw = np.array([t, phi, amp])
