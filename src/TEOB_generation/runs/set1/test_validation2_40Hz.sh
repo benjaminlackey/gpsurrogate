@@ -10,5 +10,5 @@ CFG=${RDIR}/test_validation2_40Hz.json
 LOG=${RDIR}/test_validation2_40Hz.log
 
 cd ${SDIR}
-mpirun -n 36 Generate_TEOB_TD_MPI.py -o ${CFG} > ${LOG} 2>&1 &
+mpirun -n 24 Generate_TEOB_TD_MPI.py -o ${CFG} > ${LOG} 2>&1 &
 

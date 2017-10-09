@@ -68,34 +68,11 @@ def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
         raise Exception, "Approximant must be 'TEOBv2' or 'TEOBv4'."
     lal_approx = LS.GetApproximantFromString(approximant)
     
-    
-    # Calculate higher order matter effects from universal relations
-    # lambda3 given in terms of lambda2
-    #lambda31_ur = LS.SimUniversalRelationlambda3TidalVSlambda2Tidal(lambda1)
-    #lambda32_ur = LS.SimUniversalRelationlambda3TidalVSlambda2Tidal(lambda2)
-    # Omega2 given in terms of lambda2
-    #omega21_ur = LS.SimUniversalRelationomega02TidalVSlambda2Tidal(lambda1)
-    #omega22_ur = LS.SimUniversalRelationomega02TidalVSlambda2Tidal(lambda2)
-    # Omega3 given in terms of lambda3 (not lambda2)
-    #omega31_ur = LS.SimUniversalRelationomega03TidalVSlambda3Tidal(lambda31_ur)
-    #omega32_ur = LS.SimUniversalRelationomega03TidalVSlambda3Tidal(lambda32_ur)
-
-    # print 'Terms calculated from universal relations'
-    # print lambda31_ur, lambda32_ur
-    # print omega21_ur, omega22_ur
-    # print omega31_ur, omega32_ur
-
     # Insert matter parameters
     lal_params = lal.CreateDict()
     LS.SimInspiralWaveformParamsInsertTidalLambda1(lal_params, lambda1)
     LS.SimInspiralWaveformParamsInsertTidalLambda2(lal_params, lambda2)
-    #LS.SimInspiralWaveformParamsInsertTidalOctupolarLambda1(lal_params, lambda31_ur)
-    #LS.SimInspiralWaveformParamsInsertTidalOctupolarLambda2(lal_params, lambda32_ur)
-    #LS.SimInspiralWaveformParamsInsertTidalQuadrupolarFMode1(lal_params, omega21_ur)
-    #LS.SimInspiralWaveformParamsInsertTidalQuadrupolarFMode2(lal_params, omega22_ur)
-    #LS.SimInspiralWaveformParamsInsertTidalOctupolarFMode1(lal_params, omega31_ur)
-    #LS.SimInspiralWaveformParamsInsertTidalOctupolarFMode2(lal_params, omega32_ur)
-    
+   
     if verbose:
         ap = LS.GetStringFromApproximant(lal_approx)
         L2A = LS.SimInspiralWaveformParamsLookupTidalLambda1(lal_params)
