@@ -360,6 +360,7 @@ def TEOB_process_array_TD(i, M,
         amp_on_grid = ampI(t_grid)
 
         if use_Nyquist_grid_near_merger:
+            M_sec = M*lal.MTSUN_SI
             t_trans = -1000.0 * M_sec
             # Take t_grid grid data up until t_trans
             idx_sparse = np.where(t_grid < t_trans)
