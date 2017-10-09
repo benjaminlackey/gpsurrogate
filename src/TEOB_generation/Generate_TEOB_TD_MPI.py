@@ -2,6 +2,11 @@
 
 # coding: utf-8
 
+# Hack so we doo not pick up lal packages in /usr/lib/python2.7/dist-packages
+import sys
+sys.path.insert(0, '/home/mpuer/lsc/TEOBBNS/lib/python2.7/site-packages')
+sys.path.insert(1, '/home/mpuer/.local/lib/python2.7/site-packages/')
+
 import lal
 import lalsimulation as LS
 
@@ -66,14 +71,14 @@ def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
     
     # Calculate higher order matter effects from universal relations
     # lambda3 given in terms of lambda2
-    lambda31_ur = LS.SimUniversalRelationlambda3TidalVSlambda2Tidal(lambda1)
-    lambda32_ur = LS.SimUniversalRelationlambda3TidalVSlambda2Tidal(lambda2)
+    #lambda31_ur = LS.SimUniversalRelationlambda3TidalVSlambda2Tidal(lambda1)
+    #lambda32_ur = LS.SimUniversalRelationlambda3TidalVSlambda2Tidal(lambda2)
     # Omega2 given in terms of lambda2
-    omega21_ur = LS.SimUniversalRelationomega02TidalVSlambda2Tidal(lambda1)
-    omega22_ur = LS.SimUniversalRelationomega02TidalVSlambda2Tidal(lambda2)
+    #omega21_ur = LS.SimUniversalRelationomega02TidalVSlambda2Tidal(lambda1)
+    #omega22_ur = LS.SimUniversalRelationomega02TidalVSlambda2Tidal(lambda2)
     # Omega3 given in terms of lambda3 (not lambda2)
-    omega31_ur = LS.SimUniversalRelationomega03TidalVSlambda3Tidal(lambda31_ur)
-    omega32_ur = LS.SimUniversalRelationomega03TidalVSlambda3Tidal(lambda32_ur)
+    #omega31_ur = LS.SimUniversalRelationomega03TidalVSlambda3Tidal(lambda31_ur)
+    #omega32_ur = LS.SimUniversalRelationomega03TidalVSlambda3Tidal(lambda32_ur)
 
     # print 'Terms calculated from universal relations'
     # print lambda31_ur, lambda32_ur
