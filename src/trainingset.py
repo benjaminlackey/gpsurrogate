@@ -83,6 +83,39 @@ def lnamp_phase_difference(h1, h2, npoints=1000, spacing='linear', order=2):
     return wave.Waveform.from_amp_phase(xs, dlnamp, dphase)
 
 
+def fracamp_phase_difference(h1, h2, npoints=1000, spacing='linear', order=2):
+    """Evaluate A_1(x)/A_2(x)-1 and Phi_1(x)-Phi_2(x).
+
+    Parameters
+    ----------
+    h1, h2 : Waveform
+    npoints : int, optional
+        Number of evenly spaced points at which to evaluate phase difference
+
+    Returns
+    -------
+    Waveform
+    """
+    # Bounds [xi, xf] are the minimum and maximum values of x the two waveforms have in common.
+    xi = max(h1.x[0], h2.x[0])
+    xf = min(h1.x[-1], h2.x[-1])
+    if spacing == 'linear':
+        xs = np.linspace(xi, xf, npoints)
+    elif spacing == 'log':
+        xs = np.logspace(np.log10(xi), np.log10(xf), npoints)
+    else:
+        raise Exception, "Valid 'spacing' options: 'linear', 'log'."
+
+    h1amp = h1.interpolate('amp', order=order)(xs)
+    h2amp = h2.interpolate('amp', order=order)(xs)
+    h1phase = h1.interpolate('phase', order=order)(xs)
+    h2phase = h2.interpolate('phase', order=order)(xs)
+
+    fracamp = h1amp/h2amp - 1.
+    dphase = h1phase - h2phase
+    return wave.Waveform.from_amp_phase(xs, fracamp, dphase)
+
+
 def condition_waveform(h,
                        winon_i, winon_f, winoff_i, winoff_f,
                        n_ext,

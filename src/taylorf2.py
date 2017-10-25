@@ -113,6 +113,27 @@ def taylorf2_amp(mf, eta):
     return 2.0*a00 * x**(-7./4.)
 
 
+def taylorf2_amp_1pn(mf, eta):
+    """1PN point-particle amplitude. where h(f) = h_+(f) + i h_x(f).
+    Expression from Eq. (6.10) of arXiv:0810.5336.
+    !!! This is technically wrong since you have a x**2 term (need to re-expand). !!!
+
+    Parameters
+    ----------
+    mf : numpy array or float
+        Geometric frequency. Most efficient when mf is a numpy array.
+
+    Returns
+    -------
+    amp : numpy array or float
+        Amplitude of h(f) = h_+(f) + i h_x(f) in geometric units.
+    """
+    x = (np.pi*mf)**(2.0/3.0)
+    a00 = np.sqrt( (5.0*np.pi/24.0)*eta )
+    a10 = -323./224. + 451.*eta/168.
+    return 2.0*a00 * x**(-7./4.) * (1. + a10*x)
+
+
 def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2):
     """3.5PN point-particle phase.
     FFT sign convention is $\tilde h(f) = \int h(t) e^{-2 \pi i f t} dt$
@@ -223,6 +244,8 @@ def dimensionless_taylorf2_waveform(
     tbymc = 0.
     phic = 0.
     eta = q/(1.+q)**2
-    amp = taylorf2_amp(mf, eta)
+    #amp = taylorf2_amp(mf, eta)
+    # Use the 1pn amplitude
+    amp = taylorf2_amp_1pn(mf, eta)
     phase = taylorf2_phase(mf, tbymc, phic, eta, spin1z, spin2z, lambda1, lambda2)
     return wave.Waveform.from_amp_phase(mf, amp, phase)

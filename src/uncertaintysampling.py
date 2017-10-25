@@ -79,11 +79,14 @@ def find_minimum(func, limits, nbasinjumps=20, nfun_eval_per_basin=15):
     return x_min, f_min, np.array(points), func_scaled.i
 
 
-def rms_phase_error(point, sigma_dphase_gp_list):
+def rms_phase_error(point, sigma_dphase_gp_list, nmax=None):
     """Objective function to *MAXIMIZE* when searching for new training set points.
     This is the root-mean-squared error estimate of the phase at the empirical nodes F^phi_j.
     """
-    nphase = len(sigma_dphase_gp_list)
+    if nmax is not None:
+        nphase = nmax
+    else:
+        nphase = len(sigma_dphase_gp_list)
 
     # Calculate waveform at nodes
     sigma_dphase = np.array([sigma_dphase_gp_list[j].predict(np.atleast_2d(point), return_std=True)[1][0]
@@ -96,13 +99,14 @@ def rms_phase_error(point, sigma_dphase_gp_list):
 
 class UncertaintySampling(object):
 
-    def __init__(self, original_points, limits, kernel_type, dphase_gp_list):
+    def __init__(self, original_points, limits, kernel_type, dphase_gp_list, nmax=None):
         # Quantities that don't change
         self.original_points = original_points
         self.limits = limits
         self.kernel_type = kernel_type
         self.original_dphase_gp_list = dphase_gp_list
         self.nphase = len(self.original_dphase_gp_list)
+        self.nmax = nmax
 
         # Quantities that change
         self.sigma_dphase_list = None
@@ -133,7 +137,7 @@ class UncertaintySampling(object):
     def negative_error(self, params):
         """The function you want to minimize.
         """
-        neg_err = -rms_phase_error(params, self.sigma_dphase_list)
+        neg_err = -rms_phase_error(params, self.sigma_dphase_list, nmax=self.nmax)
         return neg_err
 
     def maximize_error(self, nbasinjumps=20, nfun_eval_per_basin=15, verbose=True):
@@ -159,7 +163,7 @@ class UncertaintySampling(object):
         """Add a new point at the maximum value of the error function.
         """
         for i in range(npoints):
-            print i, 
+            print i,
             self.update_uncertainties()
             point_new, err_new = self.maximize_error(**kwargs)
 

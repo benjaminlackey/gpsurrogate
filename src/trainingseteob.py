@@ -154,24 +154,51 @@ class ConditionedWaveform(object):
         return h_ref, dh
 
 
-def moving_average_geometric_range(fs, ys, dfbyf):
-    """Moving average of ys with corresponding frequencies fs.
-    Average at f is taken over the geometric range [f(1-dfbyf), f(1+dfbyf)].
-    For example, dfbyf=0.1 corresponds to +/- 10% frequency interval.
+def moving_average_geometric_range(fs, ys, dfbyf, fbound_low=None, fbound_high=None):
+    """Calculate the moving averague of ys with corresponding frequencies fs.
+
+    Parameters
+    ----------
+    fs : 1d-array
+        Frequencies
+    ys : 1d-array
+        Function values
+    dfbyf : float
+        Average at f is taken over the geometric range [f(1-dfbyf), f(1+dfbyf)].
+        For example, dfbyf=0.1 corresponds to +/- 10% frequency interval.
+    fbound_low : {float, None}
+        Minimum bound for the averaging window.
+    fbound_high : {float, None}
+        Maximum bound for the averaging window.
+
+    Returns
+    -------
+    ymovavg : 1d-array
+        Moving average of ys.
     """
     if len(fs)!=len(ys):
         raise Exception, 'fs and ys must be numpy arrays with same length.'
+
+    if fbound_low is None:
+        fbound_low = fs[0]
+
+    if fbound_high is None:
+        fbound_high = fs[-1]
 
     ymovavg = np.zeros(len(fs))
     for i in range(len(fs)):
         f = fs[i]
         flow_try = (1.0-dfbyf)*f
         fhigh_try = (1.0+dfbyf)*f
-        # Adjust interval so you don't go outside the bounds.
-        flow = max(fs[0], flow_try)
-        fhigh = min(fs[-1], fhigh_try)
+        # Adjust interval so you don't go outside the bounds [fbound_low, fbound_high].
+        flow = max(fbound_low, flow_try)
+        fhigh = min(fbound_high, fhigh_try)
         # Select subset of ys samples in frequency range.
         ysubset = ys[(fs >= flow) & (fs <= fhigh)]
+        # It's possible well outside [fbound_low, fbound_high] for the averaging
+        # window to be empty, so don't do windowing here.
+        if len(ysubset)==0:
+            ysubset = ys[i]
         yavg = np.mean(ysubset)
         ymovavg[i] = yavg
     return ymovavg
@@ -288,20 +315,31 @@ def condition_eob_waveform(
     # Filter dh with moving average.
     # Use different window widths for amplitude and phase.
     if filter_dfbyf_amp is not None:
-        amp_filt = moving_average_geometric_range(dh.x, dh.amp, filter_dfbyf_amp)
+        amp_filt = moving_average_geometric_range(
+            dh.x, dh.amp, filter_dfbyf_amp,
+            fbound_low=trunc_i, fbound_high=None)
     else:
         amp_filt = dh.amp
     if filter_dfbyf_phase is not None:
-        phase_filt = moving_average_geometric_range(dh.x, dh.phase, filter_dfbyf_phase)
+        phase_filt = moving_average_geometric_range(
+            dh.x, dh.phase, filter_dfbyf_phase,
+            fbound_low=trunc_i, fbound_high=None)
     else:
         phase_filt = dh.phase
     dh_filt = wave.Waveform.from_amp_phase(dh.x, amp_filt, phase_filt)
+    # Match start with TaylorF2 *again* because the moving average filtered
+    # waveform may now have a slightly better linear fit
+    subtract_linear_fit(dh_filt, fit_i, fit_f)
 
     # Resample and truncate dh_filt then zero starting phase
     wave.resample_uniform(dh_filt, xi=trunc_i, xf=trunc_f, npoints=npoints, spacing='log', order=2)
-    dh_filt.phase -= dh_filt.phase[0]
     # Resample TaylorF2
     wave.resample_uniform(hf2, xi=trunc_i, xf=trunc_f, npoints=npoints, spacing='log', order=2)
+
+    # Zero the start phase of the truncated waveforms
+    dh_filt.add_phase(remove_start_phase=True)
+    hf2.add_phase(remove_start_phase=True)
+
     # Reconstruct h from hf2 and the filtered dh.
     h_filt = wave.Waveform.from_amp_phase(dh_filt.x, hf2.amp*np.exp(dh_filt.amp), dh_filt.phase+hf2.phase)
 
@@ -359,53 +397,53 @@ def get_waveform_from_training_set(f, i, mtot=2., distance=1.):
     return params, h
 
 
-def condition_eob_training_set(
-    orig_filename, h_filename, dh_filename,
-    delta_t,
-    winon_i, winon_f,
-    n_ext,
-    trunc_i, trunc_f, npoints=10000,
-    win='planck', plots=False,
-    mtot=2.0, distance=1.0):
-    """Make a conditioned WaveformSet with waveforms from orig_filename.
-    """
-    # Open original waveform file
-    f = h5py.File(orig_filename)
-    nwave = len(f['configurations'][:])
-    print f.attrs['GenerationSettings']
-    print f['configurations_keys'][:]
-    print f['data_keys_name'][:]
-
-    # WaveformSet objects for conditioned waveforms
-    h_ts = ws.HDF5WaveformSet(h_filename)
-    dh_ts = ws.HDF5WaveformSet(dh_filename)
-
-    j = 0
-    for i in range(nwave):
-        print i, j
-        # Don't just crash if waveform is not available
-        try:
-            params, h = get_waveform_from_training_set(f, i, mtot=mtot, distance=distance)
-        except Exception as e:
-            # Exception allows for keyboard interupt
-            print e
-            print 'Not adding waveform {} to training set'.format(i)
-        else:
-            # Run if an exception was not raised
-            h_cond, hf2, dh = condition_eob_waveform(
-                h, params, delta_t,
-                winon_i, winon_f,
-                n_ext,
-                trunc_i, trunc_f, npoints=npoints,
-                win=win, plots=plots)
-
-            h_ts.set_waveform(j, h_cond, params)
-            dh_ts.set_waveform(j, dh, params)
-            j += 1
-
-    f.close()
-    h_ts.close()
-    dh_ts.close()
+# def condition_eob_training_set(
+#     orig_filename, h_filename, dh_filename,
+#     delta_t,
+#     winon_i, winon_f,
+#     n_ext,
+#     trunc_i, trunc_f, npoints=10000,
+#     win='planck', plots=False,
+#     mtot=2.0, distance=1.0):
+#     """Make a conditioned WaveformSet with waveforms from orig_filename.
+#     """
+#     # Open original waveform file
+#     f = h5py.File(orig_filename)
+#     nwave = len(f['configurations'][:])
+#     print f.attrs['GenerationSettings']
+#     print f['configurations_keys'][:]
+#     print f['data_keys_name'][:]
+#
+#     # WaveformSet objects for conditioned waveforms
+#     h_ts = ws.HDF5WaveformSet(h_filename)
+#     dh_ts = ws.HDF5WaveformSet(dh_filename)
+#
+#     j = 0
+#     for i in range(nwave):
+#         print i, j
+#         # Don't just crash if waveform is not available
+#         try:
+#             params, h = get_waveform_from_training_set(f, i, mtot=mtot, distance=distance)
+#         except Exception as e:
+#             # Exception allows for keyboard interupt
+#             print e
+#             print 'Not adding waveform {} to training set'.format(i)
+#         else:
+#             # Run if an exception was not raised
+#             h_cond, hf2, dh = condition_eob_waveform(
+#                 h, params, delta_t,
+#                 winon_i, winon_f,
+#                 n_ext,
+#                 trunc_i, trunc_f, npoints=npoints,
+#                 win=win, plots=plots)
+#
+#             h_ts.set_waveform(j, h_cond, params)
+#             dh_ts.set_waveform(j, dh, params)
+#             j += 1
+#
+#     f.close()
+#     h_ts.close()
+#     dh_ts.close()
 
 
 def condition_eob_training_set_from_list(
