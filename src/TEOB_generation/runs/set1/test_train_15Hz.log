@@ -1,0 +1,185 @@
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Loading configurations from textfile /home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd_pert_15Hz.txt
+Total number of configurations 160
+5 configurations per core plus an extra 0 configurations
+==============================================================
+Entering main parallel loop
+*** Skipping existing TEOB configuration for parameters: [7, 2.0, 7, 3.0, -0.5, 0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [15, 2.0, 15, 3.0, 0.5, 0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+3.0
+*** Skipping existing TEOB configuration for parameters: [17, 2.0, 17, 1.0, -0.5, -0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [27, 2.0, 27, 1.0, 0.5, -0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [18, 2.0, 18, 1.0, -0.5, -0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [21, 2.0, 21, 1.0, -0.5, 0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [25, 2.0, 25, 1.0, 0.5, -0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [4, 2.0, 4, 3.0, -0.5, 0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [11, 2.0, 11, 3.0, 0.5, -0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [23, 2.0, 23, 1.0, -0.5, 0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [6, 2.0, 6, 3.0, -0.5, 0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [26, 2.0, 26, 1.0, 0.5, -0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [5, 2.0, 5, 3.0, -0.5, 0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [1, 2.0, 1, 3.0, -0.48999999999999999, -0.48999999999999999, 0.10000000000000001, 4900.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [9, 2.0, 9, 3.0, 0.5, -0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [8, 2.0, 8, 3.0, 0.5, -0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [2, 2.0, 2, 3.0, -0.5, -0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [0, 2.0, 0, 3.0, -0.5, -0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+3.0
+*** Skipping existing TEOB configuration for parameters: [22, 2.0, 22, 1.0, -0.5, 0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [24, 2.0, 24, 1.0, 0.5, -0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [29, 2.0, 29, 1.0, 0.5, 0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [12, 2.0, 12, 3.0, 0.5, 0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [14, 2.0, 14, 3.0, 0.5, 0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [28, 2.0, 28, 1.0, 0.5, 0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [30, 2.0, 30, 1.0, 0.5, 0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [20, 2.0, 20, 1.0, -0.5, 0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [10, 2.0, 10, 3.0, 0.5, -0.5, 5000.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [59, 2.0, 27, 2.6275862068965519, -0.42125984251968507, 0.44488188976377951, 3188.9763779527557, 1496.0629921259842, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [43, 2.0, 11, 1.1723076923076921, -0.38188976377952755, 0.066929133858267709, 708.66141732283461, 4881.8897637795271, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [53, 2.0, 21, 1.0916905444126075, 0.10629921259842523, 0.37401574803149606, 3425.196850393701, 1535.4330708661416, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [49, 2.0, 17, 2.152542372881356, -0.035433070866141725, 0.34251968503937003, 3267.7165354330709, 1417.3228346456692, 15.0, 0.0, 32768.0, 1000000.0]
+2.15254237288
+*** Skipping existing TEOB configuration for parameters: [37, 2.0, 5, 1.3003412969283275, -0.48425196850393704, 0.090551181102362155, 0.0, 905.51181102362204, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [55, 2.0, 23, 1.5425101214574899, -0.13779527559055116, -0.019685039370078761, 826.77165354330714, 2204.7244094488187, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [36, 2.0, 4, 1.3275261324041812, 0.27952755905511806, -0.37401574803149606, 4448.8188976377951, 1102.3622047244094, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [38, 2.0, 6, 1.2915254237288134, -0.30314960629921262, 0.098425196850393748, 4921.2598425196848, 4015.748031496063, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [16, 2.0, 16, 1.0, -0.5, -0.5, 0.0, 0.0, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [34, 2.0, 2, 1.914572864321608, -0.027559055118110243, -0.066929133858267709, 1102.3622047244094, 3818.8976377952754, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [32, 2.0, 0, 1.3558718861209966, -0.3582677165354331, -0.003937007874015741, 3070.8661417322833, 748.03149606299212, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [60, 2.0, 28, 1.049586776859504, 0.027559055118110187, 0.043307086614173262, 669.29133858267721, 3110.2362204724409, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [52, 2.0, 20, 1.4269662921348314, -0.003937007874015741, 0.011811023622047223, 511.81102362204723, 866.14173228346453, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [54, 2.0, 22, 1.1441441441441442, 0.098425196850393748, -0.43700787401574803, 1771.6535433070867, 2952.7559055118109, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [41, 2.0, 9, 1.5179282868525896, -0.23228346456692911, -0.12204724409448819, 2637.7952755905512, 3661.4173228346458, 15.0, 0.0, 32768.0, 1000000.0]
+1.51792828685
+*** Skipping existing TEOB configuration for parameters: [44, 2.0, 12, 2.2023121387283235, 0.23228346456692917, -0.32677165354330706, 2598.4251968503936, 1338.5826771653544, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [75, 2.0, 11, 2.0158730158730158, 0.20078740157480313, -0.074803149606299191, 787.40157480314963, 354.3307086614173, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [46, 2.0, 14, 1.6933333333333331, 0.15354330708661412, -0.035433070866141725, 4015.748031496063, 3267.7165354330709, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [42, 2.0, 10, 1.7887323943661972, 0.38188976377952755, -0.27165354330708658, 393.70078740157481, 826.77165354330714, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [19, 2.0, 19, 1.0, -0.5, -0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+1.0
+*** Skipping existing TEOB configuration for parameters: [61, 2.0, 29, 1.594142259414226, -0.082677165354330728, 0.28740157480314965, 3385.8267716535433, 4291.3385826771655, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [64, 2.0, 0, 1.994764397905759, 0.12204724409448819, -0.2874015748031496, 118.11023622047244, 3976.3779527559054, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [48, 2.0, 16, 1.3854545454545455, -0.36614173228346458, -0.20078740157480313, 3976.3779527559054, 393.70078740157481, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [92, 2.0, 28, 1.1173020527859236, 0.18503937007874016, 0.40551181102362199, 5000.0, 944.88188976377955, 15.0, 0.0, 32768.0, 1000000.0]
+1.11730205279
+*** Skipping existing TEOB configuration for parameters: [74, 2.0, 10, 1.1373134328358208, 0.1692913385826772, -0.1456692913385827, 3110.2362204724409, 2047.2440944881889, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [80, 2.0, 16, 1.6351931330472105, -0.37401574803149606, 0.1692913385826772, 1417.3228346456692, 1771.6535433070867, 15.0, 0.0, 32768.0, 1000000.0]
+*** Skipping existing TEOB configuration for parameters: [96, 2.0, 0, 1.2657807308970099, 0.082677165354330673, -0.35039370078740156, 3307.0866141732286, 433.07086614173227, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [3, 2.0, 3, 3.0, -0.5, -0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+3.0
+*** Skipping existing TEOB configuration for parameters: [106, 2.0, 10, 1.6784140969162997, -0.42913385826771655, 0.42125984251968507, 4291.3385826771655, 4685.0393700787399, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [13, 2.0, 13, 3.0, 0.5, 0.5, 0.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+3.0
+Generate wf: [128, 2.0, 0, 1.1510574018126887, -0.25590551181102361, 0.33464566929133854, 2165.3543307086616, 3897.6377952755906, 15.0, 0.0, 32768.0, 1000000.0]
+1.15105740181
+Generate wf: [31, 2.0, 31, 1.0, 0.5, 0.5, 5000.0, 5000.0, 15.0, 0.0, 32768.0, 1000000.0]
+1.0
+Generate wf: [39, 2.0, 7, 1.530120481927711, -0.43700787401574803, 0.082677165354330673, 2244.0944881889764, 4921.2598425196848, 15.0, 0.0, 32768.0, 1000000.0]
+1.53012048193
+Generate wf: [50, 2.0, 18, 2.1284916201117321, -0.2874015748031496, 0.019685039370078705, 4251.9685039370079, 1811.0236220472441, 15.0, 0.0, 32768.0, 1000000.0]
+2.12849162011
+Generate wf: [57, 2.0, 25, 2.2814371257485031, 0.44488188976377951, 0.18503937007874016, 2401.5748031496064, 118.11023622047244, 15.0, 0.0, 32768.0, 1000000.0]
+2.28143712575
+*** Skipping existing TEOB configuration for parameters: [56, 2.0, 24, 1.7720930232558139, -0.11417322834645671, 0.21653543307086609, 3818.8976377952754, 3464.5669291338581, 15.0, 0.0, 32768.0, 1000000.0]
+Generate wf: [58, 2.0, 26, 1.7397260273972603, 0.33464566929133854, 0.12204724409448819, 1732.2834645669291, 511.81102362204723, 15.0, 0.0, 32768.0, 1000000.0]
+1.7397260274
+Generate wf: [40, 2.0, 8, 1.6637554585152836, -0.452755905511811, -0.452755905511811, 1850.3937007874015, 2362.2047244094488, 15.0, 0.0, 32768.0, 1000000.0]
+1.66375545852
+Generate wf: [62, 2.0, 30, 1.0438356164383562, 0.19291338582677164, 0.31889763779527558, 1811.0236220472441, 3070.8661417322833, 15.0, 0.0, 32768.0, 1000000.0]
+1.04383561644
+Generate wf: [85, 2.0, 21, 1.8229665071770333, 0.20866141732283461, 0.36614173228346458, 4645.6692913385823, 3622.0472440944882, 15.0, 0.0, 32768.0, 1000000.0]
+1.82296650718
+Generate wf: [91, 2.0, 27, 2.6643356643356646, 0.24803149606299213, 0.41338582677165359, 3346.4566929133857, 2480.3149606299212, 15.0, 0.0, 32768.0, 1000000.0]
+2.66433566434
+Generate wf: [87, 2.0, 23, 1.7239819004524888, 0.37401574803149606, 0.14566929133858264, 2047.2440944881889, 3425.196850393701, 15.0, 0.0, 32768.0, 1000000.0]
+1.72398190045
+Generate wf: [69, 2.0, 5, 1.3092783505154639, -0.46062992125984253, 0.11417322834645671, 3937.0078740157483, 1692.9133858267717, 15.0, 0.0, 32768.0, 1000000.0]
+1.30927835052
+Generate wf: [70, 2.0, 6, 1.6212765957446806, -0.21653543307086615, -0.30314960629921262, 2834.6456692913384, 2637.7952755905512, 15.0, 0.0, 32768.0, 1000000.0]
+1.62127659574
+Generate wf: [68, 2.0, 4, 2.4580645161290322, -0.15354330708661418, 0.38976377952755903, 2440.9448818897636, 1653.5433070866143, 15.0, 0.0, 32768.0, 1000000.0]
+2.45806451613
+Generate wf: [66, 2.0, 2, 1.8405797101449275, 0.452755905511811, 0.24803149606299213, 2086.6141732283463, 3149.6062992125985, 15.0, 0.0, 32768.0, 1000000.0]
+1.84057971014
+Generate wf: [84, 2.0, 20, 1.1580547112462007, 0.13779527559055116, 0.47637795275590555, 2874.0157480314961, 2716.535433070866, 15.0, 0.0, 32768.0, 1000000.0]
+1.15805471125
+Generate wf: [112, 2.0, 16, 1.4059040590405902, 0.48425196850393704, -0.059055118110236227, 551.18110236220468, 2440.9448818897636, 15.0, 0.0, 32768.0, 1000000.0]
+1.40590405904
+Generate wf: [138, 2.0, 10, 1.165137614678899, 0.27165354330708658, 0.29527559055118113, 1496.0629921259842, 3188.9763779527557, 15.0, 0.0, 32768.0, 1000000.0]
+1.16513761468
+Generate wf: [78, 2.0, 14, 1.1305637982195844, 0.14566929133858264, 0.22440944881889768, 1259.8425196850394, 4488.1889763779527, 15.0, 0.0, 32768.0, 1000000.0]
+1.13056379822
+Generate wf: [76, 2.0, 12, 1.22508038585209, -0.40551181102362205, -0.41338582677165353, 4173.2283464566926, 4724.4094488188975, 15.0, 0.0, 32768.0, 1000000.0]
+1.22508038585
+Generate wf: [107, 2.0, 11, 1.3956043956043955, -0.17716535433070868, -0.38188976377952755, 3661.4173228346458, 3858.267716535433, 15.0, 0.0, 32768.0, 1000000.0]
+1.3956043956
+Generate wf: [93, 2.0, 29, 2.5918367346938775, -0.074803149606299191, -0.3582677165354331, 472.44094488188978, 4842.5196850393704, 15.0, 0.0, 32768.0, 1000000.0]
+2.59183673469
+Generate wf: [86, 2.0, 22, 1.3754512635379059, -0.09055118110236221, -0.46850393700787402, 2480.3149606299212, 1929.1338582677165, 15.0, 0.0, 32768.0, 1000000.0]
+1.37545126354
+Generate wf: [88, 2.0, 24, 1.2491803278688525, -0.39763779527559057, -0.18503937007874016, 2677.1653543307089, 3307.0866141732286, 15.0, 0.0, 32768.0, 1000000.0]
+1.24918032787
+*** TEOB_process_array_TD finished for parameters: [128, 2.0, 0, 1.1510574018126887, -0.25590551181102361, 0.33464566929133854, 2165.3543307086616, 3897.6377952755906, 15.0, 0.0, 32768.0, 1000000.0]
+Waiting on other procs...
+GSL function failed: failed to allocate space for c (errnum=8)
+XLAL Error - <GSL function> (cspline.c:55): Generic failure
+GSL function failed: failed to allocate space for interp state (errnum=8)
+XLAL Error - <GSL function> (interp.c:63): Generic failure
+GSL function failed: failed to allocate space for interp (errnum=8)
+XLAL Error - <GSL function> (spline.c:42): Generic failure
+[sthelens:1658612] *** Process received signal ***
+[sthelens:1658612] Signal: Segmentation fault (11)
+[sthelens:1658612] Signal code: Address not mapped (1)
+[sthelens:1658612] Failing at address: 0x18
+[sthelens:1658612] [ 0] /lib/x86_64-linux-gnu/libpthread.so.0(+0xf890) [0x7f55318f8890]
+[sthelens:1658612] [ 1] /usr/lib/libgsl.so.0(gsl_spline_init+0x8) [0x7f552e9fce48]
+[sthelens:1658612] [ 2] /home/mpuer/lsc/TEOBBNS/lib/liblalsimulation.so.16(XLALSimIMRSpinAlignedEOBWaveformAll+0x2530) [0x7f5529ba1820]
+[sthelens:1658612] [ 3] /home/mpuer/lsc/TEOBBNS/lib/liblalsimulation.so.16(XLALSimIMRSpinAlignedEOBWaveform+0x180) [0x7f5529ba7740]
+[sthelens:1658612] [ 4] /home/mpuer/lsc/TEOBBNS/lib/liblalsimulation.so.16(XLALSimInspiralChooseTDWaveform+0x219d) [0x7f5529db1cad]
+[sthelens:1658612] [ 5] /home/mpuer/lsc/TEOBBNS/lib/python2.7/site-packages/lalsimulation/_lalsimulation.so(+0x73af0) [0x7f552a61aaf0]
+[sthelens:1658612] [ 6] python(PyEval_EvalFrameEx+0x356) [0x4c9196]
+[sthelens:1658612] [ 7] python(PyEval_EvalCodeEx+0x3c9) [0x4c7a59]
+[sthelens:1658612] [ 8] python(PyEval_EvalFrameEx+0x8bd) [0x4c96fd]
+[sthelens:1658612] [ 9] python(PyEval_EvalCodeEx+0x3c9) [0x4c7a59]
+[sthelens:1658612] [10] python(PyEval_EvalFrameEx+0x8bd) [0x4c96fd]
+[sthelens:1658612] [11] python(PyEval_EvalFrameEx+0xb2a) [0x4c996a]
+[sthelens:1658612] [12] python(PyEval_EvalCodeEx+0x3c9) [0x4c7a59]
+[sthelens:1658612] [13] python() [0x50160f]
+[sthelens:1658612] [14] python(PyRun_FileExFlags+0x82) [0x4f6c32]
+[sthelens:1658612] [15] python(PyRun_SimpleFileExFlags+0x197) [0x4f5d37]
+[sthelens:1658612] [16] python(Py_Main+0x55d) [0x4981cd]
+[sthelens:1658612] [17] /lib/x86_64-linux-gnu/libc.so.6(__libc_start_main+0xf5) [0x7f5530c3cb45]
+[sthelens:1658612] [18] python() [0x497b8b]
+[sthelens:1658612] *** End of error message ***
+--------------------------------------------------------------------------
+mpirun noticed that process rank 30 with PID 1658612 on node sthelens.aei.mpg.de exited on signal 11 (Segmentation fault).
+--------------------------------------------------------------------------
