@@ -433,21 +433,15 @@ For the problem here, we have found that global basis functions do not work well
 
 \subsection{Gaussian process regression for parameters $\bx$}
 
-We use Gaussian process regression to fit the residuals $\Delta\ln(A)(F_j; \bx)$ and $\Delta\Phi(F_j; \bx)$ at the empirical nodes $F_j$ as a function of the waveform parameters. In GPR a function $f(\vec x)$ is described in terms of a mean $m(\vec x)$ and 
-covariance $k(\vec x, \vec x')$ between points [[cite RassmussenWilliamsChapter2, IntroArxivPaper]].
+We now need a method to interpolate the residuals $\Delta\ln(A)(F_j; \bx)$ and $\Delta\Phi(F_j; \bx)$ at the frequency nodes $F_j$ as a function of the five waveform parameters $\bx$. Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; the number of samples grows exponentially with the dimension $d$ ($N^d$ for $N$ samples per dimension). For our 5-dimensional problem, $10^5$ waveform evaluations are needed for only 10 samples per parameter. At 10 minutes--1 hour per EOB waveform on a standard CPU, this is at the limit of what is reasonable. However, there are other methods that do not require a rectangular grid, and this allows us to choose more efficient experimental designs. The method we choose is Gaussian Process Regression (GPR).
+
+In GPR a function $f(\vec x)$ is described in terms of a mean $m(\vec x)$ and  covariance $k(\vec x, \vec x')$ between points [[cite RassmussenWilliamsChapter2, IntroArxivPaper]].
 \begin{equation}
 f(\vec x) \approx \mathcal{GP}(m(\vec x), k(\vec x, \vec x')).
 \end{equation}
-The mean $m(x)$ can be some parameterized function which is the standard version of regression, 
-while $k(\vec x, \vec x')$ is a kernel with tunable hyperparameters that describes the covariance between
-the point $\vec x$ and the sampled point $\vec x'$. This covariance can be used to describe features of the function 
-not captured by the parameterized mean as well as genuine noise in the data ${\bm y}$. 
-For the problem here, we have already subtracted the 
-TaylorF2 waveform from EOB waveform, so we set $m=0$ and model the remainder terms purely in terms 
-of the covariance $k$. 
+The mean $m(x)$ can be some parameterized function which is the standard version of regression, while $k(\vec x, \vec x')$ is a kernel with tunable hyperparameters that describes the covariance between the point $\vec x$ and the sampled point $\vec x'$. This covariance can be used to describe features of the function not captured by the parameterized mean as well as genuine noise in the data ${\bm y}$. For the problem here, we have already subtracted the TaylorF2 waveform from EOB waveform, so we set $m=0$ and model the remainder terms purely in terms of the covariance $k$. 
 
-In a zero-mean Gaussian process, the data and function $({\bm y}, f_*)$ at the training set and new points $({\bm x}, x_*)$ are
-drawn from a multivariate normal distribution
+In a zero-mean Gaussian process, the data and function $({\bm y}, f_*)$ at the training set and new points $({\bm x}, x_*)$ are drawn from a multivariate normal distribution
 \begin{equation}
 \label{eq:gaussian}
 \begin{bmatrix}
@@ -531,60 +525,15 @@ interpolating function. We note that evaluating Eq.~\eqref{eq:var}, is an $\math
 precomputed.
 
 
-\subsection{Iterative construction of training set}
+\subsection{Iterative construction of training set and surrogate}
 
+One of the main aims of this paper is to build a surrogate with as few waveform evaluations as possible. EOB models are expensive, and we would like a method that extends to higher dimensions and more expensive simulations such as numerical relativity simulations. Using the freedom provided by GPR to sample waveforms at arbitrary locations in parameter space, we try a set of more optimal designs. 
 
-In the subsections below we will build our surrogate with the aim of using as few waveform evaluations as possible. We do this because EOB models of BNS systems are already expensive, and we would like a method that extends to higher dimensions and more expensive simulations such as numerical relativity simulations. A general overview of the process we have used is as follows:
-\begin{enumerate}
-\item Select an initial, sparse set of waveform parameters $\bx$ that cover the parameter space using a Latin Hypercube Design (LHD).
+One such design is a Latin Hypercube Design (LHD) [[cite]]. An LHD with $N$ samples divides each of $d$ dimension uniformly into $N$ grid points, for a total of $N^d$ grid points. However, for each dimension, the $N$ values are sampled exactly once. For an LHD there are $(N!)^d$ possible designs, and we choose one randomly~\footnote{There are ways to better choose an LHD. A standard requirement is that the LHD be space-filling, meaning that the points are as far apart as possible from each other. (See [[cite]] for a review of methods for optimizing the placement of samples.) One such definition of space filling is that the chosen locations maximize the minimum Euclidean distance between any two samples [[cite]]. We have not studied this here.}.
 
-\item Evaluate the initial training set of EOB waveforms $h(t;\bx)$ and condition them to produce smoothed, frequency-domain waveforms $\tilde h(f;\bx)$.
+An LHD has the property that the samples are non-collapsing; a projection onto a subspace is still a uniformly sampled LHD. This avoids wasting samples when one of the parameters has much less of an effect than the other parameters. As an example of the usefulness of non-collapsing designs, the tidal parameters have a minimal impact on the waveform at low frequencies, so it wouldn't make sense to densely sample a grid of tidal parameters at low frequencies. However, near the merger the tidal parameters can be as important as the spin parameters. One therefore might want more samples for the tidal parameters and less samples for the spin. However, due to the expense of the waveforms we must use the same set of waveforms for low and high frequencies. An LHD with its noncollapsing property bypasses this problem. 
 
-%\item Construct separate orthonormal, reduced bases for the amplitude $A(f;\bx)$ and phase $\Phi(f;\bx)$ of the training set waveforms. Then, use the empirical interpolation method (EIM) to generate separate sets of frequency-dependent empirical interpolating functions for the amplitude $B^A_j(f)$ and phase $B^\Phi_j(f)$.
-
-\item Choose interpolation nodes.
-
-%\item For each empirical interpolating function, interpolate the amplitude $A(F^A_j;\bx)$ or phase $\Phi(F^\Phi_j;\bx)$ at the associated frequency nodes $F^A_j$ or $F^\Phi_j$, respectively, as a function of the waveform parameters $\bx$ using GPR.
-
-\item GPR
-
-
-\item With the resulting surrogate model and GPR uncertainty estimates, iteratively choose the points in parameter space with the largest estimated waveform errors. Then, generate these waveforms and add them to the initial training set.
-
-\item Reconstruct the surrogate model with the updated training set. This can be repeated as necessary with additional training set waveforms.
-
-\end{enumerate}
-
-In constructing a surrogate model, we will need to interpolate several quantities as a function of the five
-waveform parameters ${\bm x}$.
-Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) 
-require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; 
-the number of samples grows exponentially with the dimension $d$ ($N^d$ for $N$ samples per dimension).
-In the 5-dimensional problem discussed here, $10^5$ waveform evaluations are needed for only 10 samples per parameter.
-At 10 minutes--1 hour per EOB waveform on a standard CPU, this is at the limit of what is reasonable.
-
-However, there are other methods such as Gaussian Process Regression (GPR), discussed below, that allow nonuniform designs.
-One such standard design is a Latin Hypercube Design (LHD). An LHD with $N$ samples divides each dimension uniformly into $N$
-grid points per dimension for a total of $N^d$ possible locations. However, for each dimension each of the $N$ values is sampled 
-exactly once. This has the convenient property that the samples are non-collapsing; if one of the parameters is much less 
-significant than other parameters, samples are not wasted on that parameter, as they would be with a uniform grid. And, a projection
-onto a subspace is still a LHD. [[Also, each dimension is uniformly sampled which is not the case for MC sampling.]]
-
-As an example of the usefulness of noncollapsing designs, the tidal parameters have a minimal impact on the waveform
-at low frequencies, so it wouldn't make sense to densely sample a grid of tidal parameters at low frequencies. However, near
-the merger the tidal parameters can be a important as the spin parameters. One therefore might want more samples for the tidal
-parameters and less samples for the spin. However, due to the expense of the wavefroms we must use the same grid of waveforms 
-for low and high frequencies. A LHD, with its noncollapsing property, bypasses this problem. 
-
-For an LHD there are $(N!)^d$ possible designs, and a standard requirement is that the LHD be space-filling, meaning that the 
-points are as far apart as possible from each other. (See [[cite]] for a review of methods for optimizing the placement of samples.) 
-The measure used here is that we maximize the minimum Euclidean distance between any two samples [[cite]]. We do this by 
-sampling $xxx$ random designs and choosing the one with the maximum minimum distance.
-
-For a smooth approximately monotonic function in $d$-dimensions, standard lore is that $10d$ samples are needed to interpolate 
-a function with GPR [[cite]] [[To what accuracy]]. We therefore construct our initial training set with 50 waveform samples, and use 
-these waveforms to construct the reduced basis and perform interpolation with GPR. Once an initial surrogate model is constructed,
-we will use the GPR error estimate to choose new waveforms to add to the training set, and update the surrogate model.
+We build an initial training set with 128 waveforms sampled with an LHD in our 5-dimensional parameter space given by $q\in[1/3, 1]$, $S_1, S_2 \in [-0.5, 0.5]$ and $\Lambda_1, \Lambda_2 \in [0, 5000]$. We also find empirically that the GPR uncertainty estimates are largest at the corners of the parameter space, so we also sample the 32 corners. We construct our initial surrogate with these 160 waveforms shown in Fig.~\ref{fig:LHD}.
 
 \begin{figure}[htb]
 \centering
@@ -598,23 +547,27 @@ using uncertainty sampling from the GPR error estimate of the RMS phase error at
 \label{fig:LHD}
 \end{figure}
 
+With this initial surrogate model, we can choose new training set samples by iteratively searching the parameter space for new points ${\bm x}$ that maximize some error criterion. The quantity that we use is the root-mean-square error in the phase at frequencies below $Mf=0.03$ [[justify this]].
 
-Once we have an initial surrogate model, we can choose new training set samples by iteratively searching the parameter space
-for new points ${\bm x}$ that maximize some error criterion. The quantity that we use is the distinguishability between the
-EOB waveform and its surrogate [[cite]]
-\begin{equation}
-|\delta h | = \sqrt{(h - h_{\rm Sur} | h - h_{\rm Sur})}.
-\end{equation}
-For an initial training set with N samples, this function has $\sim N$ local maxima. We use Monte Carlo sampling with ~100,000
-samples and choose the point with the largest distinguishability [[for now. Could also use multistart optimization.]] to find the 
-approximate global maximum. Because $|\delta h |$ is an expensive function that requires an EOB or NR evaluation, 
-we approximate it as follows:
+[[equation here]]
 
-[[Your inexpensive way of approximating $|\delta h |$ that does not depend on $h_{\rm EOB}$ here.]]
-\begin{equation}
-\label{eq:distinguish}
-|\delta h | \approx blah.
-\end{equation}
+For an initial training set with $N$ samples, this function has $\sim N$ local maxima. To find the global maximum, we use a basin jumping method [[cite]] to avoid getting stuck in local maxima.
+
+%The quantity that we use is the distinguishability between the
+%EOB waveform and its surrogate [[cite]]
+%\begin{equation}
+%|\delta h | = \sqrt{(h - h_{\rm Sur} | h - h_{\rm Sur})}.
+%\end{equation}
+%For an initial training set with N samples, this function has $\sim N$ local maxima. We use Monte Carlo sampling with ~100,000
+%samples and choose the point with the largest distinguishability [[for now. Could also use multistart optimization.]] to find the 
+%approximate global maximum. Because $|\delta h |$ is an expensive function that requires an EOB or NR evaluation, 
+%we approximate it as follows:
+%
+%[[Your inexpensive way of approximating $|\delta h |$ that does not depend on $h_{\rm EOB}$ here.]]
+%\begin{equation}
+%\label{eq:distinguish}
+%|\delta h | \approx blah.
+%\end{equation}
 
 
 With this new sample, one could evaluate the waveform at the new point and reconstruct the surrogate model, then iterate.
@@ -655,6 +608,42 @@ systematic error calculation instead of the mismatch if that's a better quantity
 \caption{Estimated RMS phase error as function of number of sampled points}
 \label{fig:uncsamp}
 \end{figure}
+
+%In constructing a surrogate model, we will need to interpolate several quantities as a function of the five
+%waveform parameters ${\bm x}$.
+%Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) 
+%require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; 
+%the number of samples grows exponentially with the dimension $d$ ($N^d$ for $N$ samples per dimension).
+%In the 5-dimensional problem discussed here, $10^5$ waveform evaluations are needed for only 10 samples per parameter.
+%At 10 minutes--1 hour per EOB waveform on a standard CPU, this is at the limit of what is reasonable.
+
+%For a smooth approximately monotonic function in $d$-dimensions, standard lore is that $10d$ samples are needed to interpolate 
+%a function with GPR [[cite]] [[To what accuracy]]. We therefore construct our initial training set with 50 waveform samples, and use 
+%these waveforms to construct the reduced basis and perform interpolation with GPR. Once an initial surrogate model is constructed,
+%we will use the GPR error estimate to choose new waveforms to add to the training set, and update the surrogate model.
+
+
+%A general overview of the process we have used is as follows:
+%\begin{enumerate}
+%\item Select an initial, sparse set of waveform parameters $\bx$ that cover the parameter space using a Latin Hypercube Design (LHD).
+%
+%\item Evaluate the initial training set of EOB waveforms $h(t;\bx)$ and condition them to produce smoothed, frequency-domain waveforms $\tilde h(f;\bx)$.
+%
+%%\item Construct separate orthonormal, reduced bases for the amplitude $A(f;\bx)$ and phase $\Phi(f;\bx)$ of the training set waveforms. Then, use the empirical interpolation method (EIM) to generate separate sets of frequency-dependent empirical interpolating functions for the amplitude $B^A_j(f)$ and phase $B^\Phi_j(f)$.
+%
+%\item Choose interpolation nodes.
+%
+%%\item For each empirical interpolating function, interpolate the amplitude $A(F^A_j;\bx)$ or phase $\Phi(F^\Phi_j;\bx)$ at the associated frequency nodes $F^A_j$ or $F^\Phi_j$, respectively, as a function of the waveform parameters $\bx$ using GPR.
+%
+%\item GPR
+%
+%
+%\item With the resulting surrogate model and GPR uncertainty estimates, iteratively choose the points in parameter space with the largest estimated waveform errors. Then, generate these waveforms and add them to the initial training set.
+%
+%\item Reconstruct the surrogate model with the updated training set. This can be repeated as necessary with additional training set waveforms.
+%
+%\end{enumerate}
+
 
 
 \subsection{Surrogate waveform evaluation}
@@ -818,7 +807,7 @@ The second effect is precession for non-aligned spins. Although none of the EOB 
 %% ________________________________________________________
 \begin{acknowledgments}
 
-BL thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the Institute for Nuclear Theory where many of the methods used here were discussed. BL, MP, and AT were supported by... 
+BL thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the Institute for Nuclear Theory where many of the methods used here were discussed. We thank Sylvain Marsat for fixing issues that caused the original TEOBv4 model to be numerically unstable. BL, MP, and AT were supported by... 
 
 \end{acknowledgments}
 
