@@ -1053,9 +1053,12 @@ static int TaylorF2Phasing(
   double q,
   double chi1,
   double chi2,
-  double lambda1,
-  double lambda2,
-  gsl_vector *Mf
+  double lambda1,   // tidal deformability of body 1
+  double lambda2,   // tidal deformability of body 2
+  double dquadmon1, // self-spin deformation of body 1
+  double dquadmon2, // self-spin deformation of body 2
+  gsl_vector *Mfs,
+  gsl_vector **PNphase // Output: TaylorF2 phase at frequencies Mfs
 );
 
 static int TaylorF2Phasing(
@@ -1063,10 +1066,17 @@ static int TaylorF2Phasing(
   double q,
   double chi1,
   double chi2,
-  double lambda1,
-  double lambda2,
-  gsl_vector *Mfs
+  double lambda1,   // tidal deformability of body 1
+  double lambda2,   // tidal deformability of body 2
+  double dquadmon1, // self-spin deformation of body 1
+  double dquadmon2, // self-spin deformation of body 2
+  gsl_vector *Mfs,
+  gsl_vector **PNphase // Output: TaylorF2 phase at frequencies Mfs
 ) {
+  XLAL_CHECK(PNphase != NULL, XLAL_EFAULT);
+  XLAL_CHECK(*PNphase == NULL, XLAL_EFAULT);
+  *PNphase = gsl_vector_alloc(Mfs->size);
+
   PNPhasingSeries *pn = NULL;
   LALDict *extraParams = XLALCreateDict();
   XLALSimInspiralWaveformParamsInsertPNSpinOrder(extraParams, LAL_SIM_INSPIRAL_SPIN_ORDER_35PN);
@@ -1078,8 +1088,11 @@ static int TaylorF2Phasing(
 
   // FIXME: We should be able to switch on quadrupole-monopole terms (self-spin deformation of the two bodies)
   // from TaylorF2; later these can be replaced with EOB as well. Just add a switch for now.
-  // XLALSimInspiralWaveformParamsInsertdQuadMon1(extraParams, dquadmon1);
-  // XLALSimInspiralWaveformParamsInsertdQuadMon2(extraParams, dquadmon2);
+  if ((dquadmon1 > 0) || (dquadmon2 > 0)) {
+    fprintf(stderr, "Using quadrupole-monopole terms from PN.\n");
+    XLALSimInspiralWaveformParamsInsertdQuadMon1(extraParams, dquadmon1);
+    XLALSimInspiralWaveformParamsInsertdQuadMon2(extraParams, dquadmon2);
+  }
 
   double m1OverM = q / (1.0+q);
   double m2OverM = 1.0 / (1.0+q);
@@ -1087,7 +1100,7 @@ static int TaylorF2Phasing(
   double m2 = Mtot * m2OverM * LAL_MSUN_SI;
   XLALSimInspiralTaylorF2AlignedPhasing(&pn, m1, m2, chi1, chi2, extraParams);
 
-fprintf(stderr, "%g %g %g %g %g\n", Mtot, m1, m2, chi1, chi2);
+// fprintf(stderr, "%g %g %g %g %g\n", Mtot, m1, m2, chi1, chi2);
 
   // Add tidal deformability terms
   pn->v[10] = pn->v[0] * ( lambda1 * XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(m1OverM)
@@ -1099,10 +1112,10 @@ fprintf(stderr, "%g %g %g %g %g\n", Mtot, m1, m2, chi1, chi2);
   //gsl_vector *amp_at_nodes = gsl_vector_alloc(N_amp);
   //gsl_vector *phi_at_nodes = gsl_vector_alloc(N_phi);
 
-fprintf(stderr, "pn->v: %g %g %g %g %g %g %g %g \n", pn->v[7], pn->v[6], pn->v[5], pn->v[4], pn->v[3], pn->v[2], pn->v[1], pn->v[0]);
-fprintf(stderr, "pn->vlogv: %g %g\n", pn->vlogv[6], pn->vlogv[5]);
+// fprintf(stderr, "pn->v: %g %g %g %g %g %g %g %g \n", pn->v[7], pn->v[6], pn->v[5], pn->v[4], pn->v[3], pn->v[2], pn->v[1], pn->v[0]);
+// fprintf(stderr, "pn->vlogv: %g %g\n", pn->vlogv[6], pn->vlogv[5]);
 
-fprintf(stderr, "\nPN phasing at nodes:");
+// fprintf(stderr, "\nPN phasing at nodes:");
   for (size_t i=0; i < Mfs->size; i++) {
       const double Mf = gsl_vector_get(Mfs, i);
       const double v = cbrt(LAL_PI * Mf);
@@ -1135,16 +1148,17 @@ fprintf(stderr, "\nPN phasing at nodes:");
 
       phasing /= v5;
       // LALSimInspiralTaylorF2.c
-      // shft = LAL_TWOPI * (tC.gpsSeconds + 1e-9 * tC.gpsNanoSeconds);
+      // shft = LAL_TWOPI * (tC.gpsSeconds + 1e-9 * tC.gpsNanoSeconds); // FIXME: this should be done in the main generator and may already be there
       // phasing += shft * f - 2.*phi_ref - ref_phasing; // FIXME: add ref
 
-      fprintf(stderr, "%.15g\n", phasing);
+      gsl_vector_set(*PNphase, i, -phasing);
+      // fprintf(stderr, "%.15g\n", phasing);
 
       //fprintf(stderr, "PN phasing[%zu] = %g, %g\n", i, Mf, phasing);
       //gsl_vector_set(phi_at_nodes, i, phasing + gsl_vector_get(sur_phi_at_nodes, i));
       // TODO: compare total and all the terms
   }
-  fprintf(stderr, "\n");
+  // fprintf(stderr, "\n");
   //amp * cos(phasing - LAL_PI_4) - amp * sin(phasing - LAL_PI_4) * 1.0j;
  // amp0 = -4. * m1 * m2 / r * LAL_MRSUN_SI * LAL_MTSUN_SI * sqrt(LAL_PI/12.L);
 
@@ -1154,6 +1168,37 @@ fprintf(stderr, "\nPN phasing at nodes:");
   return XLAL_SUCCESS;
 }
 
+static int TaylorF2Amplitude1PN(
+  double eta,        // Symmetric mass-ratio
+  gsl_vector *Mfs,   // Geometric frequency
+  gsl_vector **PNamp // Output: TaylorF2 amplitude at frequencies Mfs
+);
+
+// 1PN point-particle amplitude.
+// Expression from Eq. (6.10) of arXiv:0810.5336.
+// !!! This is technically wrong since you have a x**2 term (need to re-expand). !!!
+static int TaylorF2Amplitude1PN(
+  double eta,        // Symmetric mass-ratio
+  gsl_vector *Mfs,   // Geometric frequency
+  gsl_vector **PNamp // Output: TaylorF2 amplitude at frequencies Mfs
+) {
+  XLAL_CHECK(PNamp != NULL, XLAL_EFAULT);
+  XLAL_CHECK(*PNamp == NULL, XLAL_EFAULT);
+  *PNamp = gsl_vector_alloc(Mfs->size);
+
+  for (size_t i=0; i < Mfs->size; i++) {
+    const double Mf = gsl_vector_get(Mfs, i);
+    const double v = cbrt(LAL_PI * Mf);
+    const double x = v*v;
+
+    double a00 = sqrt( (5.0*LAL_PI/24.0)*eta );
+    double a10 = -323.0/224.0 + 451.0*eta/168.0;
+    double amp =  2.0*a00 * pow(x, -7.0/4.0) * (1.0 + a10*x);
+    gsl_vector_set(*PNamp, i, amp);
+  }
+
+  return XLAL_SUCCESS;
+}
 
 /**
  * Core function for computing the ROM waveform.
@@ -1407,7 +1452,49 @@ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
   // TODO: evaluate hardcoded TF2 and reconstruct waveform
   // fprintf(stderr, "%zu %zu %zu\n", amp_at_EI_nodes->size, (submodel_lo->B_amp)->size1, (submodel_lo->B_amp)->size2);
 
-TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, submodel_lo->mf_phi);
+double dquadmon1 = 0.0; // FIXME
+double dquadmon2 = 0.0;
+gsl_vector *PN_phi_at_nodes = NULL;
+TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, submodel_lo->mf_phi, &PN_phi_at_nodes);
+
+fprintf(stderr, "\nphiPN_at_nodes:");
+gsl_vector_fprintf(stderr, PN_phi_at_nodes, "%.15g");
+
+
+
+// FIXME: copy submodel_lo->mf_phi to a dedicated vector
+gsl_vector *PN_amp_at_nodes = NULL;
+TaylorF2Amplitude1PN(eta, submodel_lo->mf_phi, &PN_amp_at_nodes); // FIXME: should input mf_amp unless it is the same as mf_phi
+
+fprintf(stderr, "\nampPN_at_nodes:");
+gsl_vector_fprintf(stderr, PN_amp_at_nodes, "%.15g");
+
+
+
+// Setup 1d splines in frequency
+gsl_interp_accel *acc_phiNEW = gsl_interp_accel_alloc();
+gsl_spline *spline_phiNEW = gsl_spline_alloc(gsl_interp_cspline, N_phi);
+gsl_vector_add(sur_phi_at_nodes, PN_phi_at_nodes); // stores result in sur_phi_at_nodes
+gsl_spline_init(spline_phiNEW, gsl_vector_const_ptr(submodel_lo->mf_phi, 0),
+                gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
+
+
+
+gsl_interp_accel *acc_ampNEW = gsl_interp_accel_alloc();
+gsl_spline *spline_ampNEW = gsl_spline_alloc(gsl_interp_cspline, N_amp);
+// Compute amplitude = PN_amplitude * exp(surrogate_amplitude)
+gsl_vector *spline_amp_values = gsl_vector_alloc(N_amp);
+for (int i=0; i<N_amp; i++) {
+  double amp_i = gsl_vector_get(PN_amp_at_nodes, i) * exp(gsl_vector_get(sur_amp_at_nodes, i));
+  gsl_vector_set(spline_amp_values, i, amp_i);
+}
+
+gsl_spline_init(spline_ampNEW, gsl_vector_const_ptr(submodel_lo->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
+                gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
+
+
+
+
 
   // TODO: splines for amp, phi
   // FIXME: deallocate all amp, phi variables: PN, surrogate corrections
@@ -1548,11 +1635,36 @@ TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, submodel_lo->mf_phi);
     cdata[j] = -I * ccoef * htilde;
   }
 
+
+  // Assemble waveform from aplitude and phase
+  // FIXME: Temporary code block to output TEOB surrogate waveform
+  // Wipe the arrays clean again: remove this later
+  memset((*hptilde)->data->data, 0, npts * sizeof(COMPLEX16));
+  memset((*hctilde)->data->data, 0, npts * sizeof(COMPLEX16));
+  phase_change = gsl_spline_eval(spline_phiNEW, fRef_geom, acc_phiNEW) - 2*phiRef;
+  Mf_ROM_max = gsl_vector_get(submodel_lo->mf_phi, N_phi-1);
+  fprintf(stderr, "Mf_ROM_max = %g\n", Mf_ROM_max);
+  for (UINT4 i=0; i<freqs->length; i++) { // loop over frequency points in sequence
+    double f = freqs->data[i];
+    if (f > Mf_ROM_max) continue; // We're beyond the highest allowed frequency; since freqs may not be ordered, we'll just skip the current frequency and leave zero in the buffer
+    int j = i + offset; // shift index for frequency series if needed
+    double A = gsl_spline_eval(spline_ampNEW, f, acc_ampNEW);
+    double phase = gsl_spline_eval(spline_phiNEW, f, acc_phiNEW) - phase_change;
+    fprintf(stderr, "%d, %d    %g : %g %g\n", i, j, f, A, phase);
+    COMPLEX16 htilde = s*amp0*A * (cos(phase) + I*sin(phase));//cexp(I*phase);
+    pdata[j] =      pcoef * htilde;
+    cdata[j] = -I * ccoef * htilde;
+  }
+
+
   /* Correct phasing so we coalesce at t=0 (with the definition of the epoch=-1/deltaF above) */
 
   // Get SEOBNRv4 ringdown frequency for 22 mode
   double Mf_final = SEOBNRROM_Ringdown_Mf_From_Mtot_Eta(Mtot_sec, eta, chi1,
                                                         chi2, SEOBNRv4);
+
+  // FIXME: we need a function we can call for the BNS merger frequency!
+  Mf_final = 0.07; // FIXME: hack for now use Mf_max from surrogate
 
   UINT4 L = freqs->length;
   // prevent gsl interpolation errors
@@ -1591,6 +1703,15 @@ TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, submodel_lo->mf_phi);
   gsl_interp_accel_free(acc_phi);
   TEOBv4ROMdataDS_coeff_Cleanup(romdata_coeff_lo);
   TEOBv4ROMdataDS_coeff_Cleanup(romdata_coeff_hi);
+
+
+
+  // FIXME: make sure everything is freed also in case of errors
+  gsl_interp_accel_free(acc_phiNEW);
+  gsl_spline_free(spline_phiNEW);
+  gsl_interp_accel_free(acc_ampNEW);
+  gsl_spline_free(spline_ampNEW);
+
 
   return(XLAL_SUCCESS);
 }
