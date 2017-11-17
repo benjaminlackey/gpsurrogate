@@ -512,7 +512,7 @@ class GPSplineSurrogate(object):
         self.order = order
 
     @classmethod
-    def load(cls, nodes_filename, damp_gp_filename, dphase_gp_filename, order=2, npoints=10000):
+    def load(cls, nodes_filename, damp_gp_filename, dphase_gp_filename, order=3, npoints=10000):
         """Load surrogate model from 4 hdf5 data files.
         """
         mf_amp, mf_phase = load_amp_phase_nodes(nodes_filename)
