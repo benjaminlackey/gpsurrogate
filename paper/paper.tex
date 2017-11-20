@@ -28,6 +28,7 @@
 %\def\bmu{{\bm \mu}}
 
 \def\bx{\mathbf{x}}
+\def\by{\mathbf{y}}
 \def\btheta{\boldsymbol{\theta}}
 
 
@@ -529,121 +530,47 @@ precomputed.
 
 One of the main aims of this paper is to build a surrogate with as few waveform evaluations as possible. EOB models are expensive, and we would like a method that extends to higher dimensions and more expensive simulations such as numerical relativity simulations. Using the freedom provided by GPR to sample waveforms at arbitrary locations in parameter space, we try a set of more optimal designs. 
 
-One such design is a Latin Hypercube Design (LHD) [[cite]]. An LHD with $N$ samples divides each of $d$ dimension uniformly into $N$ grid points, for a total of $N^d$ grid points. However, for each dimension, the $N$ values are sampled exactly once. For an LHD there are $(N!)^d$ possible designs, and we choose one randomly~\footnote{There are ways to better choose an LHD. A standard requirement is that the LHD be space-filling, meaning that the points are as far apart as possible from each other. (See [[cite]] for a review of methods for optimizing the placement of samples.) One such definition of space filling is that the chosen locations maximize the minimum Euclidean distance between any two samples [[cite]]. We have not studied this here.}.
+One such design is a Latin Hypercube Design (LHD) [[cite]]. An LHD with $N$ samples divides each of $d$ dimensions uniformly into $N$ grid points, for a total of $N^d$ grid points. However, for each dimension, the $N$ values are sampled exactly once. For an LHD there are $(N!)^d$ possible designs, and we choose one randomly\footnote{There are ways to better choose an LHD. A standard requirement is that the LHD be space-filling, meaning that the points are as far apart as possible from each other. (See [[cite]] for a review of methods for optimizing the placement of samples.) One such definition of space filling is that the chosen locations maximize the minimum Euclidean distance between any two samples [[cite]]. We have not studied this here.}. An LHD has the property that the samples are non-collapsing; a projection onto a subspace is still an LHD. This avoids wasting samples when one of the parameters has much less of an effect than the other parameters. As an example of the usefulness of non-collapsing designs, the tidal parameters have a minimal impact on the waveform at low frequencies, so it wouldn't make sense to densely sample a grid of tidal parameters at low frequencies. However, during the merger the tidal parameters can be more important than the other parameters. One therefore might want more samples for the tidal parameters and less samples for the other parameters. However, due to the expense of the waveforms we must use the same set of waveforms for low and high frequencies. An LHD with its noncollapsing property bypasses this problem. 
 
-An LHD has the property that the samples are non-collapsing; a projection onto a subspace is still a uniformly sampled LHD. This avoids wasting samples when one of the parameters has much less of an effect than the other parameters. As an example of the usefulness of non-collapsing designs, the tidal parameters have a minimal impact on the waveform at low frequencies, so it wouldn't make sense to densely sample a grid of tidal parameters at low frequencies. However, near the merger the tidal parameters can be as important as the spin parameters. One therefore might want more samples for the tidal parameters and less samples for the spin. However, due to the expense of the waveforms we must use the same set of waveforms for low and high frequencies. An LHD with its noncollapsing property bypasses this problem. 
-
-We build an initial training set with 128 waveforms sampled with an LHD in our 5-dimensional parameter space given by $q\in[1/3, 1]$, $S_1, S_2 \in [-0.5, 0.5]$ and $\Lambda_1, \Lambda_2 \in [0, 5000]$. We also find empirically that the GPR uncertainty estimates are largest at the corners of the parameter space, so we also sample the 32 corners. We construct our initial surrogate with these 160 waveforms shown in Fig.~\ref{fig:LHD}.
+We build an initial training set with 128 waveforms sampled with an LHD in our 5-dimensional parameter space given by $q\in[1/3, 1]$, $S_1, S_2 \in [-0.5, 0.5]$ and $\Lambda_1, \Lambda_2 \in [0, 5000]$. In addition, we find empirically that the GPR uncertainty estimates are largest at the corners of the parameter space, so we also sample the 32 corners. We construct our initial surrogate with these 160 waveforms shown in Fig.~\ref{fig:LHD}.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\textwidth]{trainingset3d.png}\\
 \includegraphics[width=0.49\textwidth]{trainingset2d.png}
-\caption{Projection of the sampled waveforms onto the three-dimensional subspace $\{q, S_1, S_2\}$ (top)
-and the two-dimensional subspace $\{\Lambda_1, \Lambda_2\}$ (bottom). The 160 black circles were used for the initial
-training set (32 corner points + 128 LHD points) that generated the initial surrogate. The 200 red squares were generated
-using uncertainty sampling from the GPR error estimate of the RMS phase error at the empirical nodes. 
+\caption{Projection of the sampled waveforms onto the three-dimensional subspace $\{q, S_1, S_2\}$ (top) and the two-dimensional subspace $\{\Lambda_1, \Lambda_2\}$ (bottom). The 160 black circles were used for the initial training set (32 corner points + 128 LHD points) that generated the initial surrogate. The 200 red squares were generated using uncertainty sampling from the GPR error estimate of the RMS phase error at the interpolation nodes. The final 1000 waveforms are drawn uniformly from parameter space.
 }
 \label{fig:LHD}
 \end{figure}
 
-With this initial surrogate model, we can choose new training set samples by iteratively searching the parameter space for new points ${\bm x}$ that maximize some error criterion. The quantity that we use is the root-mean-square error in the phase at frequencies below $Mf=0.03$ [[justify this]].
+With this initial surrogate model, we can choose new training set samples by iteratively searching the parameter space for new points ${\bm x}$ that maximize some error criterion. The quantity that we use is the root-mean-square error in the phase at frequencies below $Mf=0.03$:
+\begin{equation}
+\epsilon_{\rm RMS} = \sqrt{\frac{1}{N} \sum_i (\sigma_{\Delta\Phi_i})^2},
+\label{eq:errorrms}
+\end{equation}
+where $\sigma_{\Delta\Phi_i}$ is the GPR estimate of the uncertainty in $\Delta\Phi(MF_i, \bx)$. [[justify the definition of error]]. For an initial training set with $N$ samples, this function has $\sim N$ local maxima located in the voids between samples $\bx$. To find the global maximum, we use a basin jumping method [[cite]] to avoid getting stuck in local maxima.
 
-[[equation here]]
-
-For an initial training set with $N$ samples, this function has $\sim N$ local maxima. To find the global maximum, we use a basin jumping method [[cite]] to avoid getting stuck in local maxima.
-
-%The quantity that we use is the distinguishability between the
-%EOB waveform and its surrogate [[cite]]
-%\begin{equation}
-%|\delta h | = \sqrt{(h - h_{\rm Sur} | h - h_{\rm Sur})}.
-%\end{equation}
-%For an initial training set with N samples, this function has $\sim N$ local maxima. We use Monte Carlo sampling with ~100,000
-%samples and choose the point with the largest distinguishability [[for now. Could also use multistart optimization.]] to find the 
-%approximate global maximum. Because $|\delta h |$ is an expensive function that requires an EOB or NR evaluation, 
-%we approximate it as follows:
-%
-%[[Your inexpensive way of approximating $|\delta h |$ that does not depend on $h_{\rm EOB}$ here.]]
-%\begin{equation}
-%\label{eq:distinguish}
-%|\delta h | \approx blah.
-%\end{equation}
-
-
-With this new sample, one could evaluate the waveform at the new point and reconstruct the surrogate model, then iterate.
-
-Reconstructing the surrogate for each new sample is inexpensive compared to the time needed to simulate a new NR waveform. 
-However, even for NR waveforms, one often wants to perform $N_{\rm new}$ new waveform simulations in parallel. 
-We therefore need a method for optimally choosing $N_{\rm new}$ new samples. One could simply choose the 
-$N_{\rm new}$ local maxima with the largest $|\delta h |$. However, there is a more optimal way of iteratively finding new points.
-If we hold the hyperparameters ${\bm \theta}$ fixed, we note that the GPR error estimate (Eq.~\eqref{eq:var}) does not depend
-on the data ${\bm y}$, just on the samples ${\bm x}$. Therefore, the approximate $|\delta h |$ (Eq.~\eqref{eq:distinguish}) does not depend
-on the new samples either. The method uses the idea of uncertainty sampling [[cite]] but without updating the hyperparameters
-after each new point is chosen. The algorithm for choosing the new points is as follows.
-
-While $|\delta h |_{\rm max} > \epsilon$:
+For low starting frequencies, reconstructing the surrogate for each new EOB waveform is smaller than the time needed to simulate a new EOB waveform. However, EOB waveforms are expensive enough that we would like a method to efficinetly choose $N_{\rm new}$ new waveforms in parallel. Reconstructing the surrogate with each new EOB waveform allows us to retune the hyperparameters $\btheta$ with each new waveform. However, if we hold the hyperparameters $\btheta$ fixed, we note that the GPR error estimate (Eq.~\eqref{eq:var}) does only depends on the samples $\bx$ and not on the data $\by$. Therefore, the approximate $\epsilon_{\rm rms}$ (Eq.~\eqref{eq:distinguish}) only depends on the parameters of the new waveform, not on the waveform data. The method uses the idea of uncertainty sampling [[cite]] but without updating the hyperparameters after each new point is chosen. The algorithm for choosing the $N_{\rm new}$ new points is as follows.
+For $i = 1, \dots, N_{\rm new}$:
 \begin{enumerate}
-\item Construct the GPR error functions (Eq.~\eqref{eq:var}) at each of the empirical nodes $F^A_j$ and $F^\Phi_j$.
-In practice this can be done by specifying the samples ${\bm x}$, the hyperparameters ${\bm \theta}$, and dummy 
-data ${\bm y}={\bm 1}$. These GPR error functions are the input to Eq.~\eqref{eq:distinguish}.
 
-\item Find $({\bm x}_{\rm max}, |\delta h |_{\rm max})$ that maximizes Eq.~\eqref{eq:distinguish} over the parameter space. 
+\item Construct the GPR error estimator (Eq.~\eqref{eq:errorrms}). In practice this can be done by specifying the samples $\bx$, the hyperparameters $\btheta$, and dummy data for $\by$ since Eq.~\eqref{eq:errorrms} does not depend on $\by$.
+
+\item Find $({\bm x}_{\rm max}, \epsilon_{\rm rms})$ that maximizes Eq.~\eqref{eq:errorrms} over the parameter space. 
+
 \item Add ${\bm x}_{\rm max}$ to the list of samples: ${\bm x} = [{\bm x}, {\bm x}_{\rm max}]$.
+
 \end{enumerate}
-These new waveforms can now be evaluated in parallel.
+These new waveforms can now be evaluated in parallel. An updated surrogate can then be constructed with re-optimized hyperparameters $\btheta$ using the $N_{\rm old}+N_{\rm new}$ waveforms.
 
-[[The methods used here fall under the terms active learning and Bayesian optimization [[cite]]. The specific method being used is
-uncertainty sampling [[cite]]. The parallelization method I am using I have not seen in the literature. Is it actually new? Ask Niki.]]
-
-
-[[Another method you could try is k-means clustering of the mismatch for your validation set (using mismatch above some threshold), 
-where you have $k=N$, because there will
-be $\sim N$ local maxima of the mismatch. Within each cluster, choose the waveform with the largest mismatch and add it to the
-training set. This way you only use one new point per local maximum region. You could do the same thing with the Fisher matrix
-systematic error calculation instead of the mismatch if that's a better quantity to use.]]
+Fig.~\ref{fig:LHD} shows the parameters of the 200 new waveforms chosen by the uncertainty sampling method. We note that the edges faces of the parameter space are more often chosen than the inner region. This is likely a consequence of the Mat\'{e}rn GPR kernel used. Ref.~[[]] found similar behavior when using a Mat\'{e}rn kernel instead of a squared-exponential kernel. Fig.~\ref{fig:uncsamp} shows the RMS error $\epsilon_{\rm rms}$ maximized over the parameters $\bx$ for each new sample added to the training set.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\textwidth]{uncertaintysampling.png}
-\caption{Estimated RMS phase error as function of number of sampled points}
+\caption{Estimated RMS phase error $\epsilon_{\rm rms}$ as function of the number of sampled waveforms (blue curve). The first 160 waveforms are from the initial training set chosen from the corners of parameter space and an LHD. The next 200 waveforms are chosen with uncertainty sampling. The final 1000 waveforms are drawn uniformly from parameter space. The markers are the comparisons of $\epsilon_{\rm rms}$ calculated by maximizing the error over a test set of 1000 waveforms instead of using Eq.~\eqref{eq:errorrms} for the error estimate.}
 \label{fig:uncsamp}
 \end{figure}
-
-%In constructing a surrogate model, we will need to interpolate several quantities as a function of the five
-%waveform parameters ${\bm x}$.
-%Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) 
-%require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; 
-%the number of samples grows exponentially with the dimension $d$ ($N^d$ for $N$ samples per dimension).
-%In the 5-dimensional problem discussed here, $10^5$ waveform evaluations are needed for only 10 samples per parameter.
-%At 10 minutes--1 hour per EOB waveform on a standard CPU, this is at the limit of what is reasonable.
-
-%For a smooth approximately monotonic function in $d$-dimensions, standard lore is that $10d$ samples are needed to interpolate 
-%a function with GPR [[cite]] [[To what accuracy]]. We therefore construct our initial training set with 50 waveform samples, and use 
-%these waveforms to construct the reduced basis and perform interpolation with GPR. Once an initial surrogate model is constructed,
-%we will use the GPR error estimate to choose new waveforms to add to the training set, and update the surrogate model.
-
-
-%A general overview of the process we have used is as follows:
-%\begin{enumerate}
-%\item Select an initial, sparse set of waveform parameters $\bx$ that cover the parameter space using a Latin Hypercube Design (LHD).
-%
-%\item Evaluate the initial training set of EOB waveforms $h(t;\bx)$ and condition them to produce smoothed, frequency-domain waveforms $\tilde h(f;\bx)$.
-%
-%%\item Construct separate orthonormal, reduced bases for the amplitude $A(f;\bx)$ and phase $\Phi(f;\bx)$ of the training set waveforms. Then, use the empirical interpolation method (EIM) to generate separate sets of frequency-dependent empirical interpolating functions for the amplitude $B^A_j(f)$ and phase $B^\Phi_j(f)$.
-%
-%\item Choose interpolation nodes.
-%
-%%\item For each empirical interpolating function, interpolate the amplitude $A(F^A_j;\bx)$ or phase $\Phi(F^\Phi_j;\bx)$ at the associated frequency nodes $F^A_j$ or $F^\Phi_j$, respectively, as a function of the waveform parameters $\bx$ using GPR.
-%
-%\item GPR
-%
-%
-%\item With the resulting surrogate model and GPR uncertainty estimates, iteratively choose the points in parameter space with the largest estimated waveform errors. Then, generate these waveforms and add them to the initial training set.
-%
-%\item Reconstruct the surrogate model with the updated training set. This can be repeated as necessary with additional training set waveforms.
-%
-%\end{enumerate}
-
 
 
 \subsection{Surrogate waveform evaluation}
@@ -763,15 +690,9 @@ To demonstrate that we can correctly recover the behavior of the original unfilt
 
 \subsection{Timing}
 
-Although optimizing the hyperparameters scales with number of samples $n$ as $\mathcal{O}(n^3)$
-due to the required matrix inversion, the evaluation time of a stored GPR scales as $\mathcal{O}(n)$.
-The evaluation time for the waveform functions will therefore be $\mathcal{O}(n(N_A+N_\Phi))$.
+The surrogate evaluation time can be roughly decomposed into two times. The first is the time needed to evaluate the residuals $\Delta\ln(A)(F_j; \bx)$ and $\Delta\Phi(F_j; \bx)$ at each of the $N_A+N_\Phi$ interpolating nodes. Although optimizing the hyperparameters scales with the number of samples $n$ as $\mathcal{O}(n^3)$ due to the required matrix inversion, the evaluation time of a stored GPR scales as $\mathcal{O}(n)$. The evaluation time for the residuals will therefore be fixed cost of $\mathcal{O}(n(N_A+N_\Phi))$. The second part is the time needed to resample the final surrogate (Eq.[[ref]]) at uniformly spaced frequency samples in physical units beginning at a starting frequency $f_{\rm low}$.
 
-The surrogate has a fixed time of $\sim 50$~ms to evaluate the GPR at each node then evaluate the amplitude
-and phase at the log-spaced frequencies. Then, there is an additional cost to resample the amplitude and phase
-at uniformly-spaced frequencies with interpolation, and finally evaluating $\tilde h_+$ and $\tilde h_\times$. 
-Below 50~Hz the surrogate is faster than all models except TaylorF2 [[you didn't try PhenomP etc.]], and below
-18~Hz it is faster than TaylorF2. 
+In Fig.~\ref{fig:timing}, we show the surrogate evaluation time as a function of starting frequency $f_{\rm low}$. The surrogate has a fixed time of $\sim 50$~ms to evaluate the GPR at each node. The additional cost to resample the amplitude and phase at uniformly-spaced frequencies with spline interpolation dominates at starting frequencies below $\sim 30$~Hz. We also compare the evaluation time to several BNS waveform models that have been used for LIGO data analysis. We note that at $\sim 30$~Hz, the TEOBv4\_surrogate model is comparable to the SEOBNRv4\_ROM\_NRTidal and IMRPhenomD\_NRTidal models that were used in the analysis of the GW170817 event [[cite]]. At lower frequencies, the surrogate is faster than all BNS waveform models except for TaylorF2. 
 
 \begin{figure}[htb]
 \centering
@@ -781,14 +702,6 @@ were sampled at 4096~Hz then Fourier transformed. The frequency-domain waveforms
 same frequency samples as the Fourier transformed time-domain waveforms.}
 \label{fig:timing}
 \end{figure}
-
---Frequency domain allows for evaluating likelihood with non-uniform sampling.
-
---Can construct a ROQ of the model if needed.
-
-%\subsection{Parameter estimation}
-%
-%--Can only include this section if there's a LAL version. Should you bother?
 
 
 \section{Discussion and future work}
@@ -807,7 +720,7 @@ The second effect is precession for non-aligned spins. Although none of the EOB 
 %% ________________________________________________________
 \begin{acknowledgments}
 
-BL thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the Institute for Nuclear Theory where many of the methods used here were discussed. We thank Sylvain Marsat for fixing issues that caused the original TEOBv4 model to be numerically unstable. BL, MP, and AT were supported by... 
+BL thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the Institute for Nuclear Theory where many of the methods used here were discussed. We also thank Sylvain Marsat for correcting numerical instabilities in the original TEOBv4 code. The authors were supported by... 
 
 \end{acknowledgments}
 
