@@ -362,43 +362,27 @@ With these relations the waveform only depends on 5 intrinsic parameters $\bx=\{
 %% ________________________________________________________
 \section{Surrogate model}
 
-In this section we describe a method for decomposing the waveform into smooth, slowly-varying functions and training a surrogate model for these functions. We will work with the frequency domain waveform $\tilde h(f; \bx)$. This is favorable for data analysis which is usually done in the frequency domain. It also allows us to extend the model down to arbitrarily low frequencies with analytic, Frequency-domain PN approximations. Unfortunately, Fourier transforming a finite length, discretely sampled waveform, leads to a surrogate with more noise. We will show below, however, that sufficient filtering can mostly solve this problem.
+In this section we describe how we decompose the waveform into smooth, slowly-varying functions and train a surrogate model for these functions. We will work with the frequency-domain waveform $\tilde h(Mf; \bx)$. This is favorable for data analysis which is usually done in the frequency domain. It also allows us to extend the model down to arbitrarily low frequencies with analytic, Frequency-domain PN approximations. Unfortunately, Fourier transforming a finite length, discretely sampled waveform leads to a surrogate with more noise. We will show below, however, that sufficient filtering can solve this problem.
 
 \subsection{Decomposition of the waveform}
 
-Because the waveform $\tilde h(f; \bx)$ is an oscillatory function of $f$ and $\bx$, the waveform is usually decomposed into an amplitude $A(f; \bx)$ and phase $\Phi(f; \bx)$ as $\tilde h(f; \bx) = A(f; \bx) e^{i\Phi(f; \bx)}$. These functions are smoother, mostly monotonic functions of $f$ and $\bx$. This can be seen in Fig.~\ref{fig:h} which shows the initial training set of waveforms. \red{[[Actually, you might want to show the 51 waveforms with only $S_1$ varied. Then show them as a function of $f$ and another plot as a function of $S_1$.]]} Unfortunately, the amplitude and phase still span a wide range of values. The phase, for example, spans about $10^4$~rad. To avoid systematic errors in the tidal parameters, we need phase errors of $\lesssim 1$~rad over most of this frequency range, leading to a requirement on the fractional interpolation error of $\lesssim 10^{-4}$~rad. This is a difficult requirement to achieve in the 5-dimensional parameter space here. 
+%Because the waveform $\tilde h(Mf; \bx)$ is an oscillatory function of $Mf$ and $\bx$, the waveform is usually decomposed into an amplitude $A(Mf; \bx)$ and phase $\Phi(Mf; \bx)$ as $\tilde h(Mf; \bx) = A(Mf; \bx) e^{i\Phi(Mf; \bx)}$. These functions are smoother, mostly monotonic functions of $Mf$ and $\bx$. This can be seen in Fig.~\ref{fig:h} which shows the initial training set of waveforms. \red{[[Actually, you might want to show the 51 waveforms with only $S_1$ varied. Then show them as a function of $f$ and another plot as a function of $S_1$.]]} Unfortunately, the amplitude and phase still span a wide range of values. The phase, for example, spans about $10^4$~rad. To avoid systematic errors in the tidal parameters, we need phase errors of $\lesssim 1$~rad over most of this frequency range, leading to a requirement on the fractional interpolation error of $\lesssim 10^{-4}$~rad. This is a difficult requirement to achieve in the 5-dimensional parameter space here. 
 
-\begin{figure}[htb]
-\centering
-\includegraphics[width=0.49\textwidth]{h_trainingset.png}
+%\begin{figure}[htb]
+%\centering
+%\includegraphics[width=0.49\textwidth]{h_trainingset.png}
+%%\includegraphics[width=0.49\textwidth]{dh_trainingset.png}
+%\caption{Training set. Maybe instead show the waveform set which varies 1 parameter.}
+%\label{fig:h}
+%\end{figure}
+
+%\begin{figure}[htb]
+%\centering
+%%\includegraphics[width=0.49\textwidth]{h_trainingset.png}\\
 %\includegraphics[width=0.49\textwidth]{dh_trainingset.png}
-\caption{Training set. Maybe instead show the waveform set which varies 1 parameter.}
-\label{fig:h}
-\end{figure}
-
-For aligned-spin waveforms, we can solve this problem using that fact that the waveform is approximately known analytically from the stationary phase approximation to the post-Newtonian (PN) waveform known as TaylorF2 [[cite]] $\tilde h_{\rm F2}(f; \bx) = A_{\rm F2}(f; \bx) e^{i\Phi_{\rm F2} (f; \bx)}$. This allows us to write the EOB amplitude and phase in terms of the small residuals, $\Delta\ln(A)(f; \bx)$ and $\Delta\Phi(f; \bx)$, relative to TaylorF2:
-\begin{align}
-\Delta\ln(A)(f; \bx) &= \ln\left(\frac{ A(f; \bx) }{ A_{\rm F2}(f; \bx)}\right), \label{eq:ampres}\\
-\Delta\Phi(f; \bx) & = \Phi(f; \bx) - \Phi_{\rm F2}(f; \bx), \label{eq:phaseres}
-\end{align}
-such that
-\begin{align}
-\tilde h(f; \bx) = \tilde h_{\rm F2}(f; \bx) e^{\Delta\ln(A)(f; \bx) + i  \Delta\Phi(f; \bx)}.
-\label{eq:hdecomp}
-\end{align}
-%\begin{align}
-%\tilde h(f; \bx) = A_{\rm F2}(f; \bx) e^{i\Phi_{\rm F2}(f; \bx)} e^{\Delta\ln(A)(f; \bx) + i  \Delta\Phi(f; \bx)}.
-%\label{eq:hdecomp}
-%\end{align}
-These residuals are shown in Fig.~\ref{fig:dh}. For the amplitude residual, we use a log-ratio instead of a ratio because it guarantees that the amplitude of the reconstructed waveform in Eq.~\eqref{eq:hdecomp} will be positive even if interpolation error leads to a negative $\Delta\ln(A)(f; \bx)$. In addition, because the waveform amplitude spans several orders of magnitude after the merger frequency of each waveform, the log-ratio captures this behavior. Comparing Fig.~\ref{fig:dh} to Fig.~\ref{fig:h}, we find that for most of the frequency range, the range in $\Delta\Phi$ is a few orders of magnitude smaller than the range in $\Phi$.
-
-\begin{figure}[htb]
-\centering
-%\includegraphics[width=0.49\textwidth]{h_trainingset.png}\\
-\includegraphics[width=0.49\textwidth]{dh_trainingset.png}
-\caption{Training set. Maybe instead show the waveform set which varies 1 parameter.}
-\label{fig:dh}
-\end{figure}
+%\caption{Training set. Maybe instead show the waveform set which varies 1 parameter.}
+%\label{fig:dh}
+%\end{figure}
 
 %To demonstrate the usefulness of this approach, in Fig.~\ref{fig:phaserange}, we show the range of values of the phase $\Phi$ over the training set $\Phi_{\rm range} = \Phi_{\rm max} - \Phi_{\rm min}$ as well as the range of values of the phase residual $\Delta\Phi$ over the training set $\Delta\Phi_{\rm range} = \Delta\Phi_{\rm max}-\Delta\Phi_{\rm min}$. The range in $\Phi$ can be larger than 1000~radians. The range of $\Delta\Phi$ is 1--2 orders of magnitude smaller, and as a result, the interpolation accuracy requirements are 1--2 orders of magnitude smaller as well. 
 %
@@ -409,6 +393,35 @@ These residuals are shown in Fig.~\ref{fig:dh}. For the amplitude residual, we u
 %meaning that the interpolation accuracy requirements are at least $\sim 2$ orders of magnitude less for $\Delta\Phi$.}
 %\label{fig:phaserange}
 %\end{figure}
+
+
+Because the waveform $\tilde h(Mf; \bx)$ is an oscillatory function of $Mf$ and $\bx$, the waveform is usually decomposed into an amplitude $A(Mf; \bx)$ and phase $\Phi(Mf; \bx)$ as $\tilde h(Mf; \bx) = A(Mf; \bx) e^{i\Phi(Mf; \bx)}$. The amplitude and phase are smoother, mostly monotonic functions of frequency. This can be seen in Fig.~\ref{fig:hoff} where we show the waveforms for the 32 corners of the 5-dimensional parameter space. Unfortunately, the amplitude and phase still span a wide range of values. The phase, for example, spans about $10^4$~rad between waveforms with different parameters $\bx$ (see Fig.~\ref{fig:hoff}). To avoid systematic errors in the tidal parameters, we need phase errors of $\lesssim 1$~rad over most of this frequency range, leading to a requirement on the fractional interpolation error of $\lesssim 10^{-4}$~rad. This is a difficult requirement to achieve in the 5-dimensional parameter space here. 
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.49\textwidth]{hoff.png}
+\caption{EOB waveforms $\tilde h(Mf; \bx)$ for the 32 corners of parameter space. The waveforms are filtered and Fourier transformed as described in Sec.~\ref{sec:condition}. Top two panels: the amplitude $A(Mf; \bx)$ and residual $\Delta\ln A(Mf; \bx)$ relative to TaylorF2 as defined in Eq.~\eqref{eq:ampres}. Bottom two panels: the phase $\Phi(Mf; \bx)$ and residual $\Delta\Phi(Mf; \bx)$ relative to TaylorF2 as defined in Eq.~\eqref{eq:phaseres}. Vertical dashed lines represent the frequency nodes $MF_j$ where the residuals are interpolated as functions of $\bx$ using Gaussian process regression.}
+\label{fig:hoff}
+\end{figure}
+
+For aligned-spin waveforms, we can solve this problem using the fact that the waveform is approximately known analytically from the stationary phase approximation to the post-Newtonian (PN) waveform known as TaylorF2 [[cite]] $\tilde h_{\rm F2}(Mf; \bx) = A_{\rm F2}(Mf; \bx) e^{i\Phi_{\rm F2} (Mf; \bx)}$. This allows us to write the EOB amplitude and phase in terms of small residuals, $\Delta\ln(A)(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$, relative to TaylorF2:
+\begin{align}
+\Delta\ln(A)(Mf; \bx) &= \ln\left(\frac{ A(Mf; \bx) }{ A_{\rm F2}(Mf; \bx)}\right), \label{eq:ampres}\\
+\Delta\Phi(Mf; \bx) & = \Phi(Mf; \bx) - \Phi_{\rm F2}(Mf; \bx), \label{eq:phaseres}
+\end{align}
+such that
+\begin{align}
+\tilde h(Mf; \bx) = \tilde h_{\rm F2}(Mf; \bx) e^{\Delta\ln(A)(Mf; \bx) + i  \Delta\Phi(Mf; \bx)}.
+\label{eq:hdecomp}
+\end{align}
+These residuals are also shown in Fig.~\ref{fig:hoff}. For the amplitude residual, we use a log-ratio instead of a ratio because it guarantees that the amplitude of the reconstructed waveform (Eq.~\eqref{eq:hdecomp}) will be positive even if interpolation error leads to a negative value of $\Delta\ln(A)(Mf; \bx)$. In addition, because the waveform amplitude spans several orders of magnitude after the merger frequency of each waveform, the log-ratio captures this behavior. Comparing the phase $\Phi$ and phase residual $\Delta\Phi$ in Fig.~\ref{fig:hoff}, we find that the range in $\Delta\Phi$ is a few orders of magnitude smaller than the range in $\Phi$ except at very high frequencies. In Fig.~\ref{fig:dhofs}, we show the amplitude and phase residuals at three fixed frequencies as functions of the waveform parameter $S_1$. These quantities are smooth functions of $\bx$, except for the amplitude residual at very high frequencies where the amplitude is small and numerical noise dominates, implying that interpolation as functions of $\bx$ should work.
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.49\textwidth]{dhofs.png}
+\caption{Cross sections of the amplitude and phase residuals as functions of $S_1$ for the fixed frequencies $Mf=\{0.01, 0.03, 0.05\}$. The waveform parameters are $\bx = \{q, S_1, S_2, \Lambda_1, \Lambda_2\} = \{0.6, S_1, 0.2, 2000, 1000\}$. The waveforms are generated for 51 values of $S_1$ shown as dots. Also shown is the 1-dimensional cross section of the final surrogate using Gaussian process regression (solid black) as well as its estimated $1\sigma$ uncertainty (shaded gray region).}
+\label{fig:dhofs}
+\end{figure}
 
 The explicit expressions for the amplitude and phase of the TaylorF2 waveform are as follows. For the amplitude we use the 1PN correction to the leading order waveform.
 \begin{equation}
@@ -425,6 +438,7 @@ We use the point particle terms ${\rm PP}(\eta)$ to 3.5PN order in Eq.~[[]] of R
 
 
 \subsection{Conditioning the training set waveforms}
+\label{sec:condition}
 
 The accuracy of the final frequency-domain surrogate depends on how well the finite-length, numerical waveform is Fourier transformed and filtered to remove numerical artifacts. We now describe the procedure to condition the training-set waveforms used to construct the surrogate.
 
@@ -436,8 +450,7 @@ The resulting waveforms still have some remaining Gibbs oscillations which can b
 
 Finally, we truncate the residuals outside the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}] = [0.00021, 0.07]$. We note that the gravitational-wave frequency at the Schwarzschild ISCO is $Mf_{\rm ISCO} = 1/(6^{3/2}\pi) \approx 0.022$. Although second generation detectors are only marginally sensitive to BNS signals above this frequency, we use the high-frequency cutoff of $Mf_{trunc,f}=0.07$ because the amplitude of some of the EOB waveforms is still large enough at these high frequencies to affect the structure of the surrogate waveform if inverse Fourier transformed back into the time domain.
 
-\red{[[Show plot (?) to validate that waveform is properly conditioned by plotting amplitude/phase as function of waveform parameters at specific frequencies and show that they're smooth functions?]]}
-
+To validate that the waveforms are sufficiently conditioned, we plot cross-sections of the residuals in Fig.~\ref{fig:dhofs} for fixed frequencies as functions of the waveform parameter $S_1$. The fact that the residuals are smooth functions of the waveform parameters indicates that most numerical noise has been removed. The exception is the noisy amplitude residual at high frequencies, $\Delta\ln(A)(Mf=0.05; \bx)$, where the amplitude is very small and dominated by numerical noise. 
 
 \subsection{Spline interpolation for frequency $f$}
 
