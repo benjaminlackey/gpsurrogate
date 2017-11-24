@@ -399,12 +399,12 @@ Because the waveform $\tilde h(Mf; \bx)$ is an oscillatory function of $Mf$ and 
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{hoff.png}
-\caption{EOB waveforms $\tilde h(Mf; \bx)$ for the 32 corners of parameter space. The waveforms are filtered and Fourier transformed as described in Sec.~\ref{sec:condition}. Top two panels: the amplitude $A(Mf; \bx)$ and residual $\Delta\ln A(Mf; \bx)$ relative to TaylorF2 as defined in Eq.~\eqref{eq:ampres}. Bottom two panels: the phase $\Phi(Mf; \bx)$ and residual $\Delta\Phi(Mf; \bx)$ relative to TaylorF2 as defined in Eq.~\eqref{eq:phaseres}. Vertical dashed lines represent the frequency nodes $MF_j$ where the residuals are interpolated as functions of $\bx$ using Gaussian process regression.}
+\includegraphics[width=0.49\textwidth]{hoff.pdf}
+\caption{EOB waveforms $\tilde h(Mf; \bx)$ for the 32 corners of parameter space. The waveforms are filtered and Fourier transformed as described in Sec.~\ref{sec:condition}. Top two panels: the amplitude $A(Mf; \bx)$ and residual $\Delta\ln A(Mf; \bx)$ relative to TaylorF2 as defined in Eq.~\eqref{eq:ampres}. Bottom two panels: the phase $\Phi(Mf; \bx)$ and residual $\Delta\Phi(Mf; \bx)$ relative to TaylorF2 as defined in Eq.~\eqref{eq:phaseres}. Vertical dashed lines represent the frequency nodes $MF_j$ where the residuals are interpolated as functions of $\bx$ using Gaussian process regression. The vertical solid line at $Mf_{\rm ISCO} = 1/(6^{3/2}\pi) \approx 0.022$ is the gravitational-wave frequency at the Schwarzschild ISCO.}
 \label{fig:hoff}
 \end{figure}
 
-For aligned-spin waveforms, we can solve this problem using the fact that the waveform is approximately known analytically from the stationary phase approximation to the post-Newtonian (PN) waveform known as TaylorF2 [[cite]] $\tilde h_{\rm F2}(Mf; \bx) = A_{\rm F2}(Mf; \bx) e^{i\Phi_{\rm F2} (Mf; \bx)}$. This allows us to write the EOB amplitude and phase in terms of small residuals, $\Delta\ln(A)(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$, relative to TaylorF2:
+For aligned-spin waveforms, we can solve this problem using the fact that the waveform is approximately known analytically from the stationary phase approximation to the post-Newtonian (PN) waveform known as TaylorF2 [[cite]] $\tilde h_{\rm F2}(Mf; \bx) = A_{\rm F2}(Mf; \bx) e^{i\Phi_{\rm F2} (Mf; \bx)}$. This allows us to write the EOB amplitude and phase in terms of small residuals, $\Delta\ln(A)(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$, relative to TaylorF2
 \begin{align}
 \Delta\ln(A)(Mf; \bx) &= \ln\left(\frac{ A(Mf; \bx) }{ A_{\rm F2}(Mf; \bx)}\right), \label{eq:ampres}\\
 \Delta\Phi(Mf; \bx) & = \Phi(Mf; \bx) - \Phi_{\rm F2}(Mf; \bx), \label{eq:phaseres}
@@ -414,12 +414,12 @@ such that
 \tilde h(Mf; \bx) = \tilde h_{\rm F2}(Mf; \bx) e^{\Delta\ln(A)(Mf; \bx) + i  \Delta\Phi(Mf; \bx)}.
 \label{eq:hdecomp}
 \end{align}
-These residuals are also shown in Fig.~\ref{fig:hoff}. For the amplitude residual, we use a log-ratio instead of a ratio because it guarantees that the amplitude of the reconstructed waveform (Eq.~\eqref{eq:hdecomp}) will be positive even if interpolation error leads to a negative value of $\Delta\ln(A)(Mf; \bx)$. In addition, because the waveform amplitude spans several orders of magnitude after the merger frequency of each waveform, the log-ratio captures this behavior. Comparing the phase $\Phi$ and phase residual $\Delta\Phi$ in Fig.~\ref{fig:hoff}, we find that the range in $\Delta\Phi$ is a few orders of magnitude smaller than the range in $\Phi$ except at very high frequencies. In Fig.~\ref{fig:dhofs}, we show the amplitude and phase residuals at three fixed frequencies as functions of the waveform parameter $S_1$. These quantities are smooth functions of $\bx$, except for the amplitude residual at very high frequencies where the amplitude is small and numerical noise dominates, implying that interpolation as functions of $\bx$ should work.
+These residuals are also shown in Fig.~\ref{fig:hoff}. For the amplitude residual, we use a log-ratio instead of a ratio because it guarantees that interpolation errors will not lead to a negative amplitude for the reconstructed waveform (Eq.~\eqref{eq:hdecomp}). In addition, because the waveform amplitude spans several orders of magnitude after the merger frequency, the log-ratio captures this behavior. Comparing the phase $\Phi$ and phase residual $\Delta\Phi$ in Fig.~\ref{fig:hoff}, we find that the range in $\Delta\Phi$ is a few orders of magnitude smaller than the range in $\Phi$ except at very high frequencies. In Fig.~\ref{fig:dhofs}, we show the amplitude and phase residuals at three fixed frequencies as functions of the waveform parameter $S_1$. These quantities are smooth functions of $\bx$, implying that interpolation as a function of $\bx$ should work. The exception is the amplitude residual at very high frequencies where the amplitude is small and numerical noise dominates.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{dhofs.png}
-\caption{Cross sections of the amplitude and phase residuals as functions of $S_1$ for the fixed frequencies $Mf=\{0.01, 0.03, 0.05\}$. The waveform parameters are $\bx = \{q, S_1, S_2, \Lambda_1, \Lambda_2\} = \{0.6, S_1, 0.2, 2000, 1000\}$. The waveforms are generated for 51 values of $S_1$ shown as dots. Also shown is the 1-dimensional cross section of the final surrogate using Gaussian process regression (solid black) as well as its estimated $1\sigma$ uncertainty (shaded gray region).}
+\includegraphics[width=0.49\textwidth]{dhofs.pdf}
+\caption{Cross sections of the amplitude and phase residuals as functions of $S_1$ at three nodes $MF_j$. The waveforms are generated for 51 values of $S_1$ shown as dots with the other parameters held constant at $\{q, S_2, \Lambda_1, \Lambda_2\} = \{0.6, 0.2, 2000, 1000\}$. Also shown are 1-dimensional cross sections of the interpolated residuals using Gaussian process regression (solid black) as well as their estimated $1\sigma$ uncertainty (shaded gray region).}
 \label{fig:dhofs}
 \end{figure}
 
@@ -448,33 +448,35 @@ Waveforms have free time and phase parameters $t_c$ and $\phi_c$, and in the fre
 
 The resulting waveforms still have some remaining Gibbs oscillations which can be seen as small-amplitude, high-frequency oscillations in the residuals $\Delta\ln(A)(Mf)$ and $\Delta\Phi(Mf)$. These come from two sources. The first is the fact that the Planck window at the beginning of the waveform was not sufficiently long. We could make this window longer, but that would require us to start the surrogate at a higher frequency. The second source comes from the end of the waveform where the amplitude rapidly drops to zero amplitude after the peak amplitude in $\sim 1$ cycle. The Gibbs oscillations at high frequencies are therefore a genuine feature of the EOB model. In an attempt to preserve all structure in the EOB waveform, we choose not to window the end of the time-domain waveform. We instead remove these oscillations in the frequency domain using a moving average filter centered on $Mf$ with width $[Mf(1-\Delta Mf), Mf(1+\Delta Mf)]$. We use a width of $\Delta Mf=0.1$ for the amplitude residual and $\Delta Mf=0.05$ for the phase residual. Smoothing these oscillations makes it significantly easier to interpolate the amplitude and phase residuals as functions of $Mf$ and $\bx$.
 
-Finally, we truncate the residuals outside the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}] = [0.00021, 0.07]$. We note that the gravitational-wave frequency at the Schwarzschild ISCO is $Mf_{\rm ISCO} = 1/(6^{3/2}\pi) \approx 0.022$. Although second generation detectors are only marginally sensitive to BNS signals above this frequency, we use the high-frequency cutoff of $Mf_{trunc,f}=0.07$ because the amplitude of some of the EOB waveforms is still large enough at these high frequencies to affect the structure of the surrogate waveform if inverse Fourier transformed back into the time domain.
+Finally, we truncate the residuals outside the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}] = [0.00021, 0.07]$. We note that the gravitational-wave frequency at the Schwarzschild ISCO is $Mf_{\rm ISCO} = 1/(6^{3/2}\pi) \approx 0.022$. Although second generation detectors are only marginally sensitive to BNS signals above this frequency, we use the high-frequency cutoff of $Mf_{{\rm trunc}, f}=0.07$ because the amplitude of some of the EOB waveforms is still large enough at these high frequencies to affect the structure of the surrogate waveform if inverse Fourier transformed back into the time domain.
 
-To validate that the waveforms are sufficiently conditioned, we plot cross-sections of the residuals in Fig.~\ref{fig:dhofs} for fixed frequencies as functions of the waveform parameter $S_1$. The fact that the residuals are smooth functions of the waveform parameters indicates that most numerical noise has been removed. The exception is the noisy amplitude residual at high frequencies, $\Delta\ln(A)(Mf=0.05; \bx)$, where the amplitude is very small and dominated by numerical noise. 
+To validate that the waveforms are sufficiently conditioned, we plot cross-sections of the residuals in Fig.~\ref{fig:dhofs} for fixed frequencies as functions of one of the waveform parameters $S_1$. The fact that the residuals are smooth functions of the waveform parameters indicates that most numerical noise has been removed. The exception is the noisy amplitude residual at high frequencies, $\Delta\ln(A)(Mf=0.05; \bx)$, where the amplitude is very small and dominated by numerical noise. 
 
 \subsection{Spline interpolation for frequency $f$}
 
 We now seek to interpolate the conditioned residuals $\Delta\ln(A)(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$. We begin by choosing a method for interpolating as a function of $Mf$ for fixed $\bx$. The majority of previous papers on gravitational-wave surrogates have used an orthonormal basis of global functions $\hat e_i(Mf)$ for interpolating as a function of frequency (or time) [[cite]]. This type of surrogate, built from a reduced basis, is usually referred to as a reduced order model. For a generic function $g(Mf; \bx)$, this decomposition can be written as $g(Mf; \bx) \approx \sum_{i=1}^N c_i(\bx) \hat e_i(Mf)$. The coefficients $c_i(\bx)$ are then interpolated as functions of $\bx$ [[Puerrer]]. Alternatively, using the empirical interpolation method [[cite]], one can re-express these basis functions $\hat e_i(Mf)$ in terms of empirical interpolating functions $B_j(Mf)$ and the value of $g(Mf; \bx)$ at empirical nodes $MF_j$ as $g(Mf; \bx) \approx \sum_{j=1}^N B_j(Mf) g(MF_j; \bx)$. The location of these nodes $MF_j$ is then optimized to minimize interpolation errors. This method has been used in Refs.~[[cite]].
 
-For the problem here, we have found that global basis functions do not work well. The residuals are small and smooth at low frequencies and large and noisy at high frequencies. Errors in evaluating $g(MF_j;\bx)$ for high frequency can propagate to large errors at low frequencies. Instead, we find that spline interpolation works significantly better. We use 20 frequency nodes $MF_j$ log-spaced in the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}]$. We evaluate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at these nodes as discussed below. We then interpolate between these frequencies using third-order splines. The local, third-order polynomials, that are only connected by the requirement of smoothness [[check this]] do not propagate high-frequency errors down to low-frequency errors as significantly as do global basis functions.
+For the problem here, we have found that global basis functions do not work well. The residuals are small and smooth at low frequencies and large and noisy at high frequencies. With global basis functions, errors in evaluating $g(MF_j;\bx)$ at high frequencies can propagate to large errors between the nodes $MF_j$ at low frequencies. Instead, we find that spline interpolation works significantly better. We use 40 frequency nodes $MF_j$ log-spaced in the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}]$ (see Fig.~\ref{fig:hoff}). We evaluate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at these nodes as discussed below. We then interpolate between these frequencies using third-order splines. The local, third-order polynomials, that are only connected by the requirement of smoothness do not propagate high-frequency errors down to low-frequency errors as significantly as do global basis functions.
 
 
 \subsection{Gaussian process regression for parameters $\bx$}
 
-Next we choose a method to interpolate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at each of the frequency nodes $MF_j$ as a function of the five waveform parameters $\bx$. Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; the number of samples grows exponentially with the dimension $d$ ($N^d$ samples for $N$ points per dimension). For our 5-dimensional problem, $10^5$ waveform evaluations are needed for only 10 samples per parameter. At $\sim10$~minutes--1~hour per EOB waveform on a standard CPU, this is at the limit of what is reasonable. However, there are other methods that do not require a rectangular grid, and this allows us to choose more efficient experimental designs. The method we choose is Gaussian Process Regression (GPR).
+\red{[[Make sure all vectors and matrices are bold.]]}
 
-In GPR a function $f(\vec x)$ is described in terms of a mean $m(\vec x)$ and  covariance $k(\vec x, \vec x')$ between points [[cite RassmussenWilliamsChapter2, IntroArxivPaper]].
+Next we choose a method to interpolate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at each of the frequency nodes $MF_j$ as a function of the five waveform parameters $\bx$. Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; the number of samples grows exponentially with the dimension $d$ ($N^d$ samples for $N$ points per dimension). For our 5-dimensional problem, $10^5$ waveform evaluations are needed for only 10 samples per parameter. At $\sim10$~minutes--1~day per EOB waveform on a standard CPU, this is at the limit of what is reasonable. However, there are other methods that do not require a rectangular grid, and this allows us to choose more efficient experimental designs as discussed in Sec.~\ref{sec:design} below. The method we choose is Gaussian Process Regression (GPR).
+
+In GPR a function $g(\bx)$ is described in terms of a mean $m(\bx)$ and  covariance $k(\bx, \bx')$ between points [[cite RassmussenWilliamsChapter2, IntroArxivPaper]].
 \begin{equation}
-f(\vec x) \approx \mathcal{GP}(m(\vec x), k(\vec x, \vec x')).
+g(\bx) \approx \mathcal{GP}(m(\bx), k(\bx, \bx')).
 \end{equation}
-The mean $m(x)$ can be some parameterized function which is the standard version of regression, while $k(\vec x, \vec x')$ is a kernel with tunable hyperparameters that describes the covariance between the point $\vec x$ and the sampled point $\vec x'$. This covariance can be used to describe features of the function not captured by the parameterized mean as well as genuine noise in the data ${\bm y}$. For the problem here, we have already subtracted the TaylorF2 waveform from EOB waveform, so we set $m=0$ and model the remainder terms purely in terms of the covariance $k$. 
+The mean $m(\bx)$ can be a parameterized fitting function while $k(\bx, \bx')$ is a kernel with tunable hyperparameters that describes the covariance between the point $\bx$ and the sampled point $\bx'$. This covariance can be used to describe features of the function not captured by the parameterized mean $m(\bx)$ as well as genuine noise in the data $\by$. For the problem here, we have already subtracted the TaylorF2 waveform from EOB waveform, so we set $m(\bx) = 0$ and model the residuals purely in terms of the kernel $k(\bx, \bx')$. 
 
-In a zero-mean Gaussian process, the data and function $({\bm y}, f_*)$ at the training set and new points $({\bm x}, x_*)$ are drawn from a multivariate normal distribution
+In a zero-mean Gaussian process, the data $\by_i$ and function value $\by_*$ at the training set points $\bx_i$ and new point $\bx_*$, respectively, are drawn from a multivariate normal distribution
 \begin{equation}
 \label{eq:gaussian}
 \begin{bmatrix}
 {\bm y} \\
-f_* \\
+y_* \\
 \end{bmatrix}
 \sim \mathcal{N}
 \left({\bm 0}, 
@@ -484,56 +486,43 @@ K_* & K_{**} \\
 \end{bmatrix}
 \right)
 \end{equation}
-where $K = K({\bm x}^i, {\bm x}^j)$ is a matrix, $K_* = K({\bm x}^i, {\bm x}_*)$ is a vector, and $K_{**} = K({\bm x}_*, {\bm x}_*)$ is a scalar.
+where $K_{ij} = k(\bx_i, \bx_j)$ is a matrix, $K_{*i} = k(\bx_i, \bx_*)$ is a vector, and $K_{**} = k(\bx_*, \bx_*)$ is a scalar.
 
-The conditional probability for $f_*$ given the training set examples ${\bm y}$ with hyperparameters $\theta$ is also a Gaussian
+The conditional probability for $y_*$ given the training set examples $\by$ and kernel hyperparameters $\btheta$ is also a Gaussian
 \begin{equation}
-f_* | {\bm x}, x_*, {\bm y}, {\bm \theta} \sim \mathcal{N}(\bar f_*, {\rm var}(f_*))
+p(y_* | \bx_i, \bx_*, \by, \btheta) \sim \mathcal{N}(\bar y_*, {\rm Var}(y_*)),
 \end{equation}
 where the mean and variance are
 \begin{align}
 \label{eq:mean}
-\bar f_* &= K_*^T K^{-1} y \\
+\bar y_* &= K_*^T K^{-1} y, \\
 \label{eq:var}
-{\rm var}(f_*) &= K_{**} - K_*^T K^{-1} K_*.
+{\rm Var}(y_*) &= K_{**} - K_*^T K^{-1} K_*.
 \end{align}
-Eq.~\eqref{eq:mean} is the estimate of the function, and Eq.~\eqref{eq:var} is the estimate of the uncertainty, where we note that the variance does not depend on the data $\bm{y}$.
+Eq.~\eqref{eq:mean} is the estimate of the function, and Eq.~\eqref{eq:var} is the estimate of the uncertainty. We note that the variance does not depend on the data $\by$.
 
 We use a radial kernel which expresses the covariance in terms of a distance $r$ between points
 \begin{equation}
-r^2 = (x-x')^T M (x-x'),
+r^2 = (\bx - \bx')^T M (\bx - \bx'),
 \end{equation}
-where we choose the matrix M to be diagonal
+where we choose the matrix $M$ to be diagonal
 \begin{equation}
 M = {\rm diag}(\ell_1^{-2}, \ell_2^{-2}, \dots, \ell_d^{-2}).
 \end{equation}
-The tunable hyperparameters $\ell_i$ represent the length scale over which the function $f(x)$ varies in 
-each coordinate $x_i$. Specifically, we use the Mat\'{e}rn class of kernels
+The tunable hyperparameters $\ell_i$ represent the length scale over which the function $g(\bx)$ varies in each coordinate $x_i$. Specifically, we use the Mat\'{e}rn class of kernels
 \begin{equation}
 k_{\rm Matern}(r) = \frac{2^{1-\nu}}{\Gamma(\nu)} \left(\sqrt{2\nu} r\right)^\nu K_\nu \left(\sqrt{2\nu} r \right).
 \end{equation}
-where $K_\nu(x)$ is a modified Bessel function. The value of $\nu$ parameterizes the smoothness of the 
-Gaussian Process $f(x)$, and is $k$ times mean-square differentiable if $\nu>k$ [[cite]]. For half-integer values of $\nu$, this 
-kernel has a computationally cheap form without special functions, and we have had good results with $\nu=5/2$, 
-resulting in a twice-differentiable function. The $\nu=5/2$ kernel is
+where $K_\nu(x)$ is a modified Bessel function. The value of $\nu$ parameterizes the smoothness of the Gaussian process, and is $k$ times mean-square differentiable if $\nu>k$ [[cite]]. For half-integer values of $\nu$, this kernel has a computationally cheap form without special functions, and we have had good results with $\nu=5/2$, resulting in a twice-differentiable function\footnote{If desired, one can select the optimal class of kernels using cross validation, and we have also tried the more common, infinitely differentiable squared exponential kernel [[cite]]. However, we found it difficult to reliably tune its hyperparameters for the problem here.}. The $\nu=5/2$ kernel is
 \begin{equation}
 k_{\rm Matern}^{\nu=5/2}(r) = \left(1+\sqrt{5}r + \frac{5r^2}{3}\right) \exp\left(-\sqrt{5}r\right).
 \end{equation}
 
 Our final kernel takes the form
 \begin{equation}
-k(x_p, x_q) = \sigma_f^2 k_{\rm Matern}^{\nu=5/2}(r) + \sigma_n^2 \delta_{pq}
+k(\bx_i, \bx_j) = \sigma_f^2 k_{\rm Matern}^{\nu=5/2}(r) + \sigma_n^2 \delta_{ij}
 \end{equation}
-where $\sigma_f$ is a scale factor that describes the range of values that $f(x)$ takes over the domain, 
-and $\sigma_n$ is a noise parameter. The white noise kernel $\sigma_n^2 \delta_{pq}$ (also called a nugget), which is
-$\sigma_n^2$ when $x_p=x_q$ and zero otherwise, is generically used for numerical stability, but also parameterizes
-noise in the data ${\bm y}$. In our case, the training set waveforms which are evaluated, tapered, and 
-Fourier transformed numerically have numerical noise that we will estimate by optimizing the hyperparameters.
-The hyperparameters now are $\theta = \{\sigma_f, \ell_q, \ell_{S_1}, \ell_{S_2}, \ell_{\Lambda_1}, \ell_{\Lambda_2}, \sigma_n\}$.
-
-[[In principle, one can select the optimal class of kernels using k-fold or leave-one-out cross validation. We have also tried the 
-more common infinitely differentiable squared exponential kernel. However, we found it difficult to reliably tune the 
-hyperparameters for the problem here.]]
+where $\sigma_f$ is a scale factor that describes the range of values that $g(\bx)$ takes over the domain, and $\sigma_n$ is a noise parameter. The white noise kernel $\sigma_n^2 \delta_{ij}$ (also called a nugget) is $\sigma_n^2$ when $\bx_i = \bx_j$ and zero otherwise, and parameterizes noise in the data $\by$. In our case, the training set waveforms have numerical noise that we will estimate by optimizing the hyperparameters. The full set of hyperparameters is now  $\btheta = \{\sigma_f, \ell_q, \ell_{S_1}, \ell_{S_2}, \ell_{\Lambda_1}, \ell_{\Lambda_2}, \sigma_n\}$.
 
 In order to estimate the hyperparameters, we use the above assumption (Eq.~\eqref{eq:gaussian}) that the joint distribution of 
 the data ${\bm y}$ is a multivariate Gaussian which has the following distribution
@@ -545,39 +534,40 @@ given ${\bm y}$ using Bayes' theorem
 \begin{equation}
 p({\bm \theta} | {\bm x}, {\bm y}) \propto p({\bm \theta}) p({\bm y} | {\bm x}, {\bm \theta}).
 \end{equation}
-The prior $p({\bm \theta})$ is typically uniform and used to set the bounds on ${\bm \theta}$. If interested in the distribution of the 
-hyperparamaters, one can sample this posterior with, for example, Markov chain Monte Carlo. However, for the problem here, we are
-simply interested in finding the maximum of the posterior. To do this, we use the \texttt{gaussian\_process} module in the
-\texttt{scikit-learn} package [[cite]]. Finally, with the optimized hyperparameters ${\bm \theta}$, Eq.~\eqref{eq:var} is the 
-interpolating function. We note that evaluating Eq.~\eqref{eq:var}, is an $\mathcal{O}(N)$ operation if the vector $K^{-1}{\bm y}$ is
-precomputed.
+The prior $p({\bm \theta})$ is typically uniform and used to set the bounds on ${\bm \theta}$. One can sample this posterior if interested in the distribution of hyperparameters $\btheta$. However, for the problem here, we simply want the maximum posterior. We do this using the \texttt{gaussian\_process} module in the \texttt{scikit-learn} package [[cite]]. With these optimized hyperparameters, the final interpolating function is given by Eq.~\eqref{eq:mean} and its uncertainty by Eq.~\eqref{eq:var}. We note that once the vector $K^{-1}y$ is precomputed, evaluating Eq.~\eqref{eq:mean} is a fast $\mathcal{O}(N)$ operation.
 
 
 \subsection{Iterative construction of training set and surrogate}
+\label{sec:design}
 
-One of the main aims of this paper is to build a surrogate with as few waveform evaluations as possible. EOB models are expensive, and we would like a method that extends to higher dimensions and more expensive waveform models such as from numerical relativity simulations. Using the freedom provided by GPR to sample waveforms at arbitrary locations in parameter space, we try a set of more optimal designs. 
+%One of the main aims of this paper is to build a surrogate with as few waveform evaluations as possible. EOB models are expensive, and we would like a method that extends to higher dimensions and more expensive waveform models such as from numerical relativity simulations. Using the freedom provided by GPR to sample waveforms at arbitrary locations in parameter space, we try a set of more optimal designs. 
 
-One such design is a Latin Hypercube Design (LHD) [[cite]]. An LHD with $N$ samples divides each of $d$ dimensions uniformly into $N$ grid points, for a total of $N^d$ grid points. However, for each dimension, the $N$ values are sampled exactly once. For an LHD there are $(N!)^d$ possible designs, and we choose one randomly\footnote{There are ways to better choose an LHD. A standard requirement is that the LHD be space-filling, meaning that the points are as far apart as possible from each other. (See [[cite]] for a review of methods for optimizing the placement of samples.) One such definition of space filling is that the chosen locations maximize the minimum Euclidean distance between any two samples [[cite]]. We have not studied this here.}. An LHD has the property that the samples are non-collapsing; a projection onto a subspace is still an LHD. This avoids wasting samples when one of the parameters has much less of an effect than the other parameters. As an example of the usefulness of non-collapsing designs, the tidal parameters have a minimal impact on the waveform at low frequencies, so it wouldn't make sense to densely sample a grid of tidal parameters at low frequencies. However, during the merger the tidal parameters can be more important than the other parameters. One therefore might want more samples for the tidal parameters and less samples for the other parameters. However, due to the expense of the waveforms we must use the same set of waveforms for low and high frequencies. An LHD with its noncollapsing property bypasses this problem. 
+One of the main aims of this paper is to build a surrogate with as few waveform evaluations as possible. Using the freedom provided by GPR to sample waveforms at arbitrary locations, we try a set of designs more efficient than uniform grids. One such design is a Latin Hypercube Design (LHD) [[cite]]. An LHD with $N$ samples divides each of $d$ dimensions uniformly into $N$ grid points for a total of $N^d$ grid points. However, unlike a uniform grid, the $N$ values in each dimension are sampled exactly once instead of $N^{d-1}$ times. For an LHD there are $(N!)^d$ ways to choose these points, and we choose one randomly\footnote{There are ways to better choose an LHD. A standard requirement is that the LHD be space-filling, meaning that the points are as far apart as possible from each other. (See [[cite]] for a review of methods for optimizing the placement of samples.) One such definition of space filling is that the chosen locations maximize the minimum Euclidean distance between any two samples [[cite]]. We have not experimented with these alternatives here.}. 
 
-We build an initial training set with 128 waveforms sampled with an LHD in our 5-dimensional parameter space given by $q\in[1/3, 1]$, $S_1, S_2 \in [-0.5, 0.5]$ and $\Lambda_1, \Lambda_2 \in [0, 5000]$. In addition, we find empirically that the GPR uncertainty estimates are largest at the corners of the parameter space, so we also sample the 32 corners. We construct our initial surrogate with these 160 waveforms shown in Fig.~\ref{fig:LHD}.
+An LHD has the property that the samples are non-collapsing; a projection onto a subspace is still an LHD and no points are repeated in any dimension. This avoids wasting samples when one of the parameters has much less of an influence than the other parameters. As an example, the tidal parameters have a minimal impact on the waveform at low frequencies, so it would not make sense to densely sample a grid of tidal parameters at low frequencies. However, during the merger the tidal parameters can be more important than the other parameters. One therefore might want more samples for the tidal parameters and less samples for the other parameters. However, due to the expense of the waveforms we must use the same set of waveforms for low and high frequencies. An LHD with its noncollapsing property bypasses this problem. 
+
+We build an initial training set with 128 waveforms sampled with an LHD in our 5-dimensional parameter space given by $q\in[1/3, 1]$, $S_1, S_2 \in [-0.5, 0.5]$ and $\Lambda_1, \Lambda_2 \in [0, 5000]$. In addition, we find empirically that the GPR uncertainty estimates (Eq.~\eqref{eq:var} and Eq.~\eqref{eq:errorrms} below) are largest at the corners of the parameter space, so we also sample the 32 corners. We construct our initial surrogate with these 160 waveforms shown in Fig.~\ref{fig:LHD}.
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{trainingset3d.png}\\
-\includegraphics[width=0.49\textwidth]{trainingset2d.png}
-\caption{Projection of the sampled waveforms onto the three-dimensional subspace $\{q, S_1, S_2\}$ (top) and the two-dimensional subspace $\{\Lambda_1, \Lambda_2\}$ (bottom). The 160 black circles were used for the initial training set (32 corner points + 128 LHD points) that generated the initial surrogate. The 200 red squares were generated using uncertainty sampling from the GPR error estimate of the RMS phase error at the interpolation nodes. The final 1000 waveforms are drawn uniformly from parameter space.
+\includegraphics[width=0.49\textwidth]{trainingset3d.pdf}\\
+\includegraphics[width=0.49\textwidth]{trainingset2d.pdf}
+\caption{Projection of the sampled waveforms onto the three-dimensional subspace $\{q, S_1, S_2\}$ (top) and the two-dimensional subspace $\{\Lambda_1, \Lambda_2\}$ (bottom). The 160 blue circles were used for the initial training set (32 corners + 128 LHD points). The 200 red squares were generated using uncertainty sampling from the GPR error estimate (Eq.~\eqref{eq:errorrms}). The final 1000 green triangles were drawn uniformly from the parameter space.
 }
 \label{fig:LHD}
 \end{figure}
 
-With this initial surrogate model, we can choose new training-set samples by iteratively searching the parameter space for new points ${\bm x}$ that maximize some error criterion. The quantity that we use is the root-mean-squared error in the phase at the frequency nodes $Mf_j$ below $Mf=0.03$:
+%This method is sometimes referred to as uncertainty sampling [[cite]]. However in our case, we do not update the hyperparameters after each new point is chosen, allowing us to choose the points then evaluate the waveforms in parallel.
+
+With this initial surrogate model, we can choose new training-set samples by iteratively searching the parameter space for new points ${\bm x}$ that maximize some error criterion and update the surrogate with each new waveform. This method is sometimes referred to as uncertainty sampling [[cite]]. The quantity that we use is the root-mean-squared error in the phase at the frequency nodes $Mf_j$ below $Mf=0.03$:
 \begin{equation}
-\epsilon_{\rm RMS} = \sqrt{\frac{1}{N} \sum_j (\sigma_{\Delta\Phi_j})^2},
+\epsilon_{\rm RMS}(\bx) = \sqrt{\frac{1}{N} \sum_{ \substack{j \\ MF_j \le 0.03} } [\sigma_{\Delta\Phi_j}(\bx)]^2},
+%\epsilon_{\rm RMS} = \sqrt{\frac{1}{N} \sum_{j=0}^{MF_j \le 0.03} (\sigma_{\Delta\Phi_j})^2},
 \label{eq:errorrms}
 \end{equation}
-where $\sigma_{\Delta\Phi_j}$ is the GPR estimate of the uncertainty in $\Delta\Phi(MF_j, \bx)$. [[justify the definition of error]]. For an initial training set with $N$ samples, this function has $\sim N$ local maxima located in the voids between samples $\bx$. To find the global maximum, we use a basin jumping algorithm [[cite]] to avoid getting stuck in local maxima.
+where $\sigma_{\Delta\Phi_j}(\bx)$ is the GPR estimate (Eq.~\eqref{eq:var}) of the uncertainty in $\Delta\Phi(MF_j, \bx)$. There are many possible ways to construct a scalar that estimates overall waveform error. An alternative would be an approximation to the mismatch discussed in Sec.~\ref{sec:accuracy}. However, the quantity $\epsilon_{\rm RMS}(\bx)$ describes the most important quantity, phase, and is fast to compute. For an initial training set with $N$ samples, $\epsilon_{\rm RMS}(\bx)$ has $\sim N$ local maxima located in the voids between samples $\bx$. To find the global maximum, we use a basin jumping algorithm [[cite]] to avoid getting stuck in local maxima.
 
-For low starting frequencies, reconstructing the surrogate for each new EOB waveform is smaller than the time needed to simulate a new EOB waveform. However, EOB waveforms are expensive enough that we would like a method to efficinetly choose $N_{\rm new}$ new waveforms in parallel. Reconstructing the surrogate with each new EOB waveform allows us to retune the hyperparameters $\btheta$ with each new waveform. However, if we hold the hyperparameters $\btheta$ fixed, we note that the GPR error estimate (Eq.~\eqref{eq:var}) only depends on the samples $\bx$ and not on the data $\by$. Therefore, the error $\epsilon_{\rm rms}$ (Eq.~\eqref{eq:errorrms}) only depends on the parameters of the new waveform, not on the waveform data. This method is sometimes referred to as uncertainty sampling [[cite]]. However in our case, we do not update the hyperparameters after each new point is chosen, allowing us to choose the points then evaluate the waveforms in parallel. The algorithm for choosing the $N_{\rm new}$ new points is as follows.
+For low starting frequencies, EOB waveforms are expensive enough that we would like a method to efficiently choose $N_{\rm new}$ waveforms and evaluate them in parallel. We note that if we hold the hyperparameters $\btheta$ fixed, the GPR error estimate (Eq.~\eqref{eq:var}), and therefore $\epsilon_{\rm RMS}(\bx)$, only depends on the samples $\bx$ and not on the waveform data. The algorithm for choosing the $N_{\rm new}$ new points is as follows.
 For $i = 1, \dots, N_{\rm new}$:
 \begin{enumerate}
 
@@ -588,21 +578,21 @@ For $i = 1, \dots, N_{\rm new}$:
 \item Add ${\bm x}_{\rm max}$ to the list of samples: ${\bm x} = [{\bm x}, {\bm x}_{\rm max}]$.
 
 \end{enumerate}
-These new waveforms can now be evaluated in parallel. An updated surrogate can then be constructed with re-optimized hyperparameters $\btheta$ using the $N_{\rm old}+N_{\rm new}$ waveforms.
+These $N_{\rm new}$ waveforms can now be evaluated in parallel. An updated surrogate can then be constructed with re-optimized hyperparameters $\btheta$ using the $N + N_{\rm new}$ waveforms.
 
-Fig.~\ref{fig:LHD} shows the parameters of the 200 new waveforms chosen by the uncertainty sampling method. We note that the edges and faces of the parameter space are more often chosen than the inner region. This is likely a consequence of the Mat\'{e}rn GPR kernel used. Ref.~[[]] found similar behavior when using a Mat\'{e}rn kernel instead of a squared-exponential kernel. Fig.~\ref{fig:uncsamp} shows the RMS error $\epsilon_{\rm rms}$ maximized over the parameters $\bx$ for each new sample added to the training set. \red{[[Describe this figure...]]}
+Fig.~\ref{fig:LHD} shows the parameters of the 200 new waveforms chosen by the uncertainty sampling method. We note that the edges and faces of the parameter space are more often chosen than the inner region. This is likely a consequence of the Mat\'{e}rn GPR kernel used. Ref.~[[]] found similar behavior when using a Mat\'{e}rn kernel instead of a squared-exponential kernel. Fig.~\ref{fig:uncsamp} shows the RMS error $\epsilon_{\rm rms}$ maximized over the parameters $\bx$ for each new sample added to the training set. Increasing the number of waveforms from 160 to 360 decreases the estimated RMS phase error by a factor of $\sim 4$.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\textwidth]{uncertaintysampling.png}
-\caption{Estimated RMS phase error $\epsilon_{\rm rms}$ as function of the number of sampled waveforms (blue curve). The first 160 waveforms are from the initial training set chosen from the corners of parameter space and an LHD. The next 200 waveforms are chosen with uncertainty sampling. The final 1000 waveforms are drawn uniformly from parameter space. The markers are the comparisons of $\epsilon_{\rm rms}$ calculated by maximizing the error over a test set of 1000 waveforms instead of using Eq.~\eqref{eq:errorrms} for the error estimate.}
+\caption{Estimated RMS phase error $\epsilon_{\rm RMS}$ (Eq.~\eqref{eq:errorrms}) maximized over parameter space $\bx$ as a function of the number of chosen parameters (blue curve). $\epsilon_{\rm RMS}$ depends on the chose samples $\bx_j$ and hyperparameters, not on the data, and can be calculated before generating the waveforms. Also shown for comparison are the maximum RMS phase errors at the nodes where $MF_j \le 0.03$ for the surrogate compared to a test set of 1000 waveforms. Blue circle: surrogate constructed from the 160 waveforms in the initial training set. Red square: surrogate after adding the 200 waveforms chosen with uncertainty sampling. Green triangle: final surrogate after also adding 1000 more training set waveforms drawn uniformly from parameter space. }
 \label{fig:uncsamp}
 \end{figure}
 
 
 \subsection{Surrogate waveform evaluation}
 
-Given the interpolating functions for the amplitude and phase residuals $\{\mathcal{I}_{\rm GPR}[\Delta\ln A_j](\bx)\}$ and $\{\mathcal{I}_{\rm GPR, j}[\Delta\Phi_j](\bx)\}$ evaluated at the frequency nodes $\{F_j\}$, we can now reconstruct the frequency-domain waveform. The surrogates for the residuals $\Delta\ln A_S(Mf;\bx)$ and $\Delta\Phi_S(Mf;\bx)$ are constructed by interpolating between the nodes $\{F_j\}$ with cubic splines:
+Given the interpolating functions for the amplitude and phase residuals $\{\mathcal{I}_{\rm GPR}[\Delta\ln A_j](\bx)\}$ and $\{\mathcal{I}_{\rm GPR, j}[\Delta\Phi_j](\bx)\}$ evaluated at the frequency nodes $MF_j$, we can now reconstruct the frequency-domain waveform. The surrogates for the residuals $\Delta\ln A_S(Mf;\bx)$ and $\Delta\Phi_S(Mf;\bx)$ are constructed by interpolating between the nodes $MF_j$ with cubic splines:
 \begin{align}
 \Delta\ln A_S(Mf;\bx) &= \mathcal{I}_{\rm Spline}[\{\mathcal{I}_{\rm GPR}[\Delta\ln A_j](\bx)\}](Mf),\\
 \Delta\Phi_S(Mf;\bx) &= \mathcal{I}_{\rm Spline}[\mathcal{I}_{\rm GPR}[\{\Delta\Phi_j](\bx)\}](Mf).
@@ -612,14 +602,13 @@ We set these functions to 0 below the first frequency node $MF_0 =  Mf_{trunc,i}
 A_S(Mf;\bx) &= A_{\rm F2}(Mf;\bx) \exp\left[ \Delta\ln A_S(Mf;\bx) \right] \\
 \Phi_S(Mf;\bx) &= \Phi_{\rm F2}(Mf;\bx) + \Delta\Phi_S(Mf;\bx).
 \end{align}
-In physical units the $+$ and $\times$ polarizations of the waveform are then 
+In physical units, for an inclination angle $\iota$, the $+$ and $\times$ polarizations of the waveform are 
 \begin{align}
 \tilde h_+(f; \bx) &= \frac{1}{2}(1+\cos^2\iota) \frac{G^2 M^2}{c^5 d} A_S\left(\frac{GMf}{c^3}; \bx\right) \nonumber \\
-& \times \exp\left[i \Phi_S\left(\frac{GMf}{c^3}; \bx\right)\right] \\
+& \times \exp\left[i \Phi_S\left(\frac{GMf}{c^3}; \bx\right)\right], \\
 \tilde h_\times(f; \bx) &= \cos\iota \frac{G^2 M^2}{c^5 d} A_S\left(\frac{GMf}{c^3}; \bx\right) \nonumber \\
-& \times \exp\left[i \Phi_S\left(\frac{GMf}{c^3}; \bx\right) + i \frac{\pi}{2}\right]
+& \times \exp\left[i \Phi_S\left(\frac{GMf}{c^3}; \bx\right) + i \frac{\pi}{2}\right].
 \end{align}
-where $\iota$ is the inclination angle.
 
 
 
@@ -627,6 +616,7 @@ where $\iota$ is the inclination angle.
 \section{Results}
 
 \subsection{Accuracy}
+\label{sec:accuracy}
 
 The accuracy of the surrogate can be assessed by comparing it to a test set of waveforms with randomly sampled parameters. We evaluate an additional 1000 waveforms randomly sampled in parameter space using the same distribution discussed above to generate the last 1000 waveforms for the training set.
 
@@ -656,23 +646,23 @@ We compare this mismatch to that of th
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\textwidth]{mismatch.png}
-\caption{Mismatch}
+\caption{Mismatches between the surrogate and 1000 test-set waveforms with randomly sampled parameters $\bx$. The total mass for each waveform is $M=2.8M_\odot$ and the PSD used was the aLIGO design sensitivity PSD. Histograms are shown for the initial surrogate with 160 waveforms (blue), the updated surrogate with 360 waveforms (red), and the final surrogate with 1360 waveforms (green). Also shown for comparison are the mismatches between TaylorF2 and the test set (black).}
 \label{fig:mismatch}
 \end{figure}
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\textwidth]{htildemaxerror.png}
-\caption{Amplitude and phase errors as functions of frequency for the waveform parameters $\bx$ that gave the largest mismatch with the test-set waveforms.}
+\caption{Amplitude and phase errors between the surrogate and the test-set waveform with the largest mismatch. Blue curve: initial surrogate with 160 waveforms. Red curve: updated surrogate with 360 waveforms. Green curve: final surrogate with 1360 waveforms. The vertical solid line is the gravitational-wave frequency at the Schwarzschild ISCO.}
 \label{fig:maxmismatch}
 \end{figure}
 
-To demonstrate that we can correctly recover the behavior of the original unfiltered time-domain EOB waveform, we inverse Fourier transform the surrogate and compare it to the EOB waveform. In Fig.~\ref{fig:maxmismatchtd} we compare the surrogate to the test set waveform that had the largest mismatch. We align the two waveforms in time and phase by maximizing the overlap at early times in the interval $-200,000 < t/M < -100,000$. The two waveforms are nearly identical except during the last $\sim 2$ cycles where the surrogate peaks in amplitude before the EOB waveform.
+To demonstrate that we can correctly recover the behavior of the original unfiltered time-domain EOB waveform, we inverse Fourier transform the surrogate and compare it to the EOB waveform. In Fig.~\ref{fig:maxmismatchtd} we compare the surrogate to the test set waveform that had the largest mismatch. We align the two waveforms in time and phase by maximizing the overlap at early times in the interval $-2\times 10^5 < t/M < -1\times 10^5$. The two waveforms are nearly identical except during the last $\sim 2$ cycles where the surrogate peaks in amplitude before the EOB waveform.
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.49\textwidth]{hmaxerror.png}
-\caption{Inverse Fourier transformed surrogate compared to the original EOB waveform.}
+\caption{Inverse Fourier transformed surrogate (green dashed) for the parameters $\bx$ that had the largest mismatch with the test-set EOB waveforms (black). The two waveforms are aligned in the time domain in the interval $-2\times 10^5 < t/M < -1\times 10^5$.}
 \label{fig:maxmismatchtd}
 \end{figure}
 
