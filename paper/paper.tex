@@ -450,20 +450,20 @@ The resulting waveforms still have some remaining Gibbs oscillations which can b
 
 Finally, we truncate the residuals outside the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}] = [0.00021, 0.07]$. We note that the gravitational-wave frequency at the Schwarzschild ISCO is $Mf_{\rm ISCO} = 1/(6^{3/2}\pi) \approx 0.022$. Although second generation detectors are only marginally sensitive to BNS signals above this frequency, we use the high-frequency cutoff of $Mf_{{\rm trunc}, f}=0.07$ because the amplitude of some of the EOB waveforms is still large enough at these high frequencies to affect the structure of the surrogate waveform if inverse Fourier transformed back into the time domain.
 
-To validate that the waveforms are sufficiently conditioned, we plot cross-sections of the residuals in Fig.~\ref{fig:dhofs} for fixed frequencies as functions of one of the waveform parameters $S_1$. The fact that the residuals are smooth functions of the waveform parameters indicates that most numerical noise has been removed. The exception is the noisy amplitude residual at high frequencies, $\Delta\ln(A)(Mf=0.05; \bx)$, where the amplitude is very small and dominated by numerical noise. 
+To validate that the waveforms are sufficiently conditioned, we plot cross-sections of the residuals in Fig.~\ref{fig:dhofs} for fixed frequencies as functions of one of the waveform parameters $S_1$. The fact that the residuals are smooth functions of the waveform parameters indicates that most numerical noise has been removed. The exception is the noisy amplitude residual at high frequencies, $\Delta\ln(A)(Mf=0.052; \bx)$, where the amplitude is very small and dominated by numerical noise. 
 
 \subsection{Spline interpolation for frequency $f$}
 
 We now seek to interpolate the conditioned residuals $\Delta\ln(A)(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$. We begin by choosing a method for interpolating as a function of $Mf$ for fixed $\bx$. The majority of previous papers on gravitational-wave surrogates have used an orthonormal basis of global functions $\hat e_i(Mf)$ for interpolating as a function of frequency (or time) [[cite]]. This type of surrogate, built from a reduced basis, is usually referred to as a reduced order model. For a generic function $g(Mf; \bx)$, this decomposition can be written as $g(Mf; \bx) \approx \sum_{i=1}^N c_i(\bx) \hat e_i(Mf)$. The coefficients $c_i(\bx)$ are then interpolated as functions of $\bx$ [[Puerrer]]. Alternatively, using the empirical interpolation method [[cite]], one can re-express these basis functions $\hat e_i(Mf)$ in terms of empirical interpolating functions $B_j(Mf)$ and the value of $g(Mf; \bx)$ at empirical nodes $MF_j$ as $g(Mf; \bx) \approx \sum_{j=1}^N B_j(Mf) g(MF_j; \bx)$. The location of these nodes $MF_j$ is then optimized to minimize interpolation errors. This method has been used in Refs.~[[cite]].
 
-For the problem here, we have found that global basis functions do not work well. The residuals are small and smooth at low frequencies and large and noisy at high frequencies. With global basis functions, errors in evaluating $g(MF_j;\bx)$ at high frequencies can propagate to large errors between the nodes $MF_j$ at low frequencies. Instead, we find that spline interpolation works significantly better. We use 40 frequency nodes $MF_j$ log-spaced in the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}]$ (see Fig.~\ref{fig:hoff}). We evaluate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at these nodes as discussed below. We then interpolate between these frequencies using third-order splines. The local, third-order polynomials, that are only connected by the requirement of smoothness do not propagate high-frequency errors down to low-frequency errors as significantly as do global basis functions.
+For the problem here, we have found that global basis functions do not work well. The residuals are small and smooth at low frequencies and large and noisy at high frequencies. With global basis functions, errors in evaluating $g(MF_j;\bx)$ at high frequencies can propagate to large errors between the nodes $MF_j$ at low frequencies. Instead, we find that spline interpolation works significantly better. We use 40 frequency nodes $MF_j$ log-spaced in the interval $[Mf_{{\rm trunc}, i}, Mf_{{\rm trunc}, f}]$ (see Fig.~\ref{fig:hoff}). We evaluate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at these nodes as discussed below. We then interpolate between these frequencies using third-order splines. The local, third-order polynomials, that are only connected by the requirement of smoothness, do not propagate high-frequency errors down to low-frequency errors as significantly as do global basis functions.
 
 
 \subsection{Gaussian process regression for parameters $\bx$}
 
 \red{[[Make sure all vectors and matrices are bold.]]}
 
-Next we choose a method to interpolate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at each of the frequency nodes $MF_j$ as a function of the five waveform parameters $\bx$. Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality; the number of samples grows exponentially with the dimension $d$ ($N^d$ samples for $N$ points per dimension). For our 5-dimensional problem, $10^5$ waveform evaluations are needed for only 10 samples per parameter. At $\sim10$~minutes--1~day per EOB waveform on a standard CPU, this is at the limit of what is reasonable. However, there are other methods that do not require a rectangular grid, and this allows us to choose more efficient experimental designs as discussed in Sec.~\ref{sec:design} below. The method we choose is Gaussian Process Regression (GPR).
+Next we choose a method to interpolate the residuals $\Delta\ln(A)(MF_j; \bx)$ and $\Delta\Phi(MF_j; \bx)$ at each of the frequency nodes $MF_j$ as a function of the five waveform parameters $\bx$. Most multivariate interpolation techniques (e.g. tensor spline or Chebyshev interpolation) require a function to be sampled on a rectangular grid, and thus suffer from the curse of dimensionality: the number of samples grows exponentially with the dimension $d$ ($N^d$ samples for $N$ points per dimension). For our 5-dimensional problem, $10^5$ waveform evaluations are needed for only 10 samples per parameter. At $\sim10$~minutes--1~day per EOB waveform on a standard CPU, this is at the limit of what is reasonable. However, there are other methods that do not require a rectangular grid, and this allows us to choose more efficient experimental designs as discussed in Sec.~\ref{sec:design} below. The method we choose is Gaussian Process Regression (GPR).
 
 In GPR a function $g(\bx)$ is described in terms of a mean $m(\bx)$ and  covariance $k(\bx, \bx')$ between points [[cite RassmussenWilliamsChapter2, IntroArxivPaper]].
 \begin{equation}
@@ -471,7 +471,7 @@ g(\bx) \approx \mathcal{GP}(m(\bx), k(\bx, \bx')).
 \end{equation}
 The mean $m(\bx)$ can be a parameterized fitting function while $k(\bx, \bx')$ is a kernel with tunable hyperparameters that describes the covariance between the point $\bx$ and the sampled point $\bx'$. This covariance can be used to describe features of the function not captured by the parameterized mean $m(\bx)$ as well as genuine noise in the data $\by$. For the problem here, we have already subtracted the TaylorF2 waveform from EOB waveform, so we set $m(\bx) = 0$ and model the residuals purely in terms of the kernel $k(\bx, \bx')$. 
 
-In a zero-mean Gaussian process, the data $\by_i$ and function value $\by_*$ at the training set points $\bx_i$ and new point $\bx_*$, respectively, are drawn from a multivariate normal distribution
+In a zero-mean Gaussian process, the data $y_i$ and function value $y_*$ at the training set points $\bx_i$ and new point $\bx_*$, respectively, are drawn from a multivariate normal distribution
 \begin{equation}
 \label{eq:gaussian}
 \begin{bmatrix}
@@ -584,7 +584,7 @@ Fig.~\ref{fig:LHD} shows the parameters of the 200 new waveforms chosen by the u
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{uncertaintysampling.png}
+\includegraphics[width=0.49\textwidth]{uncertaintysampling.pdf}
 \caption{Estimated RMS phase error $\epsilon_{\rm RMS}$ (Eq.~\eqref{eq:errorrms}) maximized over parameter space $\bx$ as a function of the number of chosen parameters (blue curve). $\epsilon_{\rm RMS}$ depends on the chose samples $\bx_j$ and hyperparameters, not on the data, and can be calculated before generating the waveforms. Also shown for comparison are the maximum RMS phase errors at the nodes where $MF_j \le 0.03$ for the surrogate compared to a test set of 1000 waveforms. Blue circle: surrogate constructed from the 160 waveforms in the initial training set. Red square: surrogate after adding the 200 waveforms chosen with uncertainty sampling. Green triangle: final surrogate after also adding 1000 more training set waveforms drawn uniformly from parameter space. }
 \label{fig:uncsamp}
 \end{figure}
@@ -645,14 +645,14 @@ We compare this mismatch to that of th
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{mismatch.png}
+\includegraphics[width=0.49\textwidth]{mismatch.pdf}
 \caption{Mismatches between the surrogate and 1000 test-set waveforms with randomly sampled parameters $\bx$. The total mass for each waveform is $M=2.8M_\odot$ and the PSD used was the aLIGO design sensitivity PSD. Histograms are shown for the initial surrogate with 160 waveforms (blue), the updated surrogate with 360 waveforms (red), and the final surrogate with 1360 waveforms (green). Also shown for comparison are the mismatches between TaylorF2 and the test set (black).}
 \label{fig:mismatch}
 \end{figure}
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{htildemaxerror.png}
+\includegraphics[width=0.49\textwidth]{htildemaxerror.pdf}
 \caption{Amplitude and phase errors between the surrogate and the test-set waveform with the largest mismatch. Blue curve: initial surrogate with 160 waveforms. Red curve: updated surrogate with 360 waveforms. Green curve: final surrogate with 1360 waveforms. The vertical solid line is the gravitational-wave frequency at the Schwarzschild ISCO.}
 \label{fig:maxmismatch}
 \end{figure}
@@ -661,7 +661,7 @@ To demonstrate that we can correctly recover the behavior of the original unfilt
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{hmaxerror.png}
+\includegraphics[width=0.49\textwidth]{hmaxerror.pdf}
 \caption{Inverse Fourier transformed surrogate (green dashed) for the parameters $\bx$ that had the largest mismatch with the test-set EOB waveforms (black). The two waveforms are aligned in the time domain in the interval $-2\times 10^5 < t/M < -1\times 10^5$.}
 \label{fig:maxmismatchtd}
 \end{figure}
