@@ -134,6 +134,25 @@ def taylorf2_amp_1pn(mf, eta):
     return 2.0*a00 * x**(-7./4.) * (1. + a10*x)
 
 
+def taylorf2_phase_35pn_spin(eta, chi1, chi2):
+    """3.5PN phase copied from LALSimInspiralPNCoefficients.c (line 694).
+    Spin-orbit terms derived from arXiv:1303.7412 (Eq. 3.15-16).
+    """
+    d = np.sqrt(1.0-4.0*eta)
+    X1 = 0.5*(1.0+d)
+    X2 = 0.5*(1.0-d)
+
+    # point particle term
+    #v7 = ( 77096675.0/254016.0 + 378515.0*eta/1512.0 - 74045.0*eta**2/756.0 )*np.pi
+
+    # aligned spin term
+    SL = X1**2 * chi1 + X2**2 * chi2
+    dSigmaL = d*(X2*chi2 - X1*chi1)
+    v7 = ( -8980424995.0/762048.0 + 6586595.0*eta/756.0 - 305.0*eta**2/36.0 )*SL
+    v7 = v7 - ( 170978035.0/48384.0 - 2876425.0*eta/672.0 - 4735.0*eta**2/144.0 )*dSigmaL
+    return v7
+
+
 def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2):
     """3.5PN point-particle phase.
     FFT sign convention is $\tilde h(f) = \int h(t) e^{-2 \pi i f t} dt$
@@ -161,12 +180,12 @@ def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2):
     + (75515.0/288.0 - 263245.0*eta/252.0 - 480.0*eta**2)*chia**2\
     + (75515.0/288.0 - 232415.0*eta/504.0 + 1255.0*eta**2/9.0)*chis**2
 
-    p7 = (-25150083775.0/3048192.0 + 26804935.0*eta/6040.0 - 1985.0*eta**2/48.0)*delta*chia\
-    + (-25150083775.0/3048192.0 + 10566655595.0*eta/762048.0 - 1042165.0*eta**2/3024.0 + 5345.0*eta**3/36.0)*chis\
-    + (14585.0/24.0 - 2380.0*eta)*delta*chia**3\
-    + (14585.0/24.0 - 475.0*eta/6.0 + 100.0*eta**2/3.0)*chis**3\
-    + (14585.0/8.0 - 215.0*eta/2.0)*delta*chia*chis**2\
-    + (14585.0/8.0 - 7270.0*eta + 80.0*eta**2)*chia**2*chis
+    # p7 = (-25150083775.0/3048192.0 + 26804935.0*eta/6048.0 - 1985.0*eta**2/48.0)*delta*chia\
+    # + (-25150083775.0/3048192.0 + 10566655595.0*eta/762048.0 - 1042165.0*eta**2/3024.0 + 5345.0*eta**3/36.0)*chis\
+    # + (14585.0/24.0 - 2380.0*eta)*delta*chia**3\
+    # + (14585.0/24.0 - 475.0*eta/6.0 + 100.0*eta**2/3.0)*chis**3\
+    # + (14585.0/8.0 - 215.0*eta/2.0)*delta*chia*chis**2\
+    # + (14585.0/8.0 - 7270.0*eta + 80.0*eta**2)*chia**2*chis
 
     # p8 = np.pi*( (233915.0/168.0 - 99185.0*eta/252.0)*delta*chia\
     #             + (233915.0/168.0 - 3970375.0*eta/2268.0 + 19655.0*eta**2/189.0) )*chis
@@ -191,7 +210,8 @@ def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2):
 
     a30ln = -(3.0/2.0) * 6848.0/63.0
 
-    a35 = (77096675.0/254016.0 + (378515.0*eta)/1512.0 - (74045.0*eta**2)/756.0)*np.pi + p7
+    a35spin = taylorf2_phase_35pn_spin(eta, chi1, chi2)
+    a35 = (77096675.0/254016.0 + (378515.0*eta)/1512.0 - (74045.0*eta**2)/756.0)*np.pi + a35spin
 
     #a40 = p8
 
@@ -214,6 +234,10 @@ def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2):
     #                      + a35*x**3.5 \
     #                      + (a40+a40ln*np.log(x))*x**4.0 \
     #                      + a50*x**5 + a60*x**6)
+    #print 'hi'
+    #print a00, a10, a15, a20, a25, a30, a35
+    #print a25ln, a30ln
+    #print a50, a60
 
     phi = -2.0*np.pi*mf*tbymc + phic + np.pi/4.0 \
         - a00*x**(-5.0/2.0)*(1.0 + a10*x + a15*x**1.5 + a20*x**2.0 \
