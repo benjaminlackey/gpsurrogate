@@ -1,0 +1,515 @@
+From a79ba2665184983dbfe5f33fdb26b22177209c22 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 27 Oct 2017 15:36:25 +0200
+Subject: [PATCH 03/18] Implement IMRPhenomPv2_LEAplus model
+
+Takes the IMRPhenomPv2 model and adds NSBH tidal amplitude and phase corrections in the co-precessing frame.
+---
+ lalsimulation/src/LALSimIMR.h                   |  3 +-
+ lalsimulation/src/LALSimIMRLackeyTidal2013.c    | 18 ++++-----
+ lalsimulation/src/LALSimIMRLackeyTidal2013.h    | 16 ++++----
+ lalsimulation/src/LALSimIMRPhenomP.c            | 50 ++++++++++++++++++++++---
+ lalsimulation/src/LALSimIMRPhenomP.h            | 12 +++++-
+ lalsimulation/src/LALSimInspiral.c              | 33 ++++++++++++++++
+ lalsimulation/src/LALSimInspiral.h              |  2 +
+ lalsimulation/src/LALSimInspiralWaveformCache.c | 28 ++++++++++++++
+ 8 files changed, 138 insertions(+), 24 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMR.h b/lalsimulation/src/LALSimIMR.h
+index 0fa3f8c..9942ca1 100644
+--- a/lalsimulation/src/LALSimIMR.h
++++ b/lalsimulation/src/LALSimIMR.h
+@@ -63,7 +63,8 @@ extern "C" {
+ 
+ typedef enum tagIMRPhenomP_version_type {
+  IMRPhenomPv1_V, /**< version 1: based on IMRPhenomC */
+- IMRPhenomPv2_V  /**< version 2: based on IMRPhenomD */
++ IMRPhenomPv2_V, /**< version 2: based on IMRPhenomD */
++ IMRPhenomPv2_LEAplus_V /**< version 2: based on IMRPhenomD with tidal corrections for NSBH systems using LackeyTidal2013 */
+ } IMRPhenomP_version_type;
+ 
+ /** @} */
+diff --git a/lalsimulation/src/LALSimIMRLackeyTidal2013.c b/lalsimulation/src/LALSimIMRLackeyTidal2013.c
+index fb3ec28..3f83a49 100644
+--- a/lalsimulation/src/LALSimIMRLackeyTidal2013.c
++++ b/lalsimulation/src/LALSimIMRLackeyTidal2013.c
+@@ -59,7 +59,7 @@ const double g3 = -41.741;
+ 
+ /********************* Definitions begin here ********************/
+ 
+-static void tidalPNAmplitudeCoefficient(
++void XLALLackeyTidal2013tidalPNAmplitudeCoefficient(
+   double *C,
+   const double eta,
+   const double chi_BH,
+@@ -70,7 +70,7 @@ static void tidalPNAmplitudeCoefficient(
+      + Lambda * exp(c0 + c1*eta + c2*chi_BH);
+ }
+ 
+-static double tidalCorrectionAmplitude(
++double XLALLackeyTidal2013tidalCorrectionAmplitude(
+   const double Mf,
+   const double C,
+   const double eta,
+@@ -89,7 +89,7 @@ static double tidalCorrectionAmplitude(
+ }
+ 
+ // precompute a0, a1 and G which do not depend on frequency
+-static void tidalPNPhaseCoefficients(
++void XLALLackeyTidal2013tidalPNPhaseCoefficients(
+   double *a0,
+   double *a1,
+   double *G,
+@@ -142,7 +142,7 @@ static double tidalPNPhaseDeriv(
+ }
+ 
+ // Implements Eq. 34 of Lackey et al
+-static double tidalCorrectionPhase(
++double XLALLackeyTidal2013tidalCorrectionPhase(
+   const double Mf,
+   const double a0,
+   const double a1,
+@@ -166,7 +166,7 @@ static double tidalCorrectionPhase(
+   return psiT + DpsiT - psiFit; // Eq 34 of Lackey et al
+ }
+ 
+-int LackeyTidal2013SEOBNRv2ROMCore(
++static int LackeyTidal2013SEOBNRv2ROMCore(
+   struct tagCOMPLEX16FrequencySeries **hptilde, /**< Output: Frequency-domain waveform h+ */
+   struct tagCOMPLEX16FrequencySeries **hctilde, /**< Output: Frequency-domain waveform hx */
+   REAL8 phiRef,                                 /**< Phase at reference time */
+@@ -257,16 +257,16 @@ int LackeyTidal2013SEOBNRv2ROMCore(
+ 
+   // Precompute coefficients that do not depend on frequency
+   double C, a0, a1, G;
+-  tidalPNAmplitudeCoefficient(&C, eta, chi_BH, Lambda);
+-  tidalPNPhaseCoefficients(&a0, &a1, &G, eta, chi_BH, Lambda);
++  XLALLackeyTidal2013tidalPNAmplitudeCoefficient(&C, eta, chi_BH, Lambda);
++  XLALLackeyTidal2013tidalPNPhaseCoefficients(&a0, &a1, &G, eta, chi_BH, Lambda);
+ 
+   // Assemble waveform from aplitude and phase
+   for (size_t i=0; i<freqs->length; i++) { // loop over frequency points in sequence
+     double Mf = freqs->data[i];
+     int j = i + offset; // shift index for frequency series if needed
+     // Tidal corrections to be incorporated
+-    double ampC = tidalCorrectionAmplitude(Mf, C, eta, Lambda);
+-    double phsC = tidalCorrectionPhase(Mf, a0, a1, G, eta, Lambda);
++    double ampC = XLALLackeyTidal2013tidalCorrectionAmplitude(Mf, C, eta, Lambda);
++    double phsC = XLALLackeyTidal2013tidalCorrectionPhase(Mf, a0, a1, G, eta, Lambda);
+     COMPLEX16 Corr = ampC * cexp(-I*phsC);
+     pdata[j] *= Corr;
+     cdata[j] *= Corr;
+diff --git a/lalsimulation/src/LALSimIMRLackeyTidal2013.h b/lalsimulation/src/LALSimIMRLackeyTidal2013.h
+index b4c4994..f59cace 100644
+--- a/lalsimulation/src/LALSimIMRLackeyTidal2013.h
++++ b/lalsimulation/src/LALSimIMRLackeyTidal2013.h
+@@ -1,14 +1,14 @@
+ #ifndef _LALSIM_IMR_LACKEY_TIDAL_2013_H
+ #define _LALSIM_IMR_LACKEY_TIDAL_2013_H
+ 
+-static void tidalPNAmplitudeCoefficient(
++void XLALLackeyTidal2013tidalPNAmplitudeCoefficient(
+   double *C,
+   const double eta,
+   const double chi_BH,
+   const double Lambda
+ );
+ 
+-static double tidalCorrectionAmplitude(
++double XLALLackeyTidal2013tidalCorrectionAmplitude(
+   const double mf,
+   const double C,
+   const double eta,
+@@ -16,7 +16,7 @@ static double tidalCorrectionAmplitude(
+ );
+ 
+ // precompute a0, a1 and G which do not depend on frequency
+-static void tidalPNPhaseCoefficients(
++void XLALLackeyTidal2013tidalPNPhaseCoefficients(
+   double *a0,
+   double *a1,
+   double *G,
+@@ -25,14 +25,14 @@ static void tidalPNPhaseCoefficients(
+   const double Lambda
+ );
+ 
+-static double tidalPNPhase(
++UNUSED static double tidalPNPhase(
+   const double mf,
+   const double a0,
+   const double a1,
+   const double eta
+ );
+ 
+-static double tidalPNPhaseDeriv(
++UNUSED static double tidalPNPhaseDeriv(
+   const double mf,
+   const double a0,
+   const double a1,
+@@ -40,7 +40,7 @@ static double tidalPNPhaseDeriv(
+ );
+ 
+ // Implements Eq. 34 of Lackey et al
+-static double tidalCorrectionPhase(
++double XLALLackeyTidal2013tidalCorrectionPhase(
+   const double mf,
+   const double a0,
+   const double a1,
+@@ -49,7 +49,7 @@ static double tidalCorrectionPhase(
+   const double Lambda
+ );
+ 
+-int LackeyTidal2013SEOBNRv2ROMCore(
++UNUSED static int LackeyTidal2013SEOBNRv2ROMCore(
+   struct tagCOMPLEX16FrequencySeries **hptilde, /**< Output: Frequency-domain waveform h+ */
+   struct tagCOMPLEX16FrequencySeries **hctilde, /**< Output: Frequency-domain waveform hx */
+   REAL8 phiRef,                                 /**< Phase at reference time */
+@@ -64,4 +64,4 @@ int LackeyTidal2013SEOBNRv2ROMCore(
+   REAL8 deltaF                                  /**< Sampling frequency (Hz) */
+ );
+ 
+-#endif /* _LALSIM_IMR_LACKEY_TIDAL_2013_H */
+\ No newline at end of file
++#endif /* _LALSIM_IMR_LACKEY_TIDAL_2013_H */
+diff --git a/lalsimulation/src/LALSimIMRPhenomP.c b/lalsimulation/src/LALSimIMRPhenomP.c
+index eded52d..8c5dad7 100644
+--- a/lalsimulation/src/LALSimIMRPhenomP.c
++++ b/lalsimulation/src/LALSimIMRPhenomP.c
+@@ -49,6 +49,8 @@
+ #include "LALSimIMRPhenomC_internals.c"
+ #include "LALSimIMRPhenomD_internals.c"
+ 
++#include "LALSimIMRLackeyTidal2013.h"
++
+ #include "LALSimIMRPhenomP.h"
+ 
+ #ifndef _OPENMP
+@@ -196,6 +198,7 @@ int XLALSimIMRPhenomPCalculateModelParametersOld(
+       L0 = M*M * L2PNR_v1(v_ref, eta); /* Use 2PN approximation for L. */
+       break;
+     case IMRPhenomPv2_V:
++    case IMRPhenomPv2_LEAplus_V:
+       L0 = M*M * L2PNR(v_ref, eta);   /* Use 2PN approximation for L. */
+       break;
+     default:
+@@ -331,6 +334,7 @@ int XLALSimIMRPhenomPCalculateModelParametersFromSourceFrame(
+       L0 = M*M * L2PNR_v1(v_ref, eta); /* Use 2PN approximation for L. */
+       break;
+     case IMRPhenomPv2_V:
++    case IMRPhenomPv2_LEAplus_V:
+       L0 = M*M * L2PNR(v_ref, eta);   /* Use 2PN approximation for L. */
+       break;
+     default:
+@@ -608,17 +612,22 @@ static int PhenomPCore(
+   // Enforce convention m2 >= m1
+   REAL8 chi1_l, chi2_l;
+   REAL8 m1_SI, m2_SI;
++  REAL8 Lambda = 0;
+   if (m2_SI_in >= m1_SI_in) {
+     m1_SI = m1_SI_in;
+     m2_SI = m2_SI_in;
+     chi1_l = chi1_l_in;
+     chi2_l = chi2_l_in;
++    if (IMRPhenomP_version == IMRPhenomPv2_LEAplus_V)
++      Lambda = XLALSimInspiralWaveformParamsLookupTidalLambda1(extraParams);
+   }
+   else { // swap bodies 1 <-> 2
+     m1_SI = m2_SI_in;
+     m2_SI = m1_SI_in;
+     chi1_l = chi2_l_in;
+     chi2_l = chi1_l_in;
++    if (IMRPhenomP_version == IMRPhenomPv2_LEAplus_V)
++      Lambda = XLALSimInspiralWaveformParamsLookupTidalLambda2(extraParams);
+   }
+ 
+   errcode = init_useful_powers(&powers_of_pi, LAL_PI);
+@@ -661,6 +670,7 @@ static int PhenomPCore(
+           XLAL_ERROR(XLAL_EDOM, "IMRPhenomP(v1): Effective spin chi_eff = %g outside the range [-0.9,0.9] is not supported!\n", chi_eff);
+       break;
+     case IMRPhenomPv2_V:
++    case IMRPhenomPv2_LEAplus_V:
+       if (q > 18.0)
+         XLAL_PRINT_WARNING("IMRPhenomPv2: Warning: The underlying non-precessing model is calibrated up to m1/m2 <= 18.\n");
+       else if (q > 100.0)
+@@ -712,6 +722,9 @@ static int PhenomPCore(
+   REAL8 finspin = 0.0;
+   REAL8 f_final = 0.0;
+ 
++
++  LEAplus_coefficients LEAplus_coeff;
++
+   switch (IMRPhenomP_version) {
+     case IMRPhenomPv1_V:
+       XLAL_PRINT_INFO("*** IMRPhenomP version 1: based on IMRPhenomC ***");
+@@ -725,7 +738,12 @@ static int PhenomPCore(
+       f_final = PCparams->fRingDown;
+       break;
+     case IMRPhenomPv2_V:
+-      XLAL_PRINT_INFO("*** IMRPhenomP version 2: based on IMRPhenomD ***");
++    case IMRPhenomPv2_LEAplus_V: // avoid duplicate code; the tidal coefficients are computed after the switch statement
++      if (IMRPhenomP_version == IMRPhenomPv2_V)
++        XLAL_PRINT_INFO("*** IMRPhenomP version 2: based on IMRPhenomD ***");
++      else if (IMRPhenomP_version == IMRPhenomPv2_LEAplus_V)
++          XLAL_PRINT_INFO("*** IMRPhenomP version 2: based on IMRPhenomD + tidal LEA+ correction for NSBH ***");
++
+       // PhenomD uses FinalSpin0815() to calculate the final spin if the spins are aligned.
+       // We use a generalized version of FinalSpin0815() that includes the in-plane spin chip.
+       finspin = FinalSpinIMRPhenomD_all_in_plane_spin_on_larger_BH(m1, m2, chi1_l, chi2_l, chip);
+@@ -769,6 +787,13 @@ static int PhenomPCore(
+       break;
+   }
+ 
++  if (IMRPhenomP_version == IMRPhenomPv2_LEAplus_V) {
++    // Precompute LEA+ coefficients that do not depend on frequency
++    double chi_BH = chi2_l; // using convention m2 >= m1
++    XLALLackeyTidal2013tidalPNAmplitudeCoefficient(&LEAplus_coeff.C, eta, chi_BH, Lambda);
++    XLALLackeyTidal2013tidalPNPhaseCoefficients(&LEAplus_coeff.a0, &LEAplus_coeff.a1, &LEAplus_coeff.G, eta, chi_BH, Lambda);
++  }
++
+   XLAL_CHECK ( fCut > f_min, XLAL_EDOM, "fCut = %.2g/M <= f_min", fCut );
+ 
+   /* Default f_max to params->fCut */
+@@ -878,7 +903,7 @@ static int PhenomPCore(
+   AmpInsPrefactors amp_prefactors;
+   PhiInsPrefactors phi_prefactors;
+ 
+-  if (IMRPhenomP_version == IMRPhenomPv2_V) {
++  if ((IMRPhenomP_version == IMRPhenomPv2_V) || (IMRPhenomP_version == IMRPhenomPv2_LEAplus_V)) {
+     errcode = init_amp_ins_prefactors(&amp_prefactors, pAmp);
+     XLAL_CHECK(XLAL_SUCCESS == errcode, errcode, "init_amp_ins_prefactors() failed.");
+     errcode = init_phi_ins_prefactors(&phi_prefactors, pPhi, pn);
+@@ -908,7 +933,8 @@ static int PhenomPCore(
+     per_thread_errcode = PhenomPCoreOneFrequency(f, eta, chi1_l, chi2_l, chip, distance, M, phic,
+                               pAmp, pPhi, PCparams, pn, &angcoeffs, &Y2m,
+                               alphaNNLOoffset - alpha0, epsilonNNLOoffset,
+-                              &hp_val, &hc_val, &phasing, IMRPhenomP_version, &amp_prefactors, &phi_prefactors);
++                              &hp_val, &hc_val, &phasing, IMRPhenomP_version, &amp_prefactors, &phi_prefactors,
++                              Lambda, &LEAplus_coeff);
+ 
+     if (per_thread_errcode != XLAL_SUCCESS) {
+       errcode = per_thread_errcode;
+@@ -1073,7 +1099,9 @@ static int PhenomPCoreOneFrequency(
+   REAL8 *phasing,                             /**< [out] overall phasing */
+   IMRPhenomP_version_type IMRPhenomP_version, /**< IMRPhenomP(v1) uses IMRPhenomC, IMRPhenomPv2 uses IMRPhenomD */
+   AmpInsPrefactors *amp_prefactors,           /**< pre-calculated (cached for saving runtime) coefficients for amplitude. See LALSimIMRPhenomD_internals.c*/
+-  PhiInsPrefactors *phi_prefactors            /**< pre-calculated (cached for saving runtime) coefficients for phase. See LALSimIMRPhenomD_internals.*/)
++  PhiInsPrefactors *phi_prefactors,           /**< pre-calculated (cached for saving runtime) coefficients for phase. See LALSimIMRPhenomD_internals.*/
++  const REAL8 Lambda,                         /**< dimensionless tidal deformability for LackeyTidal2013 model for NSBH correction */
++  LEAplus_coefficients *LEAplus_coeff         /**< pre-calculated (cached for saving runtime) coefficients for NSBH tidal correction. See LALSimIMRLackeyTidal2013.c */)
+ {
+   XLAL_CHECK(angcoeffs != NULL, XLAL_EFAULT);
+   XLAL_CHECK(hp != NULL, XLAL_EFAULT);
+@@ -1104,6 +1132,7 @@ static int PhenomPCoreOneFrequency(
+       SL = chi_eff*m2;        /* Dimensionfull aligned spin of the largest BH. SL = m2^2 chil = m2*M*chi_eff */
+       break;
+     case IMRPhenomPv2_V:
++    case IMRPhenomPv2_LEAplus_V: // avoid duplicate code; the tidal correction is applied after the switch statement
+       XLAL_CHECK(pAmp != NULL, XLAL_EFAULT);
+       XLAL_CHECK(pPhi != NULL, XLAL_EFAULT);
+       XLAL_CHECK(PNparams != NULL, XLAL_EFAULT);
+@@ -1120,6 +1149,16 @@ static int PhenomPCoreOneFrequency(
+       break;
+   }
+ 
++  if (IMRPhenomP_version == IMRPhenomPv2_LEAplus_V) {
++    XLAL_CHECK(LEAplus_coeff != NULL, XLAL_EFAULT);
++    double ampC = XLALLackeyTidal2013tidalCorrectionAmplitude(f, LEAplus_coeff->C, eta, Lambda);
++    double phsC = XLALLackeyTidal2013tidalCorrectionPhase(f, LEAplus_coeff->a0, LEAplus_coeff->a1, LEAplus_coeff->G, eta, Lambda);
++    // Now apply tidal amplitude and phase corrections to IMRPhenomD
++    aPhenom *= ampC;
++    // FIXME: What is the correct sign of the phasing? Compare with and without the correction for PhenomP; also compare SEOBNRv2ROM and LEA+ phasing
++    phPhenom += phsC; // FIXME: plus or minus?
++  }
++
+   phPhenom -= 2.*phic; /* Note: phic is orbital phase */
+   REAL8 amp0 = M * LAL_MRSUN_SI * M * LAL_MTSUN_SI / distance;
+   COMPLEX16 hP = amp0 * aPhenom * (cos(phPhenom) - I*sin(phPhenom));//cexp(-I*phPhenom); /* Assemble IMRPhenom waveform. */
+@@ -1149,10 +1188,11 @@ static int PhenomPCoreOneFrequency(
+       WignerdCoefficients_SmallAngleApproximation(&cBetah, &sBetah, omega_cbrt, SL, eta, Sperp);
+       break;
+     case IMRPhenomPv2_V:
++    case IMRPhenomPv2_LEAplus_V:
+       WignerdCoefficients(&cBetah, &sBetah, omega_cbrt, SL, eta, Sperp);
+       break;
+   default:
+-    XLAL_ERROR( XLAL_EINVAL, " Unknown IMRPhenomP version!\nAt present only v1 and v2 are available." );
++    XLAL_ERROR( XLAL_EINVAL, "Unknown IMRPhenomP version!\nAt present only v1 and v2 are available." );
+     break;
+   }
+ 
+diff --git a/lalsimulation/src/LALSimIMRPhenomP.h b/lalsimulation/src/LALSimIMRPhenomP.h
+index eb856dd..3b554fa 100644
+--- a/lalsimulation/src/LALSimIMRPhenomP.h
++++ b/lalsimulation/src/LALSimIMRPhenomP.h
+@@ -78,6 +78,13 @@ typedef struct tagSpinWeightedSphericalHarmonic_l2 {
+   COMPLEX16 Y2m2, Y2m1, Y20, Y21, Y22;
+ } SpinWeightedSphericalHarmonic_l2;
+ 
++typedef struct tagLEAplus_coefficients {
++  REAL8 C;
++  REAL8 a0;
++  REAL8 a1;
++  REAL8 G;
++} LEAplus_coefficients;
++
+ /* Internal core function to calculate PhenomP polarizations for a sequence of frequences. */
+ static int PhenomPCore(
+   COMPLEX16FrequencySeries **hptilde,   /**< Output: Frequency-domain waveform h+ */
+@@ -124,7 +131,9 @@ static int PhenomPCoreOneFrequency(
+   REAL8 *phasing,                         /**< Output: overall phasing */
+   const UINT4 IMRPhenomP_version,         /**< Version number: 1 uses IMRPhenomC, 2 uses IMRPhenomD */
+   AmpInsPrefactors *amp_prefactors,       /**< pre-calculated (cached for saving runtime) coefficients for amplitude. See LALSimIMRPhenomD_internals.c*/
+-  PhiInsPrefactors *phi_prefactors        /**< pre-calculated (cached for saving runtime) coefficients for phase. See LALSimIMRPhenomD_internals.*/
++  PhiInsPrefactors *phi_prefactors,       /**< pre-calculated (cached for saving runtime) coefficients for phase. See LALSimIMRPhenomD_internals.*/
++  const REAL8 Lambda,                     /**< dimensionless tidal deformability for LackeyTidal2013 model for NSBH correction */
++  LEAplus_coefficients *LEAplus_coeff     /**< pre-calculated (cached for saving runtime) coefficients for NSBH tidal correction. See LALSimIMRLackeyTidal2013.c */
+ );
+ 
+ /* Simple 2PN version of L, without any spin terms expressed as a function of v */
+@@ -190,4 +199,5 @@ static REAL8 FinalSpinBarausse2009(  /* Barausse & Rezzolla, Astrophys.J.Lett.70
+ static bool approximately_equal(REAL8 x, REAL8 y, REAL8 epsilon);
+ static void nudge(REAL8 *x, REAL8 X, REAL8 epsilon);
+ 
++
+ #endif	// of #ifndef _LALSIM_IMR_PHENOMP_H
+diff --git a/lalsimulation/src/LALSimInspiral.c b/lalsimulation/src/LALSimInspiral.c
+index c2d5365..988c89c 100644
+--- a/lalsimulation/src/LALSimInspiral.c
++++ b/lalsimulation/src/LALSimInspiral.c
+@@ -147,6 +147,7 @@ static const char *lalSimulationApproximantNames[] = {
+     INITIALIZE_NAME(IMRPhenomD),
+     INITIALIZE_NAME(IMRPhenomP),
+     INITIALIZE_NAME(IMRPhenomPv2),
++	INITIALIZE_NAME(IMRPhenomPv2_LEAplus),
+     INITIALIZE_NAME(IMRPhenomFC),
+     INITIALIZE_NAME(TaylorEt),
+     INITIALIZE_NAME(TaylorT4),
+@@ -267,6 +268,7 @@ static double fixReferenceFrequency(const double f_ref, const double f_min, cons
+         case SpinTaylorF2:
+         case IMRPhenomP:
+         case IMRPhenomPv2:
++		case IMRPhenomPv2_LEAplus:
+         case NRSur4d2s:
+             return f_min;
+         default:
+@@ -1475,6 +1477,33 @@ int XLALSimInspiralChooseFDWaveform(
+             }
+             break;
+ 
++        case IMRPhenomPv2_LEAplus:
++            /* Waveform-specific sanity checks */
++            if( !XLALSimInspiralWaveformParamsFrameAxisIsDefault(LALparams) )
++                ABORT_NONDEFAULT_FRAME_AXIS(LALparams);/* Default is LAL_SIM_INSPIRAL_FRAME_AXIS_ORBITAL_L : z-axis along direction of orbital angular momentum. */
++            if(!XLALSimInspiralWaveformParamsModesChoiceIsDefault(          /* Default is (2,2) or l=2 modes. */LALparams) )
++                ABORT_NONDEFAULT_MODES_CHOICE(LALparams);
++            /* Tranform to model parameters */
++            if(f_ref==0.0)
++                f_ref = f_min; /* Default reference frequency is minimum frequency */
++            XLALSimIMRPhenomPCalculateModelParametersFromSourceFrame(
++                &chi1_l, &chi2_l, &chip, &thetaJN, &alpha0, &phi_aligned, &zeta_polariz,
++                m1, m2, f_ref, phiRef, inclination,
++                S1x, S1y, S1z,
++                S2x, S2y, S2z, IMRPhenomPv2_LEAplus_V);
++            /* Call the waveform driver routine */
++            ret = XLALSimIMRPhenomP(hptilde, hctilde,
++              chi1_l, chi2_l, chip, thetaJN,
++              m1, m2, distance, alpha0, phi_aligned, deltaF, f_min, f_max, f_ref, IMRPhenomPv2_LEAplus_V, LALparams);
++            if (ret == XLAL_FAILURE) XLAL_ERROR(XLAL_EFUNC);
++            for (UINT4 idx=0;idx<(*hptilde)->data->length;idx++) {
++                PhPpolp=(*hptilde)->data->data[idx];
++                PhPpolc=(*hctilde)->data->data[idx];
++                (*hptilde)->data->data[idx] =cos(2.*zeta_polariz)*PhPpolp+sin(2.*zeta_polariz)*PhPpolc;
++                (*hctilde)->data->data[idx]=cos(2.*zeta_polariz)*PhPpolc-sin(2.*zeta_polariz)*PhPpolp;
++            }
++            break;
++
+         case SpinTaylorT4Fourier:
+             /* Waveform-specific sanity checks */
+             if( !XLALSimInspiralWaveformParamsFrameAxisIsDefault(LALparams) )
+@@ -4481,6 +4510,7 @@ int XLALSimInspiralImplementedTDApproximants(
+         case IMRPhenomC:
+ 	case IMRPhenomD:
+ 	case IMRPhenomPv2:
++	case IMRPhenomPv2_LEAplus:
+         case PhenSpinTaylorRD:
+         case SEOBNRv1:
+         case SpinDominatedWf:
+@@ -4521,6 +4551,7 @@ int XLALSimInspiralImplementedFDApproximants(
+         case IMRPhenomD:
+         case IMRPhenomP:
+         case IMRPhenomPv2:
++		case IMRPhenomPv2_LEAplus:
+         case EOBNRv2_ROM:
+         case EOBNRv2HM_ROM:
+         case SEOBNRv1_ROM_EffectiveSpin:
+@@ -4922,6 +4953,7 @@ int XLALSimInspiralGetSpinSupportFromApproximant(Approximant approx){
+     case SpinTaylorT3:
+     case IMRPhenomP:
+     case IMRPhenomPv2:
++	case IMRPhenomPv2_LEAplus:
+     case SpinTaylorT2Fourier:
+     case SpinTaylorT4Fourier:
+     case SpinDominatedWf:
+@@ -5078,6 +5110,7 @@ int XLALSimInspiralApproximantAcceptTestGRParams(Approximant approx){
+     case IMRPhenomD:
+     case IMRPhenomP:
+     case IMRPhenomPv2:
++	case IMRPhenomPv2_LEAplus:
+       testGR_accept=LAL_SIM_INSPIRAL_TESTGR_PARAMS;
+       break;
+     default:
+diff --git a/lalsimulation/src/LALSimInspiral.h b/lalsimulation/src/LALSimInspiral.h
+index 05e5dfd..5ad054a 100644
+--- a/lalsimulation/src/LALSimInspiral.h
++++ b/lalsimulation/src/LALSimInspiral.h
+@@ -364,6 +364,8 @@ typedef enum tagApproximant {
+                          * @remarks Implemented in lalsimulation (frequency domain).  */
+    IMRPhenomPv2,		/**< Frequency domain (generic spins) inspiral-merger-ringdown templates of Hannam et al., arXiv:1308.3271 [gr-qc]. Based on IMRPhenomD, arXiv:1508.07250 and arXiv:1508.07253.
+                          * @remarks Implemented in lalsimulation (frequency domain).  */
++   IMRPhenomPv2_LEAplus,		/**< Frequency domain (generic spins) inspiral-merger-ringdown templates of Hannam et al., arXiv:1308.3271 [gr-qc]. Based on IMRPhenomD, arXiv:1508.07250 and arXiv:1508.07253 with tidal corrections for NSBH from Lackey et al, arXiv:1303.6298.
++                         * @remarks Implemented in lalsimulation (frequency domain).  */
+    IMRPhenomFC,		/**< Frequency domain (non-precessing spins) inspiral-merger-ringdown templates of Santamaria et al [Santamaria:2010yb] with phenomenological coefficients defined in the Table II of [Santamaria:2010yb]
+                          * @attention Not implemented in lalsimulation.*/
+    TaylorEt,		/**< UNDOCUMENTED
+diff --git a/lalsimulation/src/LALSimInspiralWaveformCache.c b/lalsimulation/src/LALSimInspiralWaveformCache.c
+index a0efab9..7432217 100644
+--- a/lalsimulation/src/LALSimInspiralWaveformCache.c
++++ b/lalsimulation/src/LALSimInspiralWaveformCache.c
+@@ -1108,6 +1108,34 @@ int XLALSimInspiralChooseFDWaveformSequence(
+             }
+             break;
+ 
++        case IMRPhenomPv2_LEAplus_V:
++            /* Waveform-specific sanity checks */
++            if( !XLALSimInspiralWaveformParamsFrameAxisIsDefault(LALpars) )
++                ABORT_NONDEFAULT_FRAME_AXIS(LALpars);/* Default is LAL_SIM_INSPIRAL_FRAME_AXIS_ORBITAL_L : z-axis along direction of orbital angular momentum. */
++            if( !XLALSimInspiralWaveformParamsModesChoiceIsDefault(LALpars) )
++                ABORT_NONDEFAULT_MODES_CHOICE(LALpars);
++          /* Default is (2,2) or l=2 modes. */
++            /* Tranform to model parameters */
++            if(f_ref==0.0)
++	      f_ref = f_min; /* Default reference frequency is minimum frequency */
++            XLALSimIMRPhenomPCalculateModelParametersFromSourceFrame(
++                &chi1_l, &chi2_l, &chip, &thetaJN, &alpha0, &phi_aligned, &zeta_polariz,
++                m1, m2, f_ref, phiRef, inclination,
++                S1x, S1y, S1z,
++                S2x, S2y, S2z, IMRPhenomPv2_LEAplus_V);
++            /* Call the waveform driver routine */
++            ret = XLALSimIMRPhenomPFrequencySequence(hptilde, hctilde, frequencies,
++              chi1_l, chi2_l, chip, thetaJN,
++              m1, m2, distance, alpha0, phi_aligned, f_ref, IMRPhenomPv2_LEAplus_V, NULL);
++            if (ret == XLAL_FAILURE) XLAL_ERROR(XLAL_EFUNC);
++            for (UINT4 idx=0;idx<(*hptilde)->data->length;idx++) {
++                PhPpolp=(*hptilde)->data->data[idx];
++                PhPpolc=(*hctilde)->data->data[idx];
++                (*hptilde)->data->data[idx] =cos(2.*zeta_polariz)*PhPpolp+sin(2.*zeta_polariz)*PhPpolc;
++                (*hctilde)->data->data[idx]=cos(2.*zeta_polariz)*PhPpolc-sin(2.*zeta_polariz)*PhPpolp;
++            }
++            break;
++
+         default:
+             XLALPrintError("FD version of approximant not implemented in lalsimulation\n");
+             XLAL_ERROR(XLAL_EINVAL);
+-- 
+2.5.4 (Apple Git-61)
+

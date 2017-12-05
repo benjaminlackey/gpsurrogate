@@ -1,0 +1,87 @@
+From 23d565ca0bc5f264caf51ba96522de121b2fba2e Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 13:39:31 +0100
+Subject: [PATCH 16/18] Turn on version checking of HDF5 datafile
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 37 ++++++++++++-------------
+ 1 file changed, 18 insertions(+), 19 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index 9cc3864..d5de582 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -56,15 +56,15 @@
+ #ifdef LAL_HDF5_ENABLED
+ #include <lal/H5FileIO.h>
+ // FIXME: change these to our datafile and version number 1.0.0
+-//static const char ROMDataHDF5[] = "SEOBNRv4ROM_v2.0.hdf5";
+-//static const char ROMDataHDF5[] = "/Users/mpuer/Documents/gpsurrogate/src/TEOB-LAL-implementation/TEOBv4_surrogate.hdf5";
++//static const char SurDataHDF5[] = "SEOBNRv4ROM_v2.0.hdf5";
++//static const char SurDataHDF5[] = "/Users/mpuer/Documents/gpsurrogate/src/TEOB-LAL-implementation/TEOBv4_surrogate.hdf5";
+ // FIXME: missing attributes in HDF5 file: Email, Description (rather than description), version_major, version_minor, version_micro
+-//static const char ROMDataHDF5[] = "TEOBv4_surrogate.hdf5"; // small test dataset
+-static const char ROMDataHDF5[] = "SEOBNRv4T_surrogate_v1.0.0.hdf5"; // MP added version number in filename
++//static const char SurDataHDF5[] = "TEOBv4_surrogate.hdf5"; // small test dataset
++static const char SurDataHDF5[] = "SEOBNRv4T_surrogate_v1.0.0.hdf5"; // MP added version number in filename
+ // FIXME: uncomment after adding attributes
+-// static const INT4 ROMDataHDF5_VERSION_MAJOR = 1;
+-// static const INT4 ROMDataHDF5_VERSION_MINOR = 0;
+-// static const INT4 ROMDataHDF5_VERSION_MICRO = 0;
++static const INT4 SurDataHDF5_VERSION_MAJOR = 1;
++static const INT4 SurDataHDF5_VERSION_MINOR = 0;
++static const INT4 SurDataHDF5_VERSION_MICRO = 0;
+ #endif
+ 
+ #include <lal/LALSimInspiral.h>
+@@ -445,9 +445,9 @@ UNUSED static int Surrogatedata_Init_submodel(
+     Surrogatedata_Cleanup_submodel(*submodel);
+ 
+ #ifdef LAL_HDF5_ENABLED
+-  size_t size = strlen(dir) + strlen(ROMDataHDF5) + 2;
++  size_t size = strlen(dir) + strlen(SurDataHDF5) + 2;
+   char *path = XLALMalloc(size);
+-  snprintf(path, size, "%s/%s", dir, ROMDataHDF5);
++  snprintf(path, size, "%s/%s", dir, SurDataHDF5);
+ 
+   LALH5File *file = XLALH5FileOpen(path, "r");
+   //LALH5File *file = XLALH5FileOpen("/Users/mpuer/Documents/gpsurrogate/src/TEOB-LAL-implementation/TEOBv4_surrogate.hdf5", "r");
+@@ -522,18 +522,17 @@ int Surrogatedata_Init(
+ 
+ #ifdef LAL_HDF5_ENABLED
+   // First, check we got the correct version number
+-  size_t size = strlen(dir) + strlen(ROMDataHDF5) + 2;
++  size_t size = strlen(dir) + strlen(SurDataHDF5) + 2;
+   char *path = XLALMalloc(size);
+-  snprintf(path, size, "%s/%s", dir, ROMDataHDF5);
++  snprintf(path, size, "%s/%s", dir, SurDataHDF5);
+   LALH5File *file = XLALH5FileOpen(path, "r");
+ 
+-// FIXME: uncomment this after fixing the attributes in the HDF5 file
+-  // XLALPrintInfo("ROM metadata\n============\n");
+-  // PrintInfoStringAttribute(file, "Email");
+-  // PrintInfoStringAttribute(file, "Description");
+-  // ret = ROM_check_version_number(file, ROMDataHDF5_VERSION_MAJOR,
+-  //                                ROMDataHDF5_VERSION_MINOR,
+-  //                                ROMDataHDF5_VERSION_MICRO);
++  XLALPrintInfo("Surrogate metadata\n============\n");
++  PrintInfoStringAttribute(file, "Email");
++  PrintInfoStringAttribute(file, "Description");
++  ret = ROM_check_version_number(file, SurDataHDF5_VERSION_MAJOR,
++                                       SurDataHDF5_VERSION_MINOR,
++                                       SurDataHDF5_VERSION_MICRO);
+ 
+   XLALFree(path);
+   XLALH5FileClose(file);
+@@ -1232,7 +1231,7 @@ UNUSED static void Surrogate_Init_LALDATA(void)
+ 
+   // Expect ROM datafile in a directory listed in LAL_DATA_PATH,
+ #ifdef LAL_HDF5_ENABLED
+-#define datafile ROMDataHDF5
++#define datafile SurDataHDF5
+   char *path = XLALFileResolvePathLong(datafile, PKG_DATA_DIR);
+   if (path==NULL)
+     XLAL_ERROR_VOID(XLAL_EIO, "Unable to resolve data file %s in $LAL_DATA_PATH\n", datafile);
+-- 
+2.5.4 (Apple Git-61)
+

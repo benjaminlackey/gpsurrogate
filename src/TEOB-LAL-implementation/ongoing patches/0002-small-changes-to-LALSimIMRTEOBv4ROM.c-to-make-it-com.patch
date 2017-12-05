@@ -1,0 +1,170 @@
+From 3ecd6cd37c9254d0900099f6cf0ca37f7dad97d1 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 27 Oct 2017 15:15:40 +0200
+Subject: [PATCH 02/18] small changes to LALSimIMRTEOBv4ROM.c to make it
+ compile -- code still incomplete!
+
+---
+ lalsimulation/src/LALSimIMRTEOBv4ROM.c | 66 +++++++++++++++++-----------------
+ 1 file changed, 33 insertions(+), 33 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRTEOBv4ROM.c b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+index 75d295b..14aa0f2 100644
+--- a/lalsimulation/src/LALSimIMRTEOBv4ROM.c
++++ b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+@@ -130,7 +130,7 @@ struct tagTEOBv4ROMdataDS_submodel
+   double q_bounds[2];          // [q_min, q_max]
+   double lambda1_bounds[2];    // [lambda1_min, lambda1_max]
+   double lambda2_bounds[2];    // [lambda2_min, lambda2_max]
+-  
++
+   gsl_vector* cvec_amp;      // Flattened amplitude projection coefficients
+   gsl_vector* cvec_phi;      // Flattened phase projection coefficients
+   gsl_matrix *Bamp;          // Reduced SVD basis for amplitude
+@@ -361,8 +361,8 @@ double kernel(
+   // fprintf(stderr, "x2 = [%g, %g, %g, %g, %g]\n", gsl_vector_get(x2, 0), gsl_vector_get(x2, 1), gsl_vector_get(x2, 2), gsl_vector_get(x2, 3), gsl_vector_get(x2, 4));
+   // fprintf(stderr, "ls = [%g, %g, %g, %g, %g]\n", gsl_vector_get(&ls, 0), gsl_vector_get(&ls, 1), gsl_vector_get(&ls, 2), gsl_vector_get(&ls, 3), gsl_vector_get(&ls, 4));
+ 
+-  XLAL_CHECK((x1->size == x2->size) && (x1->size == ls.size), XLAL_EDIMS, 
+-  "kernel(): dimensions of vectors x1, x2 and ls: %zu, %zu, %zu have to be consistent.\n", 
++  XLAL_CHECK((x1->size == x2->size) && (x1->size == ls.size), XLAL_EDIMS,
++  "kernel(): dimensions of vectors x1, x2 and ls: %zu, %zu, %zu have to be consistent.\n",
+   x1->size, x2->size, ls.size);
+ 
+   // Noise nugget for diagonal elements
+@@ -583,7 +583,7 @@ static int GPR_evaluation_5D(
+   gsl_matrix *x_train,           // Input: GPR training points
+   gsl_vector *amp_at_EI_nodes,   // Output: log amplitude at EI nodes (preallocated)
+   gsl_vector *phi_at_EI_nodes    // Output: dephasing at EI nodes     (preallocated)
+-) 
++)
+ {
+   // assemble evaluation point
+   gsl_vector *xst = gsl_vector_alloc(5);
+@@ -602,7 +602,7 @@ static int GPR_evaluation_5D(
+   // FIXME: find number of EI nodes
+   for (int i=0; i<20; i++) {
+     gsl_vector hyp_amp_i = gsl_matrix_const_row(hyp_amp, i).vector;
+-    gsl_vector kinv_dot_y_amp_i = gsl_matrix_const_row(kinv_dot_y_amp, i).vector;  
++    gsl_vector kinv_dot_y_amp_i = gsl_matrix_const_row(kinv_dot_y_amp, i).vector;
+     double pred = gp_predict(xst, &hyp_amp_i, x_train, &kinv_dot_y_amp_i);
+     fprintf(stderr, "pred_amp(%d) = %g\n", i, pred);
+     gsl_vector_set(amp_at_EI_nodes, i, pred);
+@@ -614,7 +614,7 @@ static int GPR_evaluation_5D(
+   // FIXME: find number of EI nodes
+   for (int i=0; i<20; i++) {
+     gsl_vector hyp_phi_i = gsl_matrix_const_row(hyp_phi, i).vector;
+-    gsl_vector kinv_dot_y_phi_i = gsl_matrix_const_row(kinv_dot_y_phi, i).vector;  
++    gsl_vector kinv_dot_y_phi_i = gsl_matrix_const_row(kinv_dot_y_phi, i).vector;
+     double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i);
+     fprintf(stderr, "pred_phi(%d) = %g\n", i, pred);
+     gsl_vector_set(phi_at_EI_nodes, i, pred);
+@@ -687,7 +687,7 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+ 
+   LALH5File *file2 = XLALH5FileOpen("lalsuitetest_new.hdf5", "r");
+   LALH5File *root = XLALH5GroupOpen(file2, "/"); // most convenient to open the root once
+-  
++
+   //////////////////////////////////////////////////////////////////////////////
+   // load everything we need
+   // GP hyperparameters
+@@ -701,10 +701,10 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+   // Reduced bases
+   ReadHDF5RealMatrixDataset(root, "B_amp", & (*submodel)->B_amp);
+   ReadHDF5RealMatrixDataset(root, "B_phi", & (*submodel)->B_phi);
+-  
++
+   // Training points
+   ReadHDF5RealMatrixDataset(root, "x_train", & (*submodel)->x_train);
+-  
++
+   // Frequency grid
+   ReadHDF5RealVectorDataset(root, "mf", & (*submodel)->mf);
+ 
+@@ -725,7 +725,7 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+   // FIXME: check consistency of sizes against constants defined above
+ 
+   // cleanup
+-  
++
+   XLALH5FileClose(file2);
+ 
+   // END NEW CODE
+@@ -758,7 +758,7 @@ static void TEOBv4ROMdataDS_Cleanup_submodel(TEOBv4ROMdataDS_submodel *submodel)
+   if(submodel->B_amp) gsl_matrix_free(submodel->B_amp);
+   if(submodel->B_phi) gsl_matrix_free(submodel->B_phi);
+   if(submodel->x_train) gsl_matrix_free(submodel->x_train);
+-  if(submodel->mf) gsl_vector_free(submodel->mf);  
++  if(submodel->mf) gsl_vector_free(submodel->mf);
+ }
+ 
+ /* Set up a new ROM model, using data contained in dir */
+@@ -1147,7 +1147,7 @@ static int TEOBv4ROMCore(
+   REAL8 amp_pre_hi = 1.0;
+ 
+ 
+-  // TODO: Call GPR instead for log amplitude and dephasing 
++  // TODO: Call GPR instead for log amplitude and dephasing
+ 
+   double q = 1.0 / 3.333333e-01; // FIXME
+   gsl_vector *amp_at_EI_nodes = gsl_vector_alloc(20); // FIXME
+@@ -1258,35 +1258,35 @@ static int TEOBv4ROMCore(
+   // or get complete TF2 waveform
+   // FIXME: check units: f, m
+   // FIXME: destroy hptilde_TF2 after using it or use hptilde variable
+-  double m1_SI = Mtot * q/(1.0+q) * LAL_MSUN_SI;
+-  double m2_SI = Mtot * 1.0/(1.0+q) * LAL_MSUN_SI;
+-  // COMPLEX16FrequencySeries **hptilde_TF2 = NULL;
++  // double m1_SI = Mtot * q/(1.0+q) * LAL_MSUN_SI;
++  // double m2_SI = Mtot * 1.0/(1.0+q) * LAL_MSUN_SI;
++  // // COMPLEX16FrequencySeries **hptilde_TF2 = NULL;
+   // LALDict *LALparams = NULL;
+   // XLALSimInspiralTaylorF2(hptilde_TF2, phiRef, deltaF, m1_SI, m2_SI, chi1, chi2, fLow, fHigh, fRef,
+   // distance, LALparams);
+ 
+   // phasing
+-  call XLALSimInspiralTaylorF2AlignedPhasing() to get the point-particle phasing in a structure
++  // FIXME: call XLALSimInspiralTaylorF2AlignedPhasing() to get the point-particle phasing in a structure
+ 
+ 
+-  // reimplement these functions since they are static
+-  static REAL8 UNUSED
+-  XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(
+-  	REAL8 mByM /**< ratio of object mass to total mass */
+-      )
+-  {
+-    return (-288. + 264.*mByM)*mByM*mByM*mByM*mByM;
+-
+-  }
++  // FIXME: reimplement these functions since they are static; better: make them XLAL
++  // static REAL8 UNUSED
++  // XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(
++  // 	REAL8 mByM /**< ratio of object mass to total mass */
++  //     )
++  // {
++  //   return (-288. + 264.*mByM)*mByM*mByM*mByM*mByM;
++  //
++  // }
++  //
++  // static REAL8 UNUSED
++  // XLALSimInspiralTaylorF2Phasing_12PNTidalCoeff(
++  // 	REAL8 mByM /**< ratio of object mass to total mass */
++  //     )
++  // {
++  //   return (-15895./28. + 4595./28.*mByM + 5715./14.*mByM*mByM - 325./7.*mByM*mByM*mByM)*mByM*mByM*mByM*mByM;
++  // }
+ 
+-  static REAL8 UNUSED
+-  XLALSimInspiralTaylorF2Phasing_12PNTidalCoeff(
+-  	REAL8 mByM /**< ratio of object mass to total mass */
+-      )
+-  {
+-    return (-15895./28. + 4595./28.*mByM + 5715./14.*mByM*mByM - 325./7.*mByM*mByM*mByM)*mByM*mByM*mByM*mByM;
+-  }
+-  
+   // implement this as a separate function
+   // amplitude taylorf2_amp()
+   // https://github.com/benjaminlackey/gpsurrogate/blob/master/src/taylorf2.py#L59
+-- 
+2.5.4 (Apple Git-61)
+

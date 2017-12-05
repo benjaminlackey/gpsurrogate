@@ -1,0 +1,256 @@
+From 306c5e71ec1350325ae956c4c71c7e00e701ddcc Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 13:17:17 +0100
+Subject: [PATCH 15/18] Add parameter space bounds checking
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c |   2 +-
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 161 ++++++++++++++----------
+ 2 files changed, 95 insertions(+), 68 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c b/lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c
+index da4c183..dd24c07 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c
+@@ -54,7 +54,7 @@ UNUSED static int ReadHDF5RealMatrixDataset(LALH5File *file, const char *name, g
+ UNUSED static int ReadHDF5LongVectorDataset(LALH5File *file, const char *name, gsl_vector_long **data);
+ UNUSED static int ReadHDF5LongMatrixDataset(LALH5File *file, const char *name, gsl_matrix_long **data);
+ UNUSED static void PrintInfoStringAttribute(LALH5File *file, const char attribute[]);
+-UNUSED static int ROM_check_version_number(LALH5File *file, 	INT4 version_major_in, INT4 version_minor_in, INT4 version_micro_in);
++UNUSED static int ROM_check_version_number(LALH5File *file, INT4 version_major_in, INT4 version_minor_in, INT4 version_micro_in);
+ #endif
+ 
+ UNUSED static REAL8 Interpolate_Coefficent_Tensor(
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index d3aea20..9cc3864 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -103,33 +103,22 @@ static pthread_once_t Surrogate_is_initialized = PTHREAD_ONCE_INIT;
+ 
+ struct tagSurrogatedata_submodel
+ {
+-  // /B_amp                   Dataset {20, 10000}
+-  // /B_phi                   Dataset {20, 10000}
+-  // /EI_nodes_amp            Dataset {20}
+-  // /EI_nodes_phi            Dataset {20}
+-  // /hyp_amp                 Dataset {20, 7}
+-  // /hyp_phi                 Dataset {20, 7}
+-  // /kinv_dot_y_amp          Dataset {20, 159}
+-  // /kinv_dot_y_phi          Dataset {20, 159}
+-  // /mf                      Dataset {10000}
+-  // /x_train                 Dataset {159, 5}
+-
+-  gsl_matrix *hyp_amp;         // GP hyperparameters log amplitude
+-  gsl_matrix *hyp_phi;         // GP hyperparameters for dephasing
+-  gsl_matrix *kinv_dot_y_amp;  // kinv_dot_y for log amplitude
+-  gsl_matrix *kinv_dot_y_phi;  // kinv_dot_y for dephasing
+-  gsl_matrix *B_amp;           // Reduced basis for log amplitude
+-  gsl_matrix *B_phi;           // Reduced basis for dephasing
+-  gsl_matrix *x_train;         // Training points
+-  gsl_vector *mf_amp;          // location of spline nodes for log amplitude
+-  gsl_vector *mf_phi;          // location of spline nodes for dephasing
++  gsl_matrix *hyp_amp;           // GP hyperparameters log amplitude
++  gsl_matrix *hyp_phi;           // GP hyperparameters for dephasing
++  gsl_matrix *kinv_dot_y_amp;    // kinv_dot_y for log amplitude
++  gsl_matrix *kinv_dot_y_phi;    // kinv_dot_y for dephasing
++  gsl_matrix *B_amp;             // Reduced basis for log amplitude
++  gsl_matrix *B_phi;             // Reduced basis for dephasing
++  gsl_matrix *x_train;           // Training points
++  gsl_vector *mf_amp;            // location of spline nodes for log amplitude
++  gsl_vector *mf_phi;            // location of spline nodes for dephasing
+ 
+   // 5D parameter space bounds of surrogate
+-  double q_bounds[2];          // [q_min, q_max]
+-  double chi1_bounds[2];       // [chi1_min, chi1_max]
+-  double chi2_bounds[2];       // [chi2_min, chi2_max]
+-  double lambda1_bounds[2];    // [lambda1_min, lambda1_max]
+-  double lambda2_bounds[2];    // [lambda2_min, lambda2_max]
++  gsl_vector *q_bounds;          // [q_min, q_max]
++  gsl_vector *chi1_bounds;       // [chi1_min, chi1_max]
++  gsl_vector *chi2_bounds;       // [chi2_min, chi2_max]
++  gsl_vector *lambda1_bounds;    // [lambda1_min, lambda1_max]
++  gsl_vector *lambda2_bounds;    // [lambda2_min, lambda2_max]
+ };
+ typedef struct tagSurrogatedata_submodel Surrogatedata_submodel;
+ 
+@@ -192,6 +181,15 @@ UNUSED static int Surrogatedata_Init_submodel(
+ 
+ UNUSED static void Surrogatedata_Cleanup_submodel(Surrogatedata_submodel *submodel);
+ 
++UNUSED static int CheckParameterSpaceBounds(
++  Surrogatedata_submodel *sur,
++  double q,      // mass-ratio q >= 1
++  double chi1,
++  double chi2,
++  double lambda1,
++  double lambda2
++);
++
+ /**
+  * Core function for computing the ROM waveform.
+  * Interpolate projection coefficient data and evaluate coefficients at desired (q, chi).
+@@ -472,19 +470,12 @@ UNUSED static int Surrogatedata_Init_submodel(
+   ReadHDF5RealVectorDataset(root, "spline_nodes_amp", & (*submodel)->mf_amp);
+   ReadHDF5RealVectorDataset(root, "spline_nodes_phase", & (*submodel)->mf_phi);
+ 
+-  // FIXME: Domain of definition of submodel
+-  // FIXME: Get these from attributes in the HDF5 file
+-  // FIXME: check these
+-  // (*submodel)->q_bounds[0] = 1.0;
+-  // (*submodel)->q_bounds[1] = 3.0;
+-  // (*submodel)->chi1_bounds[0] = -0.5;
+-  // (*submodel)->chi1_bounds[1] = 0.5;
+-  // (*submodel)->chi2_bounds[0] = -0.5;
+-  // (*submodel)->chi2_bounds[1] = 0.5;
+-  // (*submodel)->lambda1_bounds[0] = 0.1;
+-  // (*submodel)->lambda1_bounds[1] = 5000.0;
+-  // (*submodel)->lambda2_bounds[0] = 0.1;
+-  // (*submodel)->lambda2_bounds[1] = 5000.0;
++  // Store domain of definition
++  ReadHDF5RealVectorDataset(root, "q_bounds", & (*submodel)->q_bounds);
++  ReadHDF5RealVectorDataset(root, "chi1_bounds", & (*submodel)->chi1_bounds);
++  ReadHDF5RealVectorDataset(root, "chi2_bounds", & (*submodel)->chi2_bounds);
++  ReadHDF5RealVectorDataset(root, "lambda1_bounds", & (*submodel)->lambda1_bounds);
++  ReadHDF5RealVectorDataset(root, "lambda2_bounds", & (*submodel)->lambda2_bounds);
+ 
+   // FIXME: check consistency of sizes against constants defined above
+ 
+@@ -704,6 +695,57 @@ static int TaylorF2Amplitude1PN(
+   return XLAL_SUCCESS;
+ }
+ 
++static int CheckParameterSpaceBounds(
++  Surrogatedata_submodel *sur,
++  double q,      // mass-ratio q >= 1
++  double chi1,
++  double chi2,
++  double lambda1,
++  double lambda2
++) {
++  // convert to q >= 1
++  double q_max = 1.0 / gsl_vector_get(sur->q_bounds, 0);
++  double q_min = 1.0 / gsl_vector_get(sur->q_bounds, 1);
++
++  double chi1_min = gsl_vector_get(sur->chi1_bounds, 0);
++  double chi1_max = gsl_vector_get(sur->chi1_bounds, 1);
++  double chi2_min = gsl_vector_get(sur->chi2_bounds, 0);
++  double chi2_max = gsl_vector_get(sur->chi2_bounds, 1);
++
++  double lambda1_min = gsl_vector_get(sur->lambda1_bounds, 0);
++  double lambda1_max = gsl_vector_get(sur->lambda1_bounds, 1);
++  double lambda2_min = gsl_vector_get(sur->lambda2_bounds, 0);
++  double lambda2_max = gsl_vector_get(sur->lambda2_bounds, 1);
++
++  if (q < q_min  || q > q_max) {
++    XLALPrintError("XLAL Error - %s: mass-ratio q (%f) out of bounds: [%f, %f]!\n", __func__, q, q_min, q_max);
++    XLAL_ERROR( XLAL_EDOM );
++  }
++
++  if (chi1 < chi1_min || chi1 > chi1_max) {
++    XLALPrintError("XLAL Error - %s: aligned-spin chi1 (%f) out of bounds: [%f, %f]!\n", __func__, chi1, chi1_min, chi1_max);
++    XLAL_ERROR( XLAL_EDOM );
++  }
++
++  if (chi2 < chi2_min || chi2 > chi2_max) {
++    XLALPrintError("XLAL Error - %s: aligned-spin chi2 (%f) out of bounds: [%f, %f]!\n", __func__, chi2, chi2_min, chi2_max);
++    XLAL_ERROR( XLAL_EDOM );
++  }
++
++  if (lambda1 < lambda1_min || lambda1 > lambda1_max) {
++    XLALPrintError("XLAL Error - %s: tidal deformability lambda1 (%f) out of bounds: [%f, %f]!\n", __func__, lambda1, lambda1_min, lambda1_max);
++    XLAL_ERROR( XLAL_EDOM );
++  }
++
++  if (lambda2 < lambda2_min || lambda2 > lambda2_max) {
++    XLALPrintError("XLAL Error - %s: tidal deformability lambda2 (%f) out of bounds: [%f, %f]!\n", __func__, lambda2, lambda2_min, lambda2_max);
++    XLAL_ERROR( XLAL_EDOM );
++  }
++
++  return XLAL_SUCCESS;
++}
++
++
+ /**
+  * Core function for computing the ROM waveform.
+  * Interpolate projection coefficient data and evaluate coefficients at desired (q, chi1, chi2).
+@@ -748,28 +790,13 @@ static int SurrogateCore(
+   int retcode=0;
+ 
+   double Mtot = Mtot_sec / LAL_MTSUN_SI;
+-
+-  // 'Nudge' parameter values to allowed boundary values if close by
+-  if (eta > 0.25)     nudge(&eta, 0.25, 1e-6);
+-  if (eta < 0.01)     nudge(&eta, 0.01, 1e-6);
+-
+-  if (chi1 < -1.0 || chi2 < -1.0 || chi1 > 1.0 || chi2 > 1.0) {
+-    XLALPrintError("XLAL Error - %s: chi1 or chi2 smaller than -1.0 or larger than 1.0!\n"
+-                   "Surrogate is only available for spins in the range -1 <= a/M <= 1.0.\n",
+-                   __func__);
+-    XLAL_ERROR( XLAL_EDOM );
+-  }
+-
+-  if (eta<0.01 || eta > 0.25) {
+-    XLALPrintError("XLAL Error - %s: eta (%f) smaller than 0.01 or unphysical!\n"
+-                   "Surrogate is only available for eta in the range 0.01 <= eta <= 0.25.\n",
+-                   __func__, eta);
+-    XLAL_ERROR( XLAL_EDOM );
+-  }
++  double q = (1.0 + sqrt(1.0 - 4.0*eta) - 2.0*eta) / (2.0*eta);
+ 
+   Surrogatedata_submodel *sur;
+   sur = romdata->sub1;
+ 
++  retcode |= CheckParameterSpaceBounds(sur, q, chi1, chi2, lambda1, lambda2);
++
+   /* Find frequency bounds */
+   if (!freqs_in) XLAL_ERROR(XLAL_EFAULT);
+   double fLow  = freqs_in->data[0];
+@@ -816,7 +843,6 @@ static int SurrogateCore(
+ 
+ 
+   // Evaluate GPR for log amplitude and dephasing
+-  double q = (1.0 + sqrt(1.0 - 4.0*eta) - 2.0*eta) / (2.0*eta);
+   gsl_vector *sur_amp_at_nodes = gsl_vector_alloc(N_amp);
+   gsl_vector *sur_phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
+   assert(N_amp == N_phi); // FIXME: is it safe to assume this?
+@@ -1028,7 +1054,7 @@ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+  *
+  * \author Michael Puerrer, Ben Lackey
+  *
+- * \brief C code for TEOBv4 reduced order model
++ * \brief C code for SEOBNRv4T surrogate model
+  * See arXiv:xxxxxxxxxxxx
+  *
+  * This is a frequency domain model that approximates the time domain TEOBv4 model.
+@@ -1037,18 +1063,19 @@ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+  * will be available at on LIGO clusters in /home/cbc/.
+  * Make sure the files are in your LAL_DATA_PATH.
+  *
+- * @note Note that due to its construction the iFFT of the ROM has a small (~ 20 M) offset
+- * in the peak time that scales with total mass as compared to the time-domain TEOBv4 model.
++ * @note Note that due to its construction the iFFT of the surrogate has a small (~ 20 M) offset
++ * in the peak time that scales with total mass as compared to the time-domain SEOBNRv4T model.
+  *
+- * @note Parameter ranges: FIXME
+- *   * q
+- *   * chi_i
+- *   * lambda_i
+- *   * 2Msun (@ flow=20Hz) <= Mtot
++ * @note Parameter ranges:
++ *   1 <= q <= 3
++ *   -0.5 <= chi1 <= 0.5
++ *   -0.5 <= chi2 <= 0.5
++ *   0 <= lambda1 <= 5000
++ *   0 <= lambda2 <= 5000
+  *
+  *  Aligned component spins chi1, chi2.
+- *  Symmetric mass-ratio eta = m1*m2/(m1+m2)^2.
+- *  Total mass Mtot.
++ *  Tidal deformabilities of neutron stars lambda1, lambda2.
++ *  Mass-ratio q = m1/m2
+  *
+  * @{
+  */
+-- 
+2.5.4 (Apple Git-61)
+

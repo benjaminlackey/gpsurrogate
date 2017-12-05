@@ -1,0 +1,257 @@
+From 81c3cbdec24cde9da888f0d7fdc15eab98484775 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 10 Nov 2017 15:26:26 +0100
+Subject: [PATCH 05/18] Restructure code to use spline nodes
+
+Prepending to the phase seems to work correctly
+---
+ lalsimulation/src/LALSimIMRTEOBv4ROM.c | 124 ++++++++++++++++++++++-----------
+ 1 file changed, 85 insertions(+), 39 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRTEOBv4ROM.c b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+index 14aa0f2..542881c 100644
+--- a/lalsimulation/src/LALSimIMRTEOBv4ROM.c
++++ b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+@@ -123,11 +123,16 @@ struct tagTEOBv4ROMdataDS_submodel
+   gsl_matrix *hyp_phi;         // GP hyperparameters for dephasing
+   gsl_matrix *kinv_dot_y_amp;  // kinv_dot_y for log amplitude
+   gsl_matrix *kinv_dot_y_phi;  // kinv_dot_y for dephasing
+-  gsl_matrix *B_amp;           // Reduced basis for log amplitude
+-  gsl_matrix *B_phi;           // Reduced basis for dephasing
+-  gsl_vector *mf;              // Frequency grid
++  // gsl_matrix *B_amp;           // Reduced basis for log amplitude
++  // gsl_matrix *B_phi;           // Reduced basis for dephasing
+   gsl_matrix *x_train;         // Training points
++  gsl_vector *mf_amp;          // location of spline nodes for log amplitude
++  gsl_vector *mf_phi;          // location of spline nodes for dephasing
++
++  // 5D parameter space bounds of surrogate
+   double q_bounds[2];          // [q_min, q_max]
++  double chi1_bounds[2];       // [chi1_min, chi1_max]
++  double chi2_bounds[2];       // [chi2_min, chi2_max]
+   double lambda1_bounds[2];    // [lambda1_min, lambda1_max]
+   double lambda2_bounds[2];    // [lambda2_min, lambda2_max]
+ 
+@@ -144,8 +149,6 @@ struct tagTEOBv4ROMdataDS_submodel
+   gsl_vector *chi2vec;       // B-spline knots in chi2
+   int ncx, ncy, ncz;         // Number of points in eta, chi1, chi2
+   double eta_bounds[2];      // [eta_min, eta_max]
+-  double chi1_bounds[2];     // [chi1_min, chi1_max]
+-  double chi2_bounds[2];     // [chi2_min, chi2_max]
+ };
+ typedef struct tagTEOBv4ROMdataDS_submodel TEOBv4ROMdataDS_submodel;
+ 
+@@ -327,9 +330,25 @@ UNUSED static void GluePhasing(
+   gsl_spline **spline_phi_out
+ );
+ 
++static gsl_vector *gsl_vector_prepend_value(gsl_vector *v, double value);
+ 
+ /********************* Definitions begin here ********************/
+ 
++static gsl_vector *gsl_vector_prepend_value(gsl_vector *v, double value) {
++// Helper function to prepend a value to a gsl_vector
++// Returns the augmented gsl_vector
++// Deallocates the input gsl_vector
++  int n = v->size;
++  gsl_vector *vout = gsl_vector_alloc(n+1);
++
++  gsl_vector_set(vout, 0, value);
++  for (int i=1; i<=n; i++)
++    gsl_vector_set(vout, i, gsl_vector_get(v, i-1));
++  gsl_vector_free(v);
++
++  return vout;
++}
++
+ double kernel(
+   gsl_vector *x1,          // parameter space point 1
+   gsl_vector *x2,          // parameter space point 2
+@@ -581,8 +600,8 @@ static int GPR_evaluation_5D(
+   gsl_matrix *kinv_dot_y_amp,    // Input: kinv_dot_y for log amplitude
+   gsl_matrix *kinv_dot_y_phi,    // Input: kinv_dot_y for dephasing
+   gsl_matrix *x_train,           // Input: GPR training points
+-  gsl_vector *amp_at_EI_nodes,   // Output: log amplitude at EI nodes (preallocated)
+-  gsl_vector *phi_at_EI_nodes    // Output: dephasing at EI nodes     (preallocated)
++  gsl_vector *amp_at_nodes,      // Output: log amplitude at frequency nodes (preallocated)
++  gsl_vector *phi_at_nodes       // Output: dephasing at frequency nodes (preallocated)
+ )
+ {
+   // assemble evaluation point
+@@ -594,30 +613,28 @@ static int GPR_evaluation_5D(
+   gsl_vector_set(xst, 3, lambda1);
+   gsl_vector_set(xst, 4, lambda2);
+ 
+-  // FIXME: find number of EI nodes
+-  // FIXME: check that amp_at_nodes, phi_at_nodes are preallocated and have the correct size (number of EI nodes)
++  // FIXME: find number of spline nodes
++  // FIXME: check that amp_at_nodes, phi_at_nodes are preallocated and have the correct size (number of spline nodes)
+ 
+-  // evaluate GPR for amplitude EI nodes
++  // evaluate GPR for amplitude spline nodes
+   fprintf(stderr, "\n\n");
+-  // FIXME: find number of EI nodes
+-  for (int i=0; i<20; i++) {
++  for (size_t i=0; i<amp_at_nodes->size; i++) {
+     gsl_vector hyp_amp_i = gsl_matrix_const_row(hyp_amp, i).vector;
+     gsl_vector kinv_dot_y_amp_i = gsl_matrix_const_row(kinv_dot_y_amp, i).vector;
+     double pred = gp_predict(xst, &hyp_amp_i, x_train, &kinv_dot_y_amp_i);
+-    fprintf(stderr, "pred_amp(%d) = %g\n", i, pred);
+-    gsl_vector_set(amp_at_EI_nodes, i, pred);
++    fprintf(stderr, "pred_amp(%zu) = %g\n", i, pred);
++    gsl_vector_set(amp_at_nodes, i, pred);
+   }
+   fprintf(stderr, "\n\n");
+ 
+-  // evaluate GPR for phase EI nodes
++  // evaluate GPR for phase spline nodes
+   fprintf(stderr, "\n\n");
+-  // FIXME: find number of EI nodes
+-  for (int i=0; i<20; i++) {
++  for (size_t i=0; i<phi_at_nodes->size; i++) {
+     gsl_vector hyp_phi_i = gsl_matrix_const_row(hyp_phi, i).vector;
+     gsl_vector kinv_dot_y_phi_i = gsl_matrix_const_row(kinv_dot_y_phi, i).vector;
+     double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i);
+-    fprintf(stderr, "pred_phi(%d) = %g\n", i, pred);
+-    gsl_vector_set(phi_at_EI_nodes, i, pred);
++    fprintf(stderr, "pred_phi(%zu) = %g\n", i, pred);
++    gsl_vector_set(phi_at_nodes, i, pred);
+   }
+   fprintf(stderr, "\n\n");
+ 
+@@ -685,7 +702,7 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+   // NEW CODE FOR testing TEOBv4
+ 
+ 
+-  LALH5File *file2 = XLALH5FileOpen("lalsuitetest_new.hdf5", "r");
++  LALH5File *file2 = XLALH5FileOpen("/Users/mpuer/Documents/gpsurrogate/src/TEOB-LAL-implementation/TEOBv4_surrogate.hdf5", "r");
+   LALH5File *root = XLALH5GroupOpen(file2, "/"); // most convenient to open the root once
+ 
+   //////////////////////////////////////////////////////////////////////////////
+@@ -699,14 +716,15 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+   ReadHDF5RealMatrixDataset(root, "kinv_dot_y_phi", & (*submodel)->kinv_dot_y_phi);
+ 
+   // Reduced bases
+-  ReadHDF5RealMatrixDataset(root, "B_amp", & (*submodel)->B_amp);
+-  ReadHDF5RealMatrixDataset(root, "B_phi", & (*submodel)->B_phi);
++  // ReadHDF5RealMatrixDataset(root, "B_amp", & (*submodel)->B_amp);
++  // ReadHDF5RealMatrixDataset(root, "B_phi", & (*submodel)->B_phi);
+ 
+   // Training points
+   ReadHDF5RealMatrixDataset(root, "x_train", & (*submodel)->x_train);
+ 
+   // Frequency grid
+-  ReadHDF5RealVectorDataset(root, "mf", & (*submodel)->mf);
++  ReadHDF5RealVectorDataset(root, "spline_nodes_amp", & (*submodel)->mf_amp);
++  ReadHDF5RealVectorDataset(root, "spline_nodes_phase", & (*submodel)->mf_phi);
+ 
+   // FIXME: Domain of definition of submodel
+   // FIXME: Get these from attributes in the HDF5 file
+@@ -724,6 +742,13 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+ 
+   // FIXME: check consistency of sizes against constants defined above
+ 
++  // Prepend the point [mf_amp[0], 0] to the phase nodes
++fprintf(stderr, "Before len(mf_phi) = %zu\n", (*submodel)->mf_phi->size);
++  double mf_min = gsl_vector_get( (*submodel)->mf_amp, 0); // Follow definition of mf_a in GPSplineSurrogate constructor
++  gsl_vector *phi_nodes = gsl_vector_prepend_value((*submodel)->mf_phi, mf_min);
++  (*submodel)->mf_phi = phi_nodes;
++fprintf(stderr, "After len(mf_phi) = %zu\n", (*submodel)->mf_phi->size);
++
+   // cleanup
+ 
+   XLALH5FileClose(file2);
+@@ -755,10 +780,12 @@ static void TEOBv4ROMdataDS_Cleanup_submodel(TEOBv4ROMdataDS_submodel *submodel)
+   if(submodel->hyp_phi) gsl_matrix_free(submodel->hyp_phi);
+   if(submodel->kinv_dot_y_amp) gsl_matrix_free(submodel->kinv_dot_y_amp);
+   if(submodel->kinv_dot_y_phi) gsl_matrix_free(submodel->kinv_dot_y_phi);
+-  if(submodel->B_amp) gsl_matrix_free(submodel->B_amp);
+-  if(submodel->B_phi) gsl_matrix_free(submodel->B_phi);
++  // if(submodel->B_amp) gsl_matrix_free(submodel->B_amp);
++  // if(submodel->B_phi) gsl_matrix_free(submodel->B_phi);
++
+   if(submodel->x_train) gsl_matrix_free(submodel->x_train);
+-  if(submodel->mf) gsl_vector_free(submodel->mf);
++  if(submodel->mf_amp) gsl_vector_free(submodel->mf_amp);
++  if(submodel->mf_phi) gsl_vector_free(submodel->mf_phi);
+ }
+ 
+ /* Set up a new ROM model, using data contained in dir */
+@@ -1019,8 +1046,6 @@ static void GluePhasing(
+   gsl_interp_accel_free(acc_phi_lo);
+ }
+ 
+-
+-
+ /**
+  * Core function for computing the ROM waveform.
+  * Interpolate projection coefficient data and evaluate coefficients at desired (q, chi1, chi2).
+@@ -1150,8 +1175,10 @@ static int TEOBv4ROMCore(
+   // TODO: Call GPR instead for log amplitude and dephasing
+ 
+   double q = 1.0 / 3.333333e-01; // FIXME
+-  gsl_vector *amp_at_EI_nodes = gsl_vector_alloc(20); // FIXME
+-  gsl_vector *phi_at_EI_nodes = gsl_vector_alloc(20); // FIXME
++  int N_amp = submodel_lo->mf_amp->size;
++  int N_phi = submodel_lo->mf_phi->size; // should already be corrected
++  gsl_vector *amp_at_nodes = gsl_vector_alloc(N_amp);
++  gsl_vector *phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
+ 
+   retcode = GPR_evaluation_5D(
+     q, chi1, chi2, lambda1, lambda2,
+@@ -1160,10 +1187,25 @@ static int TEOBv4ROMCore(
+     submodel_lo->kinv_dot_y_amp,
+     submodel_lo->kinv_dot_y_phi,
+     submodel_lo->x_train,
+-    amp_at_EI_nodes,
+-    phi_at_EI_nodes
++    amp_at_nodes,
++    phi_at_nodes_tmp
+   );
+ 
++  for (int i=0; i<N_phi-1; i++)
++    fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
++    gsl_vector_get(submodel_lo->mf_phi, i),
++    gsl_vector_get(phi_at_nodes_tmp, i));
++
++  // Prepend the point [mf_min, 0] to the phase nodes
++  // This has already been done in the setup for mf_phi
++  gsl_vector *phi_at_nodes = gsl_vector_prepend_value(phi_at_nodes_tmp, 0.0);
++fprintf(stderr, "phi_at_nodes->size = %zu\n", phi_at_nodes->size);
++fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
++  for (int i=0; i<N_phi; i++)
++    fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
++    gsl_vector_get(submodel_lo->mf_phi, i),
++    gsl_vector_get(phi_at_nodes, i));
++
+ 
+ 
+ 
+@@ -1236,13 +1278,17 @@ static int TEOBv4ROMCore(
+ 
+ 
+   // Evaluate ln amplitude and dephasing
+-  int len = (submodel_lo->B_amp)->size2; // FIXME: use a constant instead
+-  gsl_vector* amp_f = gsl_vector_alloc(len);
+-  gsl_vector* phi_f = gsl_vector_alloc(len);
+-  gsl_blas_dgemv(CblasTrans, 1.0, submodel_lo->B_amp, amp_at_EI_nodes, 0.0, amp_f);
+-  gsl_blas_dgemv(CblasTrans, 1.0, submodel_lo->B_phi, phi_at_EI_nodes, 0.0, phi_f);
+-
+-  // gsl_vector_fprintf(stderr, phi_f, "%g");
++  // int len = (submodel_lo->B_amp)->size2; // FIXME: use a constant instead
++  // gsl_vector* amp_f = gsl_vector_alloc(len);
++  // gsl_vector* phi_f = gsl_vector_alloc(len);
++  // // THIS is no longer needed
++  // gsl_blas_dgemv(CblasTrans, 1.0, submodel_lo->B_amp, amp_at_EI_nodes, 0.0, amp_f);
++  // gsl_blas_dgemv(CblasTrans, 1.0, submodel_lo->B_phi, phi_at_EI_nodes, 0.0, phi_f);
++
++  fprintf(stderr, "\namp_at_nodes:");
++  gsl_vector_fprintf(stderr, amp_at_nodes, "%g");
++  fprintf(stderr, "\nphi_at_nodes:");
++  gsl_vector_fprintf(stderr, phi_at_nodes, "%g");
+ 
+   // TODO: evaluate hardcoded TF2 and reconstruct waveform
+   // fprintf(stderr, "%zu %zu %zu\n", amp_at_EI_nodes->size, (submodel_lo->B_amp)->size1, (submodel_lo->B_amp)->size2);
+-- 
+2.5.4 (Apple Git-61)
+

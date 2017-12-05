@@ -1,0 +1,196 @@
+From 25d780ff35aae04870542c520515b082427c7053 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 14:04:58 +0100
+Subject: [PATCH 18/18] Further code cleanup
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 76 ++-----------------------
+ 1 file changed, 5 insertions(+), 71 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index e8ae7d3..899a4ad 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -335,8 +335,7 @@ double gp_predict(
+   return res;
+ }
+ 
+-/** Setup Surrogate model using data files installed in dir
+- */
++/** Setup Surrogate model using data files installed in dir */
+ static int Surrogate_Init(const char dir[]) {
+   if(__lalsim_SurrogateDS_data.setup) {
+     XLALPrintError("Error: Surrogate data was already set up!");
+@@ -386,27 +385,19 @@ static int GPR_evaluation_5D(
+   gsl_vector_set(xst, 3, lambda1);
+   gsl_vector_set(xst, 4, lambda2);
+ 
+-  // FIXME: find number of spline nodes
+-  // FIXME: check that amp_at_nodes, phi_at_nodes are preallocated and have the correct size (number of spline nodes)
+-
+   // Evaluate GPR for amplitude spline nodes
+-  // fprintf(stderr, "\n\n");
+   for (size_t i=0; i<amp_at_nodes->size; i++) {
+     gsl_vector hyp_amp_i = gsl_matrix_const_row(hyp_amp, i).vector;
+     gsl_vector kinv_dot_y_amp_i = gsl_matrix_const_row(kinv_dot_y_amp, i).vector;
+     double pred = gp_predict(xst, &hyp_amp_i, x_train, &kinv_dot_y_amp_i);
+-    // fprintf(stderr, "pred_amp(%zu) = %g\n", i, pred);
+     gsl_vector_set(amp_at_nodes, i, pred);
+   }
+-  // fprintf(stderr, "\n\n");
+ 
+   // Evaluate GPR for phase spline nodes
+-  // fprintf(stderr, "\n\n");
+   for (size_t i=0; i<phi_at_nodes->size; i++) {
+     gsl_vector hyp_phi_i = gsl_matrix_const_row(hyp_phi, i).vector;
+     gsl_vector kinv_dot_y_phi_i = gsl_matrix_const_row(kinv_dot_y_phi, i).vector;
+     double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i);
+-    // fprintf(stderr, "pred_phi(%zu) = %g\n", i, pred);
+     gsl_vector_set(phi_at_nodes, i, pred);
+   }
+   fprintf(stderr, "\n\n");
+@@ -444,26 +435,24 @@ UNUSED static int Surrogatedata_Init_submodel(
+   ReadHDF5RealMatrixDataset(root, "hyp_amp", & (*submodel)->hyp_amp);
+   ReadHDF5RealMatrixDataset(root, "hyp_phi", & (*submodel)->hyp_phi);
+ 
+-  // kinv_dot_y
++  // K^{-1} . y
+   ReadHDF5RealMatrixDataset(root, "kinv_dot_y_amp", & (*submodel)->kinv_dot_y_amp);
+   ReadHDF5RealMatrixDataset(root, "kinv_dot_y_phi", & (*submodel)->kinv_dot_y_phi);
+ 
+   // Training points
+   ReadHDF5RealMatrixDataset(root, "x_train", & (*submodel)->x_train);
+ 
+-  // Frequency grid
++  // Frequency grids
+   ReadHDF5RealVectorDataset(root, "spline_nodes_amp", & (*submodel)->mf_amp);
+   ReadHDF5RealVectorDataset(root, "spline_nodes_phase", & (*submodel)->mf_phi);
+ 
+-  // Store domain of definition
++  // Physical domain covered by surrogate
+   ReadHDF5RealVectorDataset(root, "q_bounds", & (*submodel)->q_bounds);
+   ReadHDF5RealVectorDataset(root, "chi1_bounds", & (*submodel)->chi1_bounds);
+   ReadHDF5RealVectorDataset(root, "chi2_bounds", & (*submodel)->chi2_bounds);
+   ReadHDF5RealVectorDataset(root, "lambda1_bounds", & (*submodel)->lambda1_bounds);
+   ReadHDF5RealVectorDataset(root, "lambda2_bounds", & (*submodel)->lambda2_bounds);
+ 
+-  // FIXME: check consistency of sizes against constants defined above
+-
+   // Prepend the point [mf_amp[0], 0] to the phase nodes
+   fprintf(stderr, "Before len(mf_phi) = %zu\n", (*submodel)->mf_phi->size);
+   double mf_min = gsl_vector_get( (*submodel)->mf_amp, 0); // Follow definition of mf_a in GPSplineSurrogate constructor
+@@ -589,18 +578,12 @@ static int TaylorF2Phasing(
+   double m2 = Mtot * m2OverM * LAL_MSUN_SI;
+   XLALSimInspiralTaylorF2AlignedPhasing(&pn, m1, m2, chi1, chi2, extraParams);
+ 
+-// fprintf(stderr, "%g %g %g %g %g\n", Mtot, m1, m2, chi1, chi2);
+-
+   // Add tidal deformability terms
+   pn->v[10] = pn->v[0] * ( lambda1 * XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(m1OverM)
+                          + lambda2 * XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(m2OverM) );
+   pn->v[12] = pn->v[0] * ( lambda1 * XLALSimInspiralTaylorF2Phasing_12PNTidalCoeff(m1OverM)
+                          + lambda2 * XLALSimInspiralTaylorF2Phasing_12PNTidalCoeff(m2OverM) );
+ 
+-// fprintf(stderr, "pn->v: %g %g %g %g %g %g %g %g \n", pn->v[7], pn->v[6], pn->v[5], pn->v[4], pn->v[3], pn->v[2], pn->v[1], pn->v[0]);
+-// fprintf(stderr, "pn->vlogv: %g %g\n", pn->vlogv[6], pn->vlogv[5]);
+-
+-// fprintf(stderr, "\nPN phasing at nodes:");
+   for (size_t i=0; i < Mfs->size; i++) {
+       const double Mf = gsl_vector_get(Mfs, i);
+       const double v = cbrt(LAL_PI * Mf);
+@@ -632,20 +615,9 @@ static int TaylorF2Phasing(
+       phasing += pn->v[10] * v10;
+ 
+       phasing /= v5;
+-      // LALSimInspiralTaylorF2.c
+-      // shft = LAL_TWOPI * (tC.gpsSeconds + 1e-9 * tC.gpsNanoSeconds); // FIXME: this should be done in the main generator and may already be there
+-      // phasing += shft * f - 2.*phi_ref - ref_phasing; // FIXME: add ref
+ 
+       gsl_vector_set(*PNphase, i, -phasing);
+-      // fprintf(stderr, "%.15g\n", phasing);
+-
+-      //fprintf(stderr, "PN phasing[%zu] = %g, %g\n", i, Mf, phasing);
+-      //gsl_vector_set(phi_at_nodes, i, phasing + gsl_vector_get(sur_phi_at_nodes, i));
+-      // TODO: compare total and all the terms
+   }
+-  // fprintf(stderr, "\n");
+-  //amp * cos(phasing - LAL_PI_4) - amp * sin(phasing - LAL_PI_4) * 1.0j;
+- // amp0 = -4. * m1 * m2 / r * LAL_MRSUN_SI * LAL_MTSUN_SI * sqrt(LAL_PI/12.L);
+ 
+   XLALDestroyDict(extraParams);
+   XLALFree(pn);
+@@ -822,14 +794,9 @@ static int SurrogateCore(
+     fRef_geom = Mf_ROM_min;
+   }
+ 
+-  if (Mtot_sec/LAL_MTSUN_SI > 500.0)
+-    XLALPrintWarning("Total mass=%gMsun > 500Msun. Surrogate disagrees with SEOBNRv4 for high total masses.\n", Mtot_sec/LAL_MTSUN_SI);
+-
+-
+   // Evaluate GPR for log amplitude and dephasing
+   gsl_vector *sur_amp_at_nodes = gsl_vector_alloc(N_amp);
+   gsl_vector *sur_phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
+-  assert(N_amp == N_phi); // FIXME: is it safe to assume this?
+ 
+   retcode = GPR_evaluation_5D(
+     q, chi1, chi2, lambda1, lambda2,
+@@ -842,55 +809,22 @@ static int SurrogateCore(
+     sur_phi_at_nodes_tmp
+   );
+ 
+-fprintf(stderr, "\n\n");
+-for (int i=0; i<N_phi-1; i++)
+-  fprintf(stderr, "mf_amp - mf_phi [%d] = %g\n", i, gsl_vector_get(sur->mf_amp, i) - gsl_vector_get(sur->mf_phi, i));
+-
+-fprintf(stderr, "\n\n");
+-fprintf(stderr, "\nmf_amp:\n");
+-gsl_vector_fprintf(stderr, sur->mf_amp, "%.15g");
+-fprintf(stderr, "\nmf_amp:\n");
+-gsl_vector_fprintf(stderr, sur->mf_phi, "%.15g");
+-fprintf(stderr, "\n\n");
+-
+   if(retcode!=0) {
+     //Surrogatedata_coeff_Cleanup(romdata_coeff_lo); /// FIXME: change to clean the data for the GPR model
+     XLAL_ERROR(retcode);
+   }
+ 
+-  for (int i=0; i<N_phi-1; i++)
+-    fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+-      gsl_vector_get(sur->mf_phi, i),
+-      gsl_vector_get(sur_phi_at_nodes_tmp, i)
+-    );
+-
+   // Prepend the point [mf_min, 0] to the phase nodes
+   // This has already been done in the setup for mf_phi
+   gsl_vector *sur_phi_at_nodes = gsl_vector_prepend_value(sur_phi_at_nodes_tmp, 0.0);
+-fprintf(stderr, "phi_at_nodes->size = %zu\n", sur_phi_at_nodes->size);
+-fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+-  for (int i=0; i<N_phi; i++)
+-    fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+-    gsl_vector_get(sur->mf_phi, i),
+-    gsl_vector_get(sur_phi_at_nodes, i));
+-
+ 
+   double dquadmon1 = 0.0;
+   double dquadmon2 = 0.0;
+   gsl_vector *PN_phi_at_nodes = NULL;
+   TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
+ 
+-  fprintf(stderr, "\nphiPN_at_nodes:");
+-  gsl_vector_fprintf(stderr, PN_phi_at_nodes, "%.15g");
+-
+-
+-  // FIXME: copy sur->mf_phi to a dedicated vector
+   gsl_vector *PN_amp_at_nodes = NULL;
+-  TaylorF2Amplitude1PN(eta, sur->mf_phi, &PN_amp_at_nodes); // FIXME: should input mf_amp unless it is the same as mf_phi
+-
+-  fprintf(stderr, "\nampPN_at_nodes:");
+-  gsl_vector_fprintf(stderr, PN_amp_at_nodes, "%.15g");
+-
++  TaylorF2Amplitude1PN(eta, sur->mf_amp, &PN_amp_at_nodes);
+ 
+   // Setup 1d splines in frequency
+   gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
+-- 
+2.5.4 (Apple Git-61)
+

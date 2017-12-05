@@ -1,0 +1,186 @@
+From 8cd66c40e25be82b549623c465177b104c10af1d Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 10 Nov 2017 18:46:43 +0100
+Subject: [PATCH 06/18] Work on computing PN phasing and adding the surrogate
+ dephasing
+
+---
+ lalsimulation/src/LALSimIMRTEOBv4ROM.c | 110 ++++++++++++++++++++++++++++-----
+ 1 file changed, 94 insertions(+), 16 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRTEOBv4ROM.c b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+index 542881c..2b0a22e 100644
+--- a/lalsimulation/src/LALSimIMRTEOBv4ROM.c
++++ b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+@@ -33,6 +33,7 @@
+ #include <alloca.h>
+ #include <string.h>
+ #include <libgen.h>
++#include <assert.h>
+ 
+ #include <gsl/gsl_errno.h>
+ #include <gsl/gsl_bspline.h>
+@@ -64,6 +65,7 @@ static const INT4 ROMDataHDF5_VERSION_MICRO = 0;
+ #include <lal/LALSimInspiral.h>
+ #include <lal/LALSimIMR.h>
+ 
++#include "LALSimInspiralPNCoefficients.c"
+ #include "LALSimIMRSEOBNRROMUtilities.c"
+ 
+ #include <lal/LALConfig.h>
+@@ -1096,7 +1098,7 @@ static int TEOBv4ROMCore(
+   if (eta > 0.25)     nudge(&eta, 0.25, 1e-6);
+   if (eta < 0.01)     nudge(&eta, 0.01, 1e-6);
+ 
+-  if ( chi1 < -1.0 || chi2 < -1.0 || chi1 > 1.0 || chi2 > 1.0) {
++  if (chi1 < -1.0 || chi2 < -1.0 || chi1 > 1.0 || chi2 > 1.0) {
+     XLALPrintError("XLAL Error - %s: chi1 or chi2 smaller than -1.0 or larger than 1.0!\n"
+                    "TEOBv4ROM is only available for spins in the range -1 <= a/M <= 1.0.\n",
+                    __func__);
+@@ -1177,8 +1179,9 @@ static int TEOBv4ROMCore(
+   double q = 1.0 / 3.333333e-01; // FIXME
+   int N_amp = submodel_lo->mf_amp->size;
+   int N_phi = submodel_lo->mf_phi->size; // should already be corrected
+-  gsl_vector *amp_at_nodes = gsl_vector_alloc(N_amp);
+-  gsl_vector *phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
++  gsl_vector *sur_amp_at_nodes = gsl_vector_alloc(N_amp);
++  gsl_vector *sur_phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
++  assert(N_amp == N_phi); // FIXME: is it safe to assume this?
+ 
+   retcode = GPR_evaluation_5D(
+     q, chi1, chi2, lambda1, lambda2,
+@@ -1187,24 +1190,24 @@ static int TEOBv4ROMCore(
+     submodel_lo->kinv_dot_y_amp,
+     submodel_lo->kinv_dot_y_phi,
+     submodel_lo->x_train,
+-    amp_at_nodes,
+-    phi_at_nodes_tmp
++    sur_amp_at_nodes,
++    sur_phi_at_nodes_tmp
+   );
+ 
+   for (int i=0; i<N_phi-1; i++)
+     fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+     gsl_vector_get(submodel_lo->mf_phi, i),
+-    gsl_vector_get(phi_at_nodes_tmp, i));
++    gsl_vector_get(sur_phi_at_nodes_tmp, i));
+ 
+   // Prepend the point [mf_min, 0] to the phase nodes
+   // This has already been done in the setup for mf_phi
+-  gsl_vector *phi_at_nodes = gsl_vector_prepend_value(phi_at_nodes_tmp, 0.0);
+-fprintf(stderr, "phi_at_nodes->size = %zu\n", phi_at_nodes->size);
++  gsl_vector *sur_phi_at_nodes = gsl_vector_prepend_value(sur_phi_at_nodes_tmp, 0.0);
++fprintf(stderr, "phi_at_nodes->size = %zu\n", sur_phi_at_nodes->size);
+ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+   for (int i=0; i<N_phi; i++)
+     fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+     gsl_vector_get(submodel_lo->mf_phi, i),
+-    gsl_vector_get(phi_at_nodes, i));
++    gsl_vector_get(sur_phi_at_nodes, i));
+ 
+ 
+ 
+@@ -1286,18 +1289,93 @@ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+   // gsl_blas_dgemv(CblasTrans, 1.0, submodel_lo->B_phi, phi_at_EI_nodes, 0.0, phi_f);
+ 
+   fprintf(stderr, "\namp_at_nodes:");
+-  gsl_vector_fprintf(stderr, amp_at_nodes, "%g");
++  gsl_vector_fprintf(stderr, sur_amp_at_nodes, "%g");
+   fprintf(stderr, "\nphi_at_nodes:");
+-  gsl_vector_fprintf(stderr, phi_at_nodes, "%g");
++  gsl_vector_fprintf(stderr, sur_phi_at_nodes, "%g");
++
++// FIXME:
++//   * evaluate TF2 basemodel on same frequencies
++//   * add amplitude and phase correction
++//   * then spline them (is that OK, or do we have to spline the correction and TF2 first??)
+ 
+   // TODO: evaluate hardcoded TF2 and reconstruct waveform
+   // fprintf(stderr, "%zu %zu %zu\n", amp_at_EI_nodes->size, (submodel_lo->B_amp)->size1, (submodel_lo->B_amp)->size2);
+ 
+-  // PNPhasingSeries *pn = NULL;
+-  // extraParams=XLALCreateDict();
+-  // XLALSimInspiralWaveformParamsInsertPNSpinOrder(extraParams, LAL_SIM_INSPIRAL_SPIN_ORDER_35PN);
+-  // XLALSimInspiralTaylorF2AlignedPhasing(&pn, m1, m2, chi1, chi2, extraParams);
+-  //
++  PNPhasingSeries *pn = NULL;
++  LALDict *extraParams = XLALCreateDict();
++  XLALSimInspiralWaveformParamsInsertPNSpinOrder(extraParams, LAL_SIM_INSPIRAL_SPIN_ORDER_35PN);
++  // Ideally, we should be able to specify lambdas like this, but for now the phasing functon does not use the lambda parameters!
++  // XLALSimInspiralWaveformParamsInsertTidalLambda1(extraParams, lambda1);
++  // XLALSimInspiralWaveformParamsInsertTidalLambda2(extraParams, lambda2);
++  // See src/LALSimInspiralTaylorF2.c:XLALSimInspiralTaylorF2AlignedPhasingArray() for how to add the tidal terms
++  // We add the terms after the XLALSimInspiralTaylorF2AlignedPhasing() call below to the structure of PN coefficients.
++
++  // FIXME: We should be able to switch on quadrupole-monopole terms (self-spin deformation of the two bodies)
++  // from TaylorF2; later these can be replaced with EOB as well.
++  // XLALSimInspiralWaveformParamsInsertdQuadMon1(extraParams, dquadmon1);
++  // XLALSimInspiralWaveformParamsInsertdQuadMon2(extraParams, dquadmon2);
++
++  double m1OverM = q / (1.0+q);
++  double m2OverM = 1.0 / (1.0+q);
++  double m1 = Mtot * m1OverM * LAL_MSUN_SI;
++  double m2 = Mtot * m2OverM * LAL_MSUN_SI;
++  XLALSimInspiralTaylorF2AlignedPhasing(&pn, m1, m2, chi1, chi2, extraParams);
++
++  // Add tidal deformability terms
++  pn->v[10] = pn->v[0] * ( lambda1 * XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(m1OverM)
++                         + lambda2 * XLALSimInspiralTaylorF2Phasing_10PNTidalCoeff(m2OverM) );
++  pn->v[12] = pn->v[0] * ( lambda1 * XLALSimInspiralTaylorF2Phasing_12PNTidalCoeff(m1OverM)
++                         + lambda2 * XLALSimInspiralTaylorF2Phasing_12PNTidalCoeff(m2OverM) );
++
++  // Total amplitude and phase (PN with added surrogate corrections)
++  //gsl_vector *amp_at_nodes = gsl_vector_alloc(N_amp);
++  gsl_vector *phi_at_nodes = gsl_vector_alloc(N_phi);
++
++  for (int i=0; i < N_phi; i++) {
++      const double Mf = gsl_vector_get(submodel_lo->mf_phi, i);
++      const double v = cbrt(LAL_PI * Mf);
++      const double logv = log(v);
++      // FIXME: optimize this further: v4=v2*v2, v8=v4*v4
++      const double v2 = v * v;
++      const double v3 = v * v2;
++      const double v4 = v * v3;
++      const double v5 = v * v4;
++      const double v6 = v * v5;
++      const double v7 = v * v6;
++      const double v8 = v * v7;
++      const double v9 = v * v8;
++      const double v10 = v * v9;
++      const double v12 = v2 * v10;
++      double phasing = 0.0;
++
++      phasing += pn->v[7] * v7;
++      phasing += (pn->v[6] + pn->vlogv[6] * logv) * v6;
++      phasing += (pn->v[5] + pn->vlogv[5] * logv) * v5;
++      phasing += pn->v[4] * v4;
++      phasing += pn->v[3] * v3;
++      phasing += pn->v[2] * v2;
++      phasing += pn->v[1] * v;
++      phasing += pn->v[0];
++
++      /* Tidal terms in phasing */
++      phasing += pn->v[12] * v12;
++      phasing += pn->v[10] * v10;
++
++      phasing /= v5;
++      // phasing += shft * f - 2.*phi_ref - ref_phasing; // FIXME: add ref
++
++      fprintf(stderr, "PN phasing[%d] = %g\n", i, phasing);
++      gsl_vector_set(phi_at_nodes, i, phasing + gsl_vector_get(sur_phi_at_nodes, i));
++      // TODO: compare total and all the terms
++  }
++  //amp * cos(phasing - LAL_PI_4) - amp * sin(phasing - LAL_PI_4) * 1.0j;
++ // amp0 = -4. * m1 * m2 / r * LAL_MRSUN_SI * LAL_MTSUN_SI * sqrt(LAL_PI/12.L);
++
++  XLALDestroyDict(extraParams);
++
++  // TODO: splines for amp, phi
++  // FIXME: deallocate all amp, phi variables: PN, surrogate corrections
++
+   // // See LALSimInspiralPNCoefficients.c:XLALSimInspiralPNPhasing_F2()
+   // pn->v[5], ....
+ 
+-- 
+2.5.4 (Apple Git-61)
+

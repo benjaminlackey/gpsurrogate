@@ -1,0 +1,37 @@
+From fc5768e063c65b9b58121449dd51de1502ee12d8 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 09:55:21 +0100
+Subject: [PATCH 11/18] Change name of HDF5 datapack for TEOBv4
+
+---
+ lalsimulation/src/LALSimIMRTEOBv4ROM.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRTEOBv4ROM.c b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+index cd4f1cd..d5e9a3b 100644
+--- a/lalsimulation/src/LALSimIMRTEOBv4ROM.c
++++ b/lalsimulation/src/LALSimIMRTEOBv4ROM.c
+@@ -59,7 +59,8 @@
+ //static const char ROMDataHDF5[] = "SEOBNRv4ROM_v2.0.hdf5";
+ //static const char ROMDataHDF5[] = "/Users/mpuer/Documents/gpsurrogate/src/TEOB-LAL-implementation/TEOBv4_surrogate.hdf5";
+ // FIXME: missing attributes in HDF5 file: Email, Description (rather than description), version_major, version_minor, version_micro
+-static const char ROMDataHDF5[] = "TEOBv4_surrogate.hdf5";
++//static const char ROMDataHDF5[] = "TEOBv4_surrogate.hdf5"; // small test dataset
++static const char ROMDataHDF5[] = "SEOBNRv4T_surrogate.hdf5";
+ // FIXME: uncomment after adding attributes
+ // static const INT4 ROMDataHDF5_VERSION_MAJOR = 1;
+ // static const INT4 ROMDataHDF5_VERSION_MINOR = 0;
+@@ -892,10 +893,6 @@ for (int i=0; i<N_amp; i++) {
+ gsl_spline_init(spline_amp, gsl_vector_const_ptr(submodel_lo->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
+                 gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
+ 
+-
+-
+-
+-
+   size_t npts = 0;
+   LIGOTimeGPS tC = {0, 0};
+   UINT4 offset = 0; // Index shift between freqs and the frequency series
+-- 
+2.5.4 (Apple Git-61)
+

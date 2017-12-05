@@ -1,0 +1,88 @@
+From d47c9de8179cd2319f9b8b7c154df89808e07428 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 11:18:46 +0100
+Subject: [PATCH 14/18] fix indentation
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 55 ++++++++++++-------------
+ 1 file changed, 27 insertions(+), 28 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index 97b20c1..d3aea20 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -853,44 +853,43 @@ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+     gsl_vector_get(sur_phi_at_nodes, i));
+ 
+ 
+-double dquadmon1 = 0.0; // FIXME
+-double dquadmon2 = 0.0;
+-gsl_vector *PN_phi_at_nodes = NULL;
+-TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
++  double dquadmon1 = 0.0;
++  double dquadmon2 = 0.0;
++  gsl_vector *PN_phi_at_nodes = NULL;
++  TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
+ 
+-fprintf(stderr, "\nphiPN_at_nodes:");
+-gsl_vector_fprintf(stderr, PN_phi_at_nodes, "%.15g");
++  fprintf(stderr, "\nphiPN_at_nodes:");
++  gsl_vector_fprintf(stderr, PN_phi_at_nodes, "%.15g");
+ 
+ 
+-// FIXME: copy sur->mf_phi to a dedicated vector
+-gsl_vector *PN_amp_at_nodes = NULL;
+-TaylorF2Amplitude1PN(eta, sur->mf_phi, &PN_amp_at_nodes); // FIXME: should input mf_amp unless it is the same as mf_phi
++  // FIXME: copy sur->mf_phi to a dedicated vector
++  gsl_vector *PN_amp_at_nodes = NULL;
++  TaylorF2Amplitude1PN(eta, sur->mf_phi, &PN_amp_at_nodes); // FIXME: should input mf_amp unless it is the same as mf_phi
+ 
+-fprintf(stderr, "\nampPN_at_nodes:");
+-gsl_vector_fprintf(stderr, PN_amp_at_nodes, "%.15g");
++  fprintf(stderr, "\nampPN_at_nodes:");
++  gsl_vector_fprintf(stderr, PN_amp_at_nodes, "%.15g");
+ 
+ 
++  // Setup 1d splines in frequency
++  gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
++  gsl_spline *spline_phi = gsl_spline_alloc(gsl_interp_cspline, N_phi);
++  gsl_vector_add(sur_phi_at_nodes, PN_phi_at_nodes); // stores result in sur_phi_at_nodes
++  gsl_spline_init(spline_phi, gsl_vector_const_ptr(sur->mf_phi, 0),
++                  gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
+ 
+-// Setup 1d splines in frequency
+-gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
+-gsl_spline *spline_phi = gsl_spline_alloc(gsl_interp_cspline, N_phi);
+-gsl_vector_add(sur_phi_at_nodes, PN_phi_at_nodes); // stores result in sur_phi_at_nodes
+-gsl_spline_init(spline_phi, gsl_vector_const_ptr(sur->mf_phi, 0),
+-                gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
+ 
+ 
++  gsl_interp_accel *acc_amp = gsl_interp_accel_alloc();
++  gsl_spline *spline_amp = gsl_spline_alloc(gsl_interp_cspline, N_amp);
++  // Compute amplitude = PN_amplitude * exp(surrogate_amplitude)
++  gsl_vector *spline_amp_values = gsl_vector_alloc(N_amp);
++  for (int i=0; i<N_amp; i++) {
++    double amp_i = gsl_vector_get(PN_amp_at_nodes, i) * exp(gsl_vector_get(sur_amp_at_nodes, i));
++    gsl_vector_set(spline_amp_values, i, amp_i);
++  }
+ 
+-gsl_interp_accel *acc_amp = gsl_interp_accel_alloc();
+-gsl_spline *spline_amp = gsl_spline_alloc(gsl_interp_cspline, N_amp);
+-// Compute amplitude = PN_amplitude * exp(surrogate_amplitude)
+-gsl_vector *spline_amp_values = gsl_vector_alloc(N_amp);
+-for (int i=0; i<N_amp; i++) {
+-  double amp_i = gsl_vector_get(PN_amp_at_nodes, i) * exp(gsl_vector_get(sur_amp_at_nodes, i));
+-  gsl_vector_set(spline_amp_values, i, amp_i);
+-}
+-
+-gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
+-                gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
++  gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
++                  gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
+ 
+   size_t npts = 0;
+   LIGOTimeGPS tC = {0, 0};
+-- 
+2.5.4 (Apple Git-61)
+

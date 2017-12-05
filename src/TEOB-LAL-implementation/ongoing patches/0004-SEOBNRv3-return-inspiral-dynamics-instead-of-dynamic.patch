@@ -1,0 +1,43 @@
+From ebbee1d0e59abb891f16a5eaecd5c2b27ad7e00b Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 29 Sep 2017 16:43:39 +0200
+Subject: [PATCH 04/18] SEOBNRv3: return inspiral dynamics instead of
+ dynamicsHi newer version
+
+applies to 95ad957cee1a37b7fc3128883d8b723556f9ec38
+---
+ lalsimulation/src/LALSimIMRSpinPrecEOB.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSpinPrecEOB.c b/lalsimulation/src/LALSimIMRSpinPrecEOB.c
+index 1fd7fbe..55bc601 100644
+--- a/lalsimulation/src/LALSimIMRSpinPrecEOB.c
++++ b/lalsimulation/src/LALSimIMRSpinPrecEOB.c
+@@ -3857,7 +3857,6 @@ int XLALSimIMRSpinEOBWaveformAll(
+     XLALDestroyREAL8Vector( sigReHi );
+     XLALDestroyREAL8Vector( sigImHi );
+     XLALAdaptiveRungeKuttaFree(integrator);
+-    XLALDestroyREAL8Array( dynamics );
+     XLALDestroyREAL8Vector( Alpha );
+     XLALDestroyREAL8Vector( Beta );
+     XLALDestroyREAL8Vector( AlphaHi );
+@@ -3879,13 +3878,14 @@ int XLALSimIMRSpinEOBWaveformAll(
+   /* FIXME: Temporary code to convert REAL8Array to REAL8Vector because SWIG
+    *        doesn't seem to like REAL8Array */
+   REAL8Vector *tmp_vec;
+-  tmp_vec = XLALCreateREAL8Vector(dynamicsHi->dimLength->data[0] * dynamicsHi->dimLength->data[1]);
++  tmp_vec = XLALCreateREAL8Vector(dynamics->dimLength->data[0] * dynamics->dimLength->data[1]);
+   UINT4 tmp_idx_ii;
+   for (tmp_idx_ii=0; tmp_idx_ii < tmp_vec->length; tmp_idx_ii++)
+   {
+-      tmp_vec->data[tmp_idx_ii] = dynamicsHi->data[tmp_idx_ii];
++      tmp_vec->data[tmp_idx_ii] = dynamics->data[tmp_idx_ii];
+   }
+   *dynHi = tmp_vec;
++    XLALDestroyREAL8Array( dynamics );
+     XLALDestroyREAL8Array( dynamicsHi );
+     XLALDestroyREAL8Vector( valuesV2 );
+     if (dynamicsV2 != NULL){
+-- 
+2.5.4 (Apple Git-61)
+

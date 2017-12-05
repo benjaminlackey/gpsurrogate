@@ -1,0 +1,463 @@
+From b7ec69f1669a34f68be52dac17cf9915350420bb Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 11:17:03 +0100
+Subject: [PATCH 13/18] Rename a bunch of things in surrogate code
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 168 ++++++++++++------------
+ 1 file changed, 84 insertions(+), 84 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index 6f83927..97b20c1 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -87,7 +87,7 @@ static const char ROMDataHDF5[] = "SEOBNRv4T_surrogate_v1.0.0.hdf5"; // MP added
+ 
+ 
+ #ifdef LAL_PTHREAD_LOCK
+-static pthread_once_t TEOBv4ROM_is_initialized = PTHREAD_ONCE_INIT;
++static pthread_once_t Surrogate_is_initialized = PTHREAD_ONCE_INIT;
+ #endif
+ 
+ /*************** type definitions ******************/
+@@ -101,7 +101,7 @@ static pthread_once_t TEOBv4ROM_is_initialized = PTHREAD_ONCE_INIT;
+ // n_EI_nodes and n_freqs are the same number for amplitude and phase
+ 
+ 
+-struct tagTEOBv4ROMdataDS_submodel
++struct tagSurrogatedata_submodel
+ {
+   // /B_amp                   Dataset {20, 10000}
+   // /B_phi                   Dataset {20, 10000}
+@@ -131,16 +131,16 @@ struct tagTEOBv4ROMdataDS_submodel
+   double lambda1_bounds[2];    // [lambda1_min, lambda1_max]
+   double lambda2_bounds[2];    // [lambda2_min, lambda2_max]
+ };
+-typedef struct tagTEOBv4ROMdataDS_submodel TEOBv4ROMdataDS_submodel;
++typedef struct tagSurrogatedata_submodel Surrogatedata_submodel;
+ 
+-struct tagTEOBv4ROMdataDS
++struct tagSurrogatedata
+ {
+   UINT4 setup;
+-  TEOBv4ROMdataDS_submodel* sub1;
++  Surrogatedata_submodel* sub1;
+ };
+-typedef struct tagTEOBv4ROMdataDS TEOBv4ROMdataDS;
++typedef struct tagSurrogatedata Surrogatedata;
+ 
+-static TEOBv4ROMdataDS __lalsim_TEOBv4ROMDS_data;
++static Surrogatedata __lalsim_SurrogateDS_data;
+ 
+ typedef int (*load_dataPtr)(const char*, gsl_vector *, gsl_vector *, gsl_matrix *, gsl_matrix *, gsl_vector *);
+ 
+@@ -162,12 +162,12 @@ double gp_predict(
+ );
+ 
+ 
+-UNUSED static void TEOBv4ROM_Init_LALDATA(void);
+-UNUSED static int TEOBv4ROM_Init(const char dir[]);
+-UNUSED static bool TEOBv4ROM_IsSetup(void);
++UNUSED static void Surrogate_Init_LALDATA(void);
++UNUSED static int Surrogate_Init(const char dir[]);
++UNUSED static bool Surrogate_IsSetup(void);
+ 
+-UNUSED static int TEOBv4ROMdataDS_Init(TEOBv4ROMdataDS *romdata, const char dir[]);
+-UNUSED static void TEOBv4ROMdataDS_Cleanup(TEOBv4ROMdataDS *romdata);
++UNUSED static int Surrogatedata_Init(Surrogatedata *romdata, const char dir[]);
++UNUSED static void Surrogatedata_Cleanup(Surrogatedata *romdata);
+ 
+ static int GPR_evaluation_5D(
+   double q,                      // Input: q-value (q >= 1)
+@@ -184,13 +184,13 @@ static int GPR_evaluation_5D(
+   gsl_vector *phi_at_EI_nodes    // Output: dephasing at EI nodes     (preallocated)
+ );
+ 
+-UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+-  UNUSED TEOBv4ROMdataDS_submodel **submodel,
++UNUSED static int Surrogatedata_Init_submodel(
++  UNUSED Surrogatedata_submodel **submodel,
+   UNUSED const char dir[],
+   UNUSED const char grp_name[]
+ );
+ 
+-UNUSED static void TEOBv4ROMdataDS_Cleanup_submodel(TEOBv4ROMdataDS_submodel *submodel);
++UNUSED static void Surrogatedata_Cleanup_submodel(Surrogatedata_submodel *submodel);
+ 
+ /**
+  * Core function for computing the ROM waveform.
+@@ -198,7 +198,7 @@ UNUSED static void TEOBv4ROMdataDS_Cleanup_submodel(TEOBv4ROMdataDS_submodel *su
+  * Construct 1D splines for amplitude and phase.
+  * Compute strain waveform from amplitude and phase.
+ */
+-UNUSED static int TEOBv4ROMCore(
++UNUSED static int SurrogateCore(
+   COMPLEX16FrequencySeries **hptilde,
+   COMPLEX16FrequencySeries **hctilde,
+   double phiRef,
+@@ -352,16 +352,16 @@ double gp_predict(
+   return res;
+ }
+ 
+-/** Setup TEOBv4ROM model using data files installed in dir
++/** Setup Surrogate model using data files installed in dir
+  */
+-static int TEOBv4ROM_Init(const char dir[]) {
+-  if(__lalsim_TEOBv4ROMDS_data.setup) {
+-    XLALPrintError("Error: TEOBv4ROM data was already set up!");
++static int Surrogate_Init(const char dir[]) {
++  if(__lalsim_SurrogateDS_data.setup) {
++    XLALPrintError("Error: Surrogate data was already set up!");
+     XLAL_ERROR(XLAL_EFAILED);
+   }
+-  TEOBv4ROMdataDS_Init(&__lalsim_TEOBv4ROMDS_data, dir);
++  Surrogatedata_Init(&__lalsim_SurrogateDS_data, dir);
+ 
+-  if(__lalsim_TEOBv4ROMDS_data.setup) {
++  if(__lalsim_SurrogateDS_data.setup) {
+     return(XLAL_SUCCESS);
+   }
+   else {
+@@ -369,9 +369,9 @@ static int TEOBv4ROM_Init(const char dir[]) {
+   }
+ }
+ 
+-/** Helper function to check if the TEOBv4ROM model has been initialised */
+-static bool TEOBv4ROM_IsSetup(void) {
+-  if(__lalsim_TEOBv4ROMDS_data.setup)
++/** Helper function to check if the Surrogate model has been initialised */
++static bool Surrogate_IsSetup(void) {
++  if(__lalsim_SurrogateDS_data.setup)
+     return true;
+   else
+     return false;
+@@ -431,9 +431,9 @@ static int GPR_evaluation_5D(
+   return XLAL_SUCCESS;
+ }
+ 
+-/* Set up a new ROM submodel, using data contained in dir */
+-UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+-  TEOBv4ROMdataDS_submodel **submodel,
++/* Set up a new submodel, using data contained in dir */
++UNUSED static int Surrogatedata_Init_submodel(
++  Surrogatedata_submodel **submodel,
+   UNUSED const char dir[],
+   UNUSED const char grp_name[]
+ ) {
+@@ -442,9 +442,9 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+   if(!submodel) exit(1);
+   /* Create storage for submodel structures */
+   if (!*submodel)
+-    *submodel = XLALCalloc(1,sizeof(TEOBv4ROMdataDS_submodel));
++    *submodel = XLALCalloc(1,sizeof(Surrogatedata_submodel));
+   else
+-    TEOBv4ROMdataDS_Cleanup_submodel(*submodel);
++    Surrogatedata_Cleanup_submodel(*submodel);
+ 
+ #ifdef LAL_HDF5_ENABLED
+   size_t size = strlen(dir) + strlen(ROMDataHDF5) + 2;
+@@ -505,8 +505,8 @@ UNUSED static int TEOBv4ROMdataDS_Init_submodel(
+   return ret;
+ }
+ 
+-/* Deallocate contents of the given TEOBv4ROMdataDS_submodel structure */
+-static void TEOBv4ROMdataDS_Cleanup_submodel(TEOBv4ROMdataDS_submodel *submodel) {
++/* Deallocate contents of the given Surrogatedata_submodel structure */
++static void Surrogatedata_Cleanup_submodel(Surrogatedata_submodel *submodel) {
+   if(submodel->hyp_amp) gsl_matrix_free(submodel->hyp_amp);
+   if(submodel->hyp_phi) gsl_matrix_free(submodel->hyp_phi);
+   if(submodel->kinv_dot_y_amp) gsl_matrix_free(submodel->kinv_dot_y_amp);
+@@ -517,15 +517,15 @@ static void TEOBv4ROMdataDS_Cleanup_submodel(TEOBv4ROMdataDS_submodel *submodel)
+ }
+ 
+ /* Set up a new ROM model, using data contained in dir */
+-int TEOBv4ROMdataDS_Init(
+-  UNUSED TEOBv4ROMdataDS *romdata,
++int Surrogatedata_Init(
++  UNUSED Surrogatedata *romdata,
+   UNUSED const char dir[])
+ {
+   int ret = XLAL_FAILURE;
+ 
+   /* Create storage for structures */
+   if(romdata->setup) {
+-    XLALPrintError("WARNING: You tried to setup the TEOBv4ROM model that was already initialised. Ignoring\n");
++    XLALPrintError("WARNING: You tried to setup the Surrogate model that was already initialised. Ignoring\n");
+     return (XLAL_FAILURE);
+   }
+ 
+@@ -547,13 +547,13 @@ int TEOBv4ROMdataDS_Init(
+   XLALFree(path);
+   XLALH5FileClose(file);
+ 
+-  ret = TEOBv4ROMdataDS_Init_submodel(&(romdata)->sub1, dir, "sub1");
++  ret = Surrogatedata_Init_submodel(&(romdata)->sub1, dir, "sub1");
+   if (ret==XLAL_SUCCESS) XLALPrintInfo("%s : submodel 1 loaded successfully.\n", __func__);
+ 
+   if(XLAL_SUCCESS==ret)
+     romdata->setup=1;
+   else
+-    TEOBv4ROMdataDS_Cleanup(romdata);
++    Surrogatedata_Cleanup(romdata);
+ #else
+   XLAL_ERROR(XLAL_EFAILED, "HDF5 support not enabled");
+ #endif
+@@ -561,9 +561,9 @@ int TEOBv4ROMdataDS_Init(
+   return (ret);
+ }
+ 
+-/* Deallocate contents of the given TEOBv4ROMdataDS structure */
+-static void TEOBv4ROMdataDS_Cleanup(TEOBv4ROMdataDS *romdata) {
+-  TEOBv4ROMdataDS_Cleanup_submodel((romdata)->sub1);
++/* Deallocate contents of the given Surrogatedata structure */
++static void Surrogatedata_Cleanup(Surrogatedata *romdata) {
++  Surrogatedata_Cleanup_submodel((romdata)->sub1);
+   XLALFree((romdata)->sub1);
+   (romdata)->sub1 = NULL;
+   romdata->setup=0;
+@@ -710,7 +710,7 @@ static int TaylorF2Amplitude1PN(
+  * Construct 1D splines for amplitude and phase.
+  * Compute strain waveform from amplitude and phase.
+ */
+-static int TEOBv4ROMCore(
++static int SurrogateCore(
+   COMPLEX16FrequencySeries **hptilde,
+   COMPLEX16FrequencySeries **hctilde,
+   double phiRef, // orbital reference phase
+@@ -734,10 +734,10 @@ static int TEOBv4ROMCore(
+   if(!hptilde || !hctilde)
+     XLAL_ERROR(XLAL_EFAULT);
+ 
+-  TEOBv4ROMdataDS *romdata=&__lalsim_TEOBv4ROMDS_data;
+-  if (!TEOBv4ROM_IsSetup()) {
++  Surrogatedata *romdata=&__lalsim_SurrogateDS_data;
++  if (!Surrogate_IsSetup()) {
+     XLAL_ERROR(XLAL_EFAILED,
+-               "Error setting up TEOBv4ROM data - check your $LAL_DATA_PATH\n");
++               "Error setting up Surrogate data - check your $LAL_DATA_PATH\n");
+   }
+ 
+   if(*hptilde || *hctilde) {
+@@ -755,20 +755,20 @@ static int TEOBv4ROMCore(
+ 
+   if (chi1 < -1.0 || chi2 < -1.0 || chi1 > 1.0 || chi2 > 1.0) {
+     XLALPrintError("XLAL Error - %s: chi1 or chi2 smaller than -1.0 or larger than 1.0!\n"
+-                   "TEOBv4ROM is only available for spins in the range -1 <= a/M <= 1.0.\n",
++                   "Surrogate is only available for spins in the range -1 <= a/M <= 1.0.\n",
+                    __func__);
+     XLAL_ERROR( XLAL_EDOM );
+   }
+ 
+   if (eta<0.01 || eta > 0.25) {
+     XLALPrintError("XLAL Error - %s: eta (%f) smaller than 0.01 or unphysical!\n"
+-                   "TEOBv4ROM is only available for eta in the range 0.01 <= eta <= 0.25.\n",
++                   "Surrogate is only available for eta in the range 0.01 <= eta <= 0.25.\n",
+                    __func__, eta);
+     XLAL_ERROR( XLAL_EDOM );
+   }
+ 
+-  TEOBv4ROMdataDS_submodel *submodel_lo; // FIXME: rename submodel_lo to model
+-  submodel_lo = romdata->sub1;
++  Surrogatedata_submodel *sur;
++  sur = romdata->sub1;
+ 
+   /* Find frequency bounds */
+   if (!freqs_in) XLAL_ERROR(XLAL_EFAULT);
+@@ -779,15 +779,15 @@ static int TEOBv4ROMCore(
+     fRef=fLow;
+ 
+   /* Convert to geometric units for frequency */
+-  int N_amp = submodel_lo->mf_amp->size;
+-  int N_phi = submodel_lo->mf_phi->size;
++  int N_amp = sur->mf_amp->size;
++  int N_phi = sur->mf_phi->size;
+ 
+   // lowest allowed geometric frequency for ROM
+-  double Mf_ROM_min = fmax(gsl_vector_get(submodel_lo->mf_amp, 0),
+-                           gsl_vector_get(submodel_lo->mf_phi,0));
++  double Mf_ROM_min = fmax(gsl_vector_get(sur->mf_amp, 0),
++                           gsl_vector_get(sur->mf_phi,0));
+   // highest allowed geometric frequency for ROM
+-  double Mf_ROM_max = fmin(gsl_vector_get(submodel_lo->mf_amp, N_amp-1),
+-                           gsl_vector_get(submodel_lo->mf_phi, N_phi-1));
++  double Mf_ROM_max = fmin(gsl_vector_get(sur->mf_amp, N_amp-1),
++                           gsl_vector_get(sur->mf_phi, N_phi-1));
+   double fLow_geom = fLow * Mtot_sec;
+   double fHigh_geom = fHigh * Mtot_sec;
+   double fRef_geom = fRef * Mtot_sec;
+@@ -812,7 +812,7 @@ static int TEOBv4ROMCore(
+   }
+ 
+   if (Mtot_sec/LAL_MTSUN_SI > 500.0)
+-    XLALPrintWarning("Total mass=%gMsun > 500Msun. TEOBv4ROM disagrees with SEOBNRv4 for high total masses.\n", Mtot_sec/LAL_MTSUN_SI);
++    XLALPrintWarning("Total mass=%gMsun > 500Msun. Surrogate disagrees with SEOBNRv4 for high total masses.\n", Mtot_sec/LAL_MTSUN_SI);
+ 
+ 
+   // Evaluate GPR for log amplitude and dephasing
+@@ -823,23 +823,23 @@ static int TEOBv4ROMCore(
+ 
+   retcode = GPR_evaluation_5D(
+     q, chi1, chi2, lambda1, lambda2,
+-    submodel_lo->hyp_amp,
+-    submodel_lo->hyp_phi,
+-    submodel_lo->kinv_dot_y_amp,
+-    submodel_lo->kinv_dot_y_phi,
+-    submodel_lo->x_train,
++    sur->hyp_amp,
++    sur->hyp_phi,
++    sur->kinv_dot_y_amp,
++    sur->kinv_dot_y_phi,
++    sur->x_train,
+     sur_amp_at_nodes,
+     sur_phi_at_nodes_tmp
+   );
+ 
+   if(retcode!=0) {
+-    //TEOBv4ROMdataDS_coeff_Cleanup(romdata_coeff_lo); /// FIXME: change to clean the data for the GPR model
++    //Surrogatedata_coeff_Cleanup(romdata_coeff_lo); /// FIXME: change to clean the data for the GPR model
+     XLAL_ERROR(retcode);
+   }
+ 
+   for (int i=0; i<N_phi-1; i++)
+     fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+-    gsl_vector_get(submodel_lo->mf_phi, i),
++    gsl_vector_get(sur->mf_phi, i),
+     gsl_vector_get(sur_phi_at_nodes_tmp, i));
+ 
+   // Prepend the point [mf_min, 0] to the phase nodes
+@@ -849,22 +849,22 @@ fprintf(stderr, "phi_at_nodes->size = %zu\n", sur_phi_at_nodes->size);
+ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+   for (int i=0; i<N_phi; i++)
+     fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+-    gsl_vector_get(submodel_lo->mf_phi, i),
++    gsl_vector_get(sur->mf_phi, i),
+     gsl_vector_get(sur_phi_at_nodes, i));
+ 
+ 
+ double dquadmon1 = 0.0; // FIXME
+ double dquadmon2 = 0.0;
+ gsl_vector *PN_phi_at_nodes = NULL;
+-TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, submodel_lo->mf_phi, &PN_phi_at_nodes);
++TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
+ 
+ fprintf(stderr, "\nphiPN_at_nodes:");
+ gsl_vector_fprintf(stderr, PN_phi_at_nodes, "%.15g");
+ 
+ 
+-// FIXME: copy submodel_lo->mf_phi to a dedicated vector
++// FIXME: copy sur->mf_phi to a dedicated vector
+ gsl_vector *PN_amp_at_nodes = NULL;
+-TaylorF2Amplitude1PN(eta, submodel_lo->mf_phi, &PN_amp_at_nodes); // FIXME: should input mf_amp unless it is the same as mf_phi
++TaylorF2Amplitude1PN(eta, sur->mf_phi, &PN_amp_at_nodes); // FIXME: should input mf_amp unless it is the same as mf_phi
+ 
+ fprintf(stderr, "\nampPN_at_nodes:");
+ gsl_vector_fprintf(stderr, PN_amp_at_nodes, "%.15g");
+@@ -875,7 +875,7 @@ gsl_vector_fprintf(stderr, PN_amp_at_nodes, "%.15g");
+ gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
+ gsl_spline *spline_phi = gsl_spline_alloc(gsl_interp_cspline, N_phi);
+ gsl_vector_add(sur_phi_at_nodes, PN_phi_at_nodes); // stores result in sur_phi_at_nodes
+-gsl_spline_init(spline_phi, gsl_vector_const_ptr(submodel_lo->mf_phi, 0),
++gsl_spline_init(spline_phi, gsl_vector_const_ptr(sur->mf_phi, 0),
+                 gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
+ 
+ 
+@@ -889,7 +889,7 @@ for (int i=0; i<N_amp; i++) {
+   gsl_vector_set(spline_amp_values, i, amp_i);
+ }
+ 
+-gsl_spline_init(spline_amp, gsl_vector_const_ptr(submodel_lo->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
++gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
+                 gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
+ 
+   size_t npts = 0;
+@@ -969,7 +969,7 @@ gsl_spline_init(spline_amp, gsl_vector_const_ptr(submodel_lo->mf_phi, 0), // FIX
+   double Momega22_BNS_mrg = XLALSimNSNSMergerFreq(&tidal1, &tidal2);
+   fprintf(stderr, "Momega22_BNS_mrg = %g\n", Momega22_BNS_mrg);
+ 
+-  Mf_ROM_max = gsl_vector_get(submodel_lo->mf_phi, N_phi-1);
++  Mf_ROM_max = gsl_vector_get(sur->mf_phi, N_phi-1);
+   double Mf_final = fmin(Momega22_BNS_mrg, Mf_ROM_max);
+ 
+   // Assemble waveform from aplitude and phase
+@@ -1109,19 +1109,19 @@ int XLALSimIMRSEOBNRv4TSurrogateFrequencySequence(
+ 
+   // Load ROM data if not loaded already
+ #ifdef LAL_PTHREAD_LOCK
+-  (void) pthread_once(&TEOBv4ROM_is_initialized, TEOBv4ROM_Init_LALDATA);
++  (void) pthread_once(&Surrogate_is_initialized, Surrogate_Init_LALDATA);
+ #else
+-  TEOBv4ROM_Init_LALDATA();
++  Surrogate_Init_LALDATA();
+ #endif
+ 
+-  if(!TEOBv4ROM_IsSetup()) {
++  if(!Surrogate_IsSetup()) {
+     XLAL_ERROR(XLAL_EFAILED,
+-               "Error setting up TEOBv4ROM data - check your $LAL_DATA_PATH\n");
++               "Error setting up Surrogate data - check your $LAL_DATA_PATH\n");
+   }
+ 
+   // Call the internal core function with deltaF = 0 to indicate that freqs is non-uniformly
+   // spaced and we want the strain only at these frequencies
+-  int retcode = TEOBv4ROMCore(hptilde, hctilde, phiRef, fRef, distance,
++  int retcode = SurrogateCore(hptilde, hctilde, phiRef, fRef, distance,
+                                 inclination, Mtot_sec, eta, chi1, chi2, lambda1, lambda2, freqs, 0);
+ 
+   return(retcode);
+@@ -1174,9 +1174,9 @@ int XLALSimIMRSEOBNRv4TSurrogate(
+ 
+   // Load ROM data if not loaded already
+ #ifdef LAL_PTHREAD_LOCK
+-  (void) pthread_once(&TEOBv4ROM_is_initialized, TEOBv4ROM_Init_LALDATA);
++  (void) pthread_once(&Surrogate_is_initialized, Surrogate_Init_LALDATA);
+ #else
+-  TEOBv4ROM_Init_LALDATA();
++  Surrogate_Init_LALDATA();
+ #endif
+ 
+   // Use fLow, fHigh, deltaF to compute freqs sequence
+@@ -1186,7 +1186,7 @@ int XLALSimIMRSEOBNRv4TSurrogate(
+   freqs->data[0] = fLow;
+   freqs->data[1] = fHigh;
+ 
+-  int retcode = TEOBv4ROMCore(hptilde, hctilde, phiRef, fRef, distance,
++  int retcode = SurrogateCore(hptilde, hctilde, phiRef, fRef, distance,
+                                 inclination, Mtot_sec, eta, chi1, chi2, lambda1, lambda2, freqs, deltaF);
+ 
+   XLALDestroyREAL8Sequence(freqs);
+@@ -1197,12 +1197,12 @@ int XLALSimIMRSEOBNRv4TSurrogate(
+ /** @} */
+ 
+ 
+-/** Setup TEOBv4ROM model using data files installed in $LAL_DATA_PATH
++/** Setup Surrogate model using data files installed in $LAL_DATA_PATH
+  */
+-UNUSED static void TEOBv4ROM_Init_LALDATA(void)
++UNUSED static void Surrogate_Init_LALDATA(void)
+ {
+-  fprintf(stderr, "In TEOBv4ROM_Init_LALDATA()\n");
+-  if (TEOBv4ROM_IsSetup()) return;
++  fprintf(stderr, "In Surrogate_Init_LALDATA()\n");
++  if (Surrogate_IsSetup()) return;
+ 
+   // Expect ROM datafile in a directory listed in LAL_DATA_PATH,
+ #ifdef LAL_HDF5_ENABLED
+@@ -1211,12 +1211,12 @@ UNUSED static void TEOBv4ROM_Init_LALDATA(void)
+   if (path==NULL)
+     XLAL_ERROR_VOID(XLAL_EIO, "Unable to resolve data file %s in $LAL_DATA_PATH\n", datafile);
+   char *dir = dirname(path);
+-  int ret = TEOBv4ROM_Init(dir);
++  int ret = Surrogate_Init(dir);
+   XLALFree(path);
+ 
+   if(ret!=XLAL_SUCCESS)
+-    XLAL_ERROR_VOID(XLAL_FAILURE, "Unable to find TEOBv4ROM data files in $LAL_DATA_PATH\n");
++    XLAL_ERROR_VOID(XLAL_FAILURE, "Unable to find Surrogate data files in $LAL_DATA_PATH\n");
+ #else
+-  XLAL_ERROR_VOID(XLAL_EFAILED, "TEOBv4ROM requires HDF5 support which is not enabled\n");
++  XLAL_ERROR_VOID(XLAL_EFAILED, "Surrogate requires HDF5 support which is not enabled\n");
+ #endif
+ }
+-- 
+2.5.4 (Apple Git-61)
+

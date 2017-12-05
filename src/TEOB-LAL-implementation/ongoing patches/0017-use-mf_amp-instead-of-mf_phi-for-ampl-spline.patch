@@ -1,0 +1,136 @@
+From 7a7aa74a4635a1776e013362e3980ead795c4cff Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Tue, 5 Dec 2017 13:58:06 +0100
+Subject: [PATCH 17/18] use mf_amp instead of mf_phi for ampl spline
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 53 ++++++++++++-------------
+ 1 file changed, 25 insertions(+), 28 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index d5de582..e8ae7d3 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -55,13 +55,7 @@
+ 
+ #ifdef LAL_HDF5_ENABLED
+ #include <lal/H5FileIO.h>
+-// FIXME: change these to our datafile and version number 1.0.0
+-//static const char SurDataHDF5[] = "SEOBNRv4ROM_v2.0.hdf5";
+-//static const char SurDataHDF5[] = "/Users/mpuer/Documents/gpsurrogate/src/TEOB-LAL-implementation/TEOBv4_surrogate.hdf5";
+-// FIXME: missing attributes in HDF5 file: Email, Description (rather than description), version_major, version_minor, version_micro
+-//static const char SurDataHDF5[] = "TEOBv4_surrogate.hdf5"; // small test dataset
+-static const char SurDataHDF5[] = "SEOBNRv4T_surrogate_v1.0.0.hdf5"; // MP added version number in filename
+-// FIXME: uncomment after adding attributes
++static const char SurDataHDF5[] = "SEOBNRv4T_surrogate_v1.0.0.hdf5";
+ static const INT4 SurDataHDF5_VERSION_MAJOR = 1;
+ static const INT4 SurDataHDF5_VERSION_MINOR = 0;
+ static const INT4 SurDataHDF5_VERSION_MICRO = 0;
+@@ -92,15 +86,6 @@ static pthread_once_t Surrogate_is_initialized = PTHREAD_ONCE_INIT;
+ 
+ /*************** type definitions ******************/
+ 
+-// Constants if needed
+-//static const INT4 n_pars = 5; // dimensionality of the parameter space
+-//static const INT4 n_hyp = 7; // number of hyperparameters in GP kernel
+-//static const INT4 n_train = 159; // number of training points for the GPR
+-//static const INT4 n_EI_nodes = 20; // number of empirical interpolant nodes (or dimension of EI basis)
+-//static const INT4 n_freqs = 10000; // number of frequency points in bases
+-// n_EI_nodes and n_freqs are the same number for amplitude and phase
+-
+-
+ struct tagSurrogatedata_submodel
+ {
+   gsl_matrix *hyp_amp;           // GP hyperparameters log amplitude
+@@ -392,7 +377,7 @@ static int GPR_evaluation_5D(
+   gsl_vector *phi_at_nodes       // Output: dephasing at frequency nodes (preallocated)
+ )
+ {
+-  // assemble evaluation point
++  // Assemble evaluation point
+   gsl_vector *xst = gsl_vector_alloc(5);
+   double q_inv = 1.0/q;
+   gsl_vector_set(xst, 0, q_inv);
+@@ -404,24 +389,24 @@ static int GPR_evaluation_5D(
+   // FIXME: find number of spline nodes
+   // FIXME: check that amp_at_nodes, phi_at_nodes are preallocated and have the correct size (number of spline nodes)
+ 
+-  // evaluate GPR for amplitude spline nodes
+-  fprintf(stderr, "\n\n");
++  // Evaluate GPR for amplitude spline nodes
++  // fprintf(stderr, "\n\n");
+   for (size_t i=0; i<amp_at_nodes->size; i++) {
+     gsl_vector hyp_amp_i = gsl_matrix_const_row(hyp_amp, i).vector;
+     gsl_vector kinv_dot_y_amp_i = gsl_matrix_const_row(kinv_dot_y_amp, i).vector;
+     double pred = gp_predict(xst, &hyp_amp_i, x_train, &kinv_dot_y_amp_i);
+-    fprintf(stderr, "pred_amp(%zu) = %g\n", i, pred);
++    // fprintf(stderr, "pred_amp(%zu) = %g\n", i, pred);
+     gsl_vector_set(amp_at_nodes, i, pred);
+   }
+-  fprintf(stderr, "\n\n");
++  // fprintf(stderr, "\n\n");
+ 
+-  // evaluate GPR for phase spline nodes
+-  fprintf(stderr, "\n\n");
++  // Evaluate GPR for phase spline nodes
++  // fprintf(stderr, "\n\n");
+   for (size_t i=0; i<phi_at_nodes->size; i++) {
+     gsl_vector hyp_phi_i = gsl_matrix_const_row(hyp_phi, i).vector;
+     gsl_vector kinv_dot_y_phi_i = gsl_matrix_const_row(kinv_dot_y_phi, i).vector;
+     double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i);
+-    fprintf(stderr, "pred_phi(%zu) = %g\n", i, pred);
++    // fprintf(stderr, "pred_phi(%zu) = %g\n", i, pred);
+     gsl_vector_set(phi_at_nodes, i, pred);
+   }
+   fprintf(stderr, "\n\n");
+@@ -590,7 +575,7 @@ static int TaylorF2Phasing(
+   // See src/LALSimInspiralTaylorF2.c:XLALSimInspiralTaylorF2AlignedPhasingArray() for how to add the tidal terms
+   // We add the terms after the XLALSimInspiralTaylorF2AlignedPhasing() call below to the structure of PN coefficients.
+ 
+-  // FIXME: We should be able to switch on quadrupole-monopole terms (self-spin deformation of the two bodies)
++  // We should be able to switch on quadrupole-monopole terms (self-spin deformation of the two bodies)
+   // from TaylorF2; later these can be replaced with a new TEOB surrogate as well. Just add a switch for now.
+   if ((dquadmon1 > 0) || (dquadmon2 > 0)) {
+     fprintf(stderr, "Using quadrupole-monopole terms from PN.\n");
+@@ -857,6 +842,17 @@ static int SurrogateCore(
+     sur_phi_at_nodes_tmp
+   );
+ 
++fprintf(stderr, "\n\n");
++for (int i=0; i<N_phi-1; i++)
++  fprintf(stderr, "mf_amp - mf_phi [%d] = %g\n", i, gsl_vector_get(sur->mf_amp, i) - gsl_vector_get(sur->mf_phi, i));
++
++fprintf(stderr, "\n\n");
++fprintf(stderr, "\nmf_amp:\n");
++gsl_vector_fprintf(stderr, sur->mf_amp, "%.15g");
++fprintf(stderr, "\nmf_amp:\n");
++gsl_vector_fprintf(stderr, sur->mf_phi, "%.15g");
++fprintf(stderr, "\n\n");
++
+   if(retcode!=0) {
+     //Surrogatedata_coeff_Cleanup(romdata_coeff_lo); /// FIXME: change to clean the data for the GPR model
+     XLAL_ERROR(retcode);
+@@ -864,8 +860,9 @@ static int SurrogateCore(
+ 
+   for (int i=0; i<N_phi-1; i++)
+     fprintf(stderr, "mf_phi, phi_at_nodes [%d] = (%g, %g)\n", i,
+-    gsl_vector_get(sur->mf_phi, i),
+-    gsl_vector_get(sur_phi_at_nodes_tmp, i));
++      gsl_vector_get(sur->mf_phi, i),
++      gsl_vector_get(sur_phi_at_nodes_tmp, i)
++    );
+ 
+   // Prepend the point [mf_min, 0] to the phase nodes
+   // This has already been done in the setup for mf_phi
+@@ -913,7 +910,7 @@ fprintf(stderr, "N_amp, N_phi = %d, %d\n", N_amp, N_phi);
+     gsl_vector_set(spline_amp_values, i, amp_i);
+   }
+ 
+-  gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_phi, 0), // FIXME: should input mf_amp unless it is the same as mf_phi
++  gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_amp, 0),
+                   gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
+ 
+   size_t npts = 0;
+-- 
+2.5.4 (Apple Git-61)
+

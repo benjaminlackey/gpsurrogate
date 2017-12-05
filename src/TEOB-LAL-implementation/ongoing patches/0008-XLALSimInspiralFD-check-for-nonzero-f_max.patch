@@ -1,0 +1,24 @@
+From 66c46c51856beb88b4bac50c9fa1a6b060f86f8b Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 17 Nov 2017 17:52:45 +0100
+Subject: [PATCH 08/18] XLALSimInspiralFD: check for nonzero f_max
+
+---
+ lalsimulation/src/LALSimInspiral.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/lalsimulation/src/LALSimInspiral.c b/lalsimulation/src/LALSimInspiral.c
+index 988c89c..ad5ea2b 100644
+--- a/lalsimulation/src/LALSimInspiral.c
++++ b/lalsimulation/src/LALSimInspiral.c
+@@ -2090,6 +2090,7 @@ int XLALSimInspiralFD(
+ 
+     /* FIXME: assume that f_max is the Nyquist frequency, and use it
+      * to compute the requested deltaT */
++    XLAL_CHECK(f_max != 0.0, XLAL_EDOM, "f_max must be the Nyquist frequency.");
+     deltaT = 0.5 / f_max;
+ 
+     if (XLALSimInspiralImplementedFDApproximants(approximant)) {
+-- 
+2.5.4 (Apple Git-61)
+
