@@ -74,11 +74,6 @@ static const INT4 SurDataHDF5_VERSION_MICRO = 0;
 #endif
 
 
-// TODO:
-// * remove all debugging code: fprintf statements
-// * add more checks and tests
-// * take care of all FIXMEs
-
 
 #ifdef LAL_PTHREAD_LOCK
 static pthread_once_t Surrogate_is_initialized = PTHREAD_ONCE_INIT;
@@ -92,8 +87,6 @@ struct tagSurrogatedata_submodel
   gsl_matrix *hyp_phi;           // GP hyperparameters for dephasing
   gsl_matrix *kinv_dot_y_amp;    // kinv_dot_y for log amplitude
   gsl_matrix *kinv_dot_y_phi;    // kinv_dot_y for dephasing
-  gsl_matrix *B_amp;             // Reduced basis for log amplitude
-  gsl_matrix *B_phi;             // Reduced basis for dephasing
   gsl_matrix *x_train;           // Training points
   gsl_vector *mf_amp;            // location of spline nodes for log amplitude
   gsl_vector *mf_phi;            // location of spline nodes for dephasing
@@ -265,11 +258,6 @@ double kernel(
   double sigma_n = gsl_vector_get(hyperparams, hyperparams->size-1);
   gsl_vector ls = gsl_vector_subvector(hyperparams, 1, hyperparams->size-2).vector;
 
-  // fprintf(stderr, "** kernel **\n");
-  // fprintf(stderr, "x1 = [%g, %g, %g, %g, %g]\n", gsl_vector_get(x1, 0), gsl_vector_get(x1, 1), gsl_vector_get(x1, 2), gsl_vector_get(x1, 3), gsl_vector_get(x1, 4));
-  // fprintf(stderr, "x2 = [%g, %g, %g, %g, %g]\n", gsl_vector_get(x2, 0), gsl_vector_get(x2, 1), gsl_vector_get(x2, 2), gsl_vector_get(x2, 3), gsl_vector_get(x2, 4));
-  // fprintf(stderr, "ls = [%g, %g, %g, %g, %g]\n", gsl_vector_get(&ls, 0), gsl_vector_get(&ls, 1), gsl_vector_get(&ls, 2), gsl_vector_get(&ls, 3), gsl_vector_get(&ls, 4));
-
   XLAL_CHECK((x1->size == x2->size) && (x1->size == ls.size), XLAL_EDIMS,
   "kernel(): dimensions of vectors x1, x2 and ls: %zu, %zu, %zu have to be consistent.\n",
   x1->size, x2->size, ls.size);
@@ -400,7 +388,8 @@ static int GPR_evaluation_5D(
     double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i);
     gsl_vector_set(phi_at_nodes, i, pred);
   }
-  fprintf(stderr, "\n\n");
+
+  gsl_vector_free(xst);
 
   return XLAL_SUCCESS;
 }
@@ -454,11 +443,9 @@ UNUSED static int Surrogatedata_Init_submodel(
   ReadHDF5RealVectorDataset(root, "lambda2_bounds", & (*submodel)->lambda2_bounds);
 
   // Prepend the point [mf_amp[0], 0] to the phase nodes
-  fprintf(stderr, "Before len(mf_phi) = %zu\n", (*submodel)->mf_phi->size);
   double mf_min = gsl_vector_get( (*submodel)->mf_amp, 0); // Follow definition of mf_a in GPSplineSurrogate constructor
   gsl_vector *phi_nodes = gsl_vector_prepend_value((*submodel)->mf_phi, mf_min);
   (*submodel)->mf_phi = phi_nodes;
-  fprintf(stderr, "After len(mf_phi) = %zu\n", (*submodel)->mf_phi->size);
 
   XLALFree(path);
   XLALH5FileClose(file);
@@ -479,6 +466,12 @@ static void Surrogatedata_Cleanup_submodel(Surrogatedata_submodel *submodel) {
   if(submodel->x_train) gsl_matrix_free(submodel->x_train);
   if(submodel->mf_amp) gsl_vector_free(submodel->mf_amp);
   if(submodel->mf_phi) gsl_vector_free(submodel->mf_phi);
+
+  if(submodel->q_bounds) gsl_vector_free(submodel->q_bounds);
+  if(submodel->chi1_bounds) gsl_vector_free(submodel->chi1_bounds);
+  if(submodel->chi2_bounds) gsl_vector_free(submodel->chi2_bounds);
+  if(submodel->lambda1_bounds) gsl_vector_free(submodel->lambda1_bounds);
+  if(submodel->lambda2_bounds) gsl_vector_free(submodel->lambda2_bounds);
 }
 
 /* Set up a new ROM model, using data contained in dir */
@@ -567,7 +560,7 @@ static int TaylorF2Phasing(
   // We should be able to switch on quadrupole-monopole terms (self-spin deformation of the two bodies)
   // from TaylorF2; later these can be replaced with a new TEOB surrogate as well. Just add a switch for now.
   if ((dquadmon1 > 0) || (dquadmon2 > 0)) {
-    fprintf(stderr, "Using quadrupole-monopole terms from PN.\n");
+    XLALPrintInfo("Using quadrupole-monopole terms from PN: %g, %g\n", dquadmon1, dquadmon2);
     XLALSimInspiralWaveformParamsInsertdQuadMon1(extraParams, dquadmon1);
     XLALSimInspiralWaveformParamsInsertdQuadMon2(extraParams, dquadmon2);
   }
@@ -588,7 +581,6 @@ static int TaylorF2Phasing(
       const double Mf = gsl_vector_get(Mfs, i);
       const double v = cbrt(LAL_PI * Mf);
       const double logv = log(v);
-      // FIXME: optimize this further: v4=v2*v2, v8=v4*v4
       const double v2 = v * v;
       const double v3 = v * v2;
       const double v4 = v * v3;
@@ -751,7 +743,8 @@ static int SurrogateCore(
   Surrogatedata_submodel *sur;
   sur = romdata->sub1;
 
-  retcode |= CheckParameterSpaceBounds(sur, q, chi1, chi2, lambda1, lambda2);
+  retcode = CheckParameterSpaceBounds(sur, q, chi1, chi2, lambda1, lambda2);
+  if(retcode != 0) XLAL_ERROR(retcode);
 
   /* Find frequency bounds */
   if (!freqs_in) XLAL_ERROR(XLAL_EFAULT);
@@ -798,7 +791,7 @@ static int SurrogateCore(
   gsl_vector *sur_amp_at_nodes = gsl_vector_alloc(N_amp);
   gsl_vector *sur_phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
 
-  retcode = GPR_evaluation_5D(
+  retcode |= GPR_evaluation_5D(
     q, chi1, chi2, lambda1, lambda2,
     sur->hyp_amp,
     sur->hyp_phi,
@@ -809,11 +802,6 @@ static int SurrogateCore(
     sur_phi_at_nodes_tmp
   );
 
-  if(retcode!=0) {
-    //Surrogatedata_coeff_Cleanup(romdata_coeff_lo); /// FIXME: change to clean the data for the GPR model
-    XLAL_ERROR(retcode);
-  }
-
   // Prepend the point [mf_min, 0] to the phase nodes
   // This has already been done in the setup for mf_phi
   gsl_vector *sur_phi_at_nodes = gsl_vector_prepend_value(sur_phi_at_nodes_tmp, 0.0);
@@ -821,10 +809,16 @@ static int SurrogateCore(
   double dquadmon1 = 0.0;
   double dquadmon2 = 0.0;
   gsl_vector *PN_phi_at_nodes = NULL;
-  TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
+  retcode |= TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
 
   gsl_vector *PN_amp_at_nodes = NULL;
-  TaylorF2Amplitude1PN(eta, sur->mf_amp, &PN_amp_at_nodes);
+  retcode |= TaylorF2Amplitude1PN(eta, sur->mf_amp, &PN_amp_at_nodes);
+
+  if(retcode != 0) {
+    gsl_vector_free(sur_amp_at_nodes);
+    gsl_vector_free(sur_phi_at_nodes_tmp);
+    XLAL_ERROR(retcode);
+  }
 
   // Setup 1d splines in frequency
   gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
@@ -834,10 +828,9 @@ static int SurrogateCore(
                   gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
 
 
-
   gsl_interp_accel *acc_amp = gsl_interp_accel_alloc();
   gsl_spline *spline_amp = gsl_spline_alloc(gsl_interp_cspline, N_amp);
-  // Compute amplitude = PN_amplitude * exp(surrogate_amplitude)
+  // Compute amplitude = PN_amplitude * exp(log_surrogate_amplitude)
   gsl_vector *spline_amp_values = gsl_vector_alloc(N_amp);
   for (int i=0; i<N_amp; i++) {
     double amp_i = gsl_vector_get(PN_amp_at_nodes, i) * exp(gsl_vector_get(sur_amp_at_nodes, i));
@@ -846,6 +839,11 @@ static int SurrogateCore(
 
   gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_amp, 0),
                   gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
+
+  gsl_vector_free(PN_amp_at_nodes);
+  gsl_vector_free(PN_phi_at_nodes);
+  gsl_vector_free(sur_amp_at_nodes);
+  gsl_vector_free(sur_phi_at_nodes);
 
   size_t npts = 0;
   LIGOTimeGPS tC = {0, 0};
@@ -909,8 +907,8 @@ static int SurrogateCore(
   REAL8 pcoef = 0.5*(1.0 + cosi*cosi);
   REAL8 ccoef = cosi;
 
-  REAL8 s = 0.5; // Scale polarization amplitude so that strain agrees with FFT of SEOBNRv4
-  double amp0 = Mtot * Mtot_sec * LAL_MRSUN_SI / (distance); // Correct overall amplitude to undo mass-dependent scaling used in ROM
+  REAL8 s = 0.5; // Scale polarization amplitude so that strain agrees with FFT of SEOBNRv4_T
+  double amp0 = Mtot * Mtot_sec * LAL_MRSUN_SI / (distance); // amplitude prefactor
 
   // Evaluate reference phase for setting phiRef correctly
   double phase_change = gsl_spline_eval(spline_phi, fRef_geom, acc_phi) - 2*phiRef;
@@ -922,20 +920,17 @@ static int SurrogateCore(
   tidal2.mByM = 1.0 / (1.0+q);
   tidal2.lambda2Tidal = lambda2 * pow(tidal2.mByM,5);
   double Momega22_BNS_mrg = XLALSimNSNSMergerFreq(&tidal1, &tidal2);
-  fprintf(stderr, "Momega22_BNS_mrg = %g\n", Momega22_BNS_mrg);
 
   Mf_ROM_max = gsl_vector_get(sur->mf_phi, N_phi-1);
   double Mf_final = fmin(Momega22_BNS_mrg, Mf_ROM_max);
 
   // Assemble waveform from aplitude and phase
-  fprintf(stderr, "Mf_ROM_max = %g\n", Mf_ROM_max);
   for (UINT4 i=0; i<freqs->length; i++) { // loop over frequency points in sequence
     double f = freqs->data[i];
     if (f > Mf_final) continue; // We're beyond the highest allowed frequency; since freqs may not be ordered, we'll just skip the current frequency and leave zero in the buffer
     int j = i + offset; // shift index for frequency series if needed
     double A = gsl_spline_eval(spline_amp, f, acc_amp);
     double phase = gsl_spline_eval(spline_phi, f, acc_phi) - phase_change;
-    fprintf(stderr, "%d, %d    %g : %g %g\n", i, j, f, A, phase);
     COMPLEX16 htilde = s*amp0*A * (cos(phase) + I*sin(phase));//cexp(I*phase);
     pdata[j] =      pcoef * htilde;
     cdata[j] = -I * ccoef * htilde;
@@ -970,7 +965,6 @@ static int SurrogateCore(
   }
 
   XLALDestroyREAL8Sequence(freqs);
-
   gsl_interp_accel_free(acc_phi);
   gsl_spline_free(spline_phi);
   gsl_interp_accel_free(acc_amp);
@@ -1157,7 +1151,6 @@ int XLALSimIMRSEOBNRv4TSurrogate(
  */
 UNUSED static void Surrogate_Init_LALDATA(void)
 {
-  fprintf(stderr, "In Surrogate_Init_LALDATA()\n");
   if (Surrogate_IsSetup()) return;
 
   // Expect ROM datafile in a directory listed in LAL_DATA_PATH,
