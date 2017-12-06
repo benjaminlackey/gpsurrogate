@@ -1,4 +1,4 @@
-From edcfaead79203c80aedbc36490e4c36e3f606004 Mon Sep 17 00:00:00 2001
+From 35f76ec21ccee473b14cf081374c969cad7a5e9e Mon Sep 17 00:00:00 2001
 From: Michael Puerrer <Michael.Puerrer@ligo.org>
 Date: Tue, 5 Dec 2017 19:38:44 +0100
 Subject: [PATCH] Implement SEOBNRv4T surrogate model
@@ -10,12 +10,12 @@ stars including overall tidal deformability using universal relations.
  lalsimulation/src/LALSimIMR.h                   |    6 +
  lalsimulation/src/LALSimIMREOBNRv2.h            |   10 +
  lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c |    2 +-
- lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 1184 +++++++++++++++++++++++
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 1182 +++++++++++++++++++++++
  lalsimulation/src/LALSimIMRSpinAlignedEOB.c     |    2 +-
  lalsimulation/src/LALSimInspiral.c              |   15 +
  lalsimulation/src/LALSimInspiral.h              |    2 +
  lalsimulation/src/Makefile.am                   |    1 +
- 8 files changed, 1220 insertions(+), 2 deletions(-)
+ 8 files changed, 1218 insertions(+), 2 deletions(-)
  create mode 100644 lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
 
 diff --git a/lalsimulation/src/LALSimIMR.h b/lalsimulation/src/LALSimIMR.h
@@ -71,10 +71,10 @@ index da4c183..dd24c07 100644
  UNUSED static REAL8 Interpolate_Coefficent_Tensor(
 diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
 new file mode 100644
-index 0000000..04091d6
+index 0000000..d75661d
 --- /dev/null
 +++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
-@@ -0,0 +1,1184 @@
+@@ -0,0 +1,1182 @@
 +/*
 + *  Copyright (C) 2017 Michael Puerrer, Ben Lackey
 + *  Reduced Order Model for SEOBNRv4T spin-aligned tidal effective-one-body model
@@ -348,12 +348,10 @@ index 0000000..04091d6
 +  if (gsl_vector_equal(x1, x2))
 +    nugget = sigma_n*sigma_n;
 +
-+  //gsl_vector *tmp = gsl_vector_alloc(x1->size);
 +  gsl_vector_memcpy(work, x1);
 +  gsl_vector_sub(work, x2);
 +  gsl_vector_div(work, &ls); // (x1 - x2) / ls
 +  double r = gsl_blas_dnrm2(work);
-+  //gsl_vector_free(tmp);
 +
 +  // nu = 5/2 Matern covariance
 +  double matern = (1.0 + sqrt(5.0)*r + 5.0*r*r/3.0) * exp(-sqrt(5.0)*r);
