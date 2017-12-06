@@ -1,4 +1,4 @@
-From 2a768a1b8bef9a6ad2511bebe958ae0572f0dc86 Mon Sep 17 00:00:00 2001
+From edcfaead79203c80aedbc36490e4c36e3f606004 Mon Sep 17 00:00:00 2001
 From: Michael Puerrer <Michael.Puerrer@ligo.org>
 Date: Tue, 5 Dec 2017 19:38:44 +0100
 Subject: [PATCH] Implement SEOBNRv4T surrogate model
@@ -10,12 +10,12 @@ stars including overall tidal deformability using universal relations.
  lalsimulation/src/LALSimIMR.h                   |    6 +
  lalsimulation/src/LALSimIMREOBNRv2.h            |   10 +
  lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c |    2 +-
- lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 1172 +++++++++++++++++++++++
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 1184 +++++++++++++++++++++++
  lalsimulation/src/LALSimIMRSpinAlignedEOB.c     |    2 +-
  lalsimulation/src/LALSimInspiral.c              |   15 +
  lalsimulation/src/LALSimInspiral.h              |    2 +
  lalsimulation/src/Makefile.am                   |    1 +
- 8 files changed, 1208 insertions(+), 2 deletions(-)
+ 8 files changed, 1220 insertions(+), 2 deletions(-)
  create mode 100644 lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
 
 diff --git a/lalsimulation/src/LALSimIMR.h b/lalsimulation/src/LALSimIMR.h
@@ -71,10 +71,10 @@ index da4c183..dd24c07 100644
  UNUSED static REAL8 Interpolate_Coefficent_Tensor(
 diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
 new file mode 100644
-index 0000000..ed631de
+index 0000000..04091d6
 --- /dev/null
 +++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
-@@ -0,0 +1,1172 @@
+@@ -0,0 +1,1184 @@
 +/*
 + *  Copyright (C) 2017 Michael Puerrer, Ben Lackey
 + *  Reduced Order Model for SEOBNRv4T spin-aligned tidal effective-one-body model
@@ -195,14 +195,16 @@ index 0000000..ed631de
 +double kernel(
 +  gsl_vector *x1,          // array with shape ndim
 +  gsl_vector *x2,          // array with shape ndim
-+  gsl_vector *hyperparams  // Hyperparameters
++  gsl_vector *hyperparams, // Hyperparameters
++  gsl_vector *work         // work array
 +);
 +
 +double gp_predict(
 +  gsl_vector *xst,          // Point x_* where you want to evaluate the function.
 +  gsl_vector *hyperparams,  // Hyperparameters for the GPR kernel.
 +  gsl_matrix *x_train,      // Training set points.
-+  gsl_vector *Kinv_dot_y    // The interpolating weights at each training set point.
++  gsl_vector *Kinv_dot_y,   // The interpolating weights at each training set point.
++  gsl_vector *work          // work array for kernel
 +);
 +
 +
@@ -225,7 +227,8 @@ index 0000000..ed631de
 +  gsl_matrix *kinv_dot_y_phi,    // Input: kinv_dot_y for dephasing
 +  gsl_matrix *x_train,           // Input: GPR training points
 +  gsl_vector *amp_at_EI_nodes,   // Output: log amplitude at EI nodes (preallocated)
-+  gsl_vector *phi_at_EI_nodes    // Output: dephasing at EI nodes     (preallocated)
++  gsl_vector *phi_at_EI_nodes,   // Output: dephasing at EI nodes     (preallocated)
++  gsl_vector *work               // Input: work array
 +);
 +
 +UNUSED static int Surrogatedata_Init_submodel(
@@ -312,7 +315,8 @@ index 0000000..ed631de
 +double kernel(
 +  gsl_vector *x1,          // parameter space point 1
 +  gsl_vector *x2,          // parameter space point 2
-+  gsl_vector *hyperparams  // GPR Hyperparameters
++  gsl_vector *hyperparams, // GPR Hyperparameters
++  gsl_vector *work         // work array
 +)
 +{
 +  // Matern covariance function for n-dimensional data.
@@ -344,12 +348,12 @@ index 0000000..ed631de
 +  if (gsl_vector_equal(x1, x2))
 +    nugget = sigma_n*sigma_n;
 +
-+  gsl_vector *tmp = gsl_vector_alloc(x1->size);
-+  gsl_vector_memcpy(tmp, x1);
-+  gsl_vector_sub(tmp, x2);
-+  gsl_vector_div(tmp, &ls); // (x1 - x2) / ls
-+  double r = gsl_blas_dnrm2(tmp);
-+  gsl_vector_free(tmp);
++  //gsl_vector *tmp = gsl_vector_alloc(x1->size);
++  gsl_vector_memcpy(work, x1);
++  gsl_vector_sub(work, x2);
++  gsl_vector_div(work, &ls); // (x1 - x2) / ls
++  double r = gsl_blas_dnrm2(work);
++  //gsl_vector_free(tmp);
 +
 +  // nu = 5/2 Matern covariance
 +  double matern = (1.0 + sqrt(5.0)*r + 5.0*r*r/3.0) * exp(-sqrt(5.0)*r);
@@ -363,7 +367,8 @@ index 0000000..ed631de
 +  gsl_vector *xst,          // Point x_* where you want to evaluate the function.
 +  gsl_vector *hyperparams,  // Hyperparameters for the GPR kernel.
 +  gsl_matrix *x_train,      // Training set points.
-+  gsl_vector *Kinv_dot_y    // The interpolating weights at each training set point.
++  gsl_vector *Kinv_dot_y,   // The interpolating weights at each training set point.
++  gsl_vector *work
 +)
 +{
 +  // Interpolate the function at the point xst using Gaussian process regression.
@@ -389,7 +394,7 @@ index 0000000..ed631de
 +  gsl_vector *Kst = gsl_vector_alloc(n);
 +  for (int i=0; i < n; i++) {
 +    gsl_vector x = gsl_matrix_const_row(x_train, i).vector;
-+    double ker = kernel(xst, &x, hyperparams);
++    double ker = kernel(xst, &x, hyperparams, work);
 +    gsl_vector_set(Kst, i, ker);
 +  }
 +
@@ -438,7 +443,8 @@ index 0000000..ed631de
 +  gsl_matrix *kinv_dot_y_phi,    // Input: kinv_dot_y for dephasing
 +  gsl_matrix *x_train,           // Input: GPR training points
 +  gsl_vector *amp_at_nodes,      // Output: log amplitude at frequency nodes (preallocated)
-+  gsl_vector *phi_at_nodes       // Output: dephasing at frequency nodes (preallocated)
++  gsl_vector *phi_at_nodes,      // Output: dephasing at frequency nodes (preallocated)
++  gsl_vector *work               // Input: workspace
 +)
 +{
 +  // Assemble evaluation point
@@ -454,7 +460,7 @@ index 0000000..ed631de
 +  for (size_t i=0; i<amp_at_nodes->size; i++) {
 +    gsl_vector hyp_amp_i = gsl_matrix_const_row(hyp_amp, i).vector;
 +    gsl_vector kinv_dot_y_amp_i = gsl_matrix_const_row(kinv_dot_y_amp, i).vector;
-+    double pred = gp_predict(xst, &hyp_amp_i, x_train, &kinv_dot_y_amp_i);
++    double pred = gp_predict(xst, &hyp_amp_i, x_train, &kinv_dot_y_amp_i, work);
 +    gsl_vector_set(amp_at_nodes, i, pred);
 +  }
 +
@@ -462,7 +468,7 @@ index 0000000..ed631de
 +  for (size_t i=0; i<phi_at_nodes->size; i++) {
 +    gsl_vector hyp_phi_i = gsl_matrix_const_row(hyp_phi, i).vector;
 +    gsl_vector kinv_dot_y_phi_i = gsl_matrix_const_row(kinv_dot_y_phi, i).vector;
-+    double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i);
++    double pred = gp_predict(xst, &hyp_phi_i, x_train, &kinv_dot_y_phi_i, work);
 +    gsl_vector_set(phi_at_nodes, i, pred);
 +  }
 +
@@ -868,6 +874,9 @@ index 0000000..ed631de
 +  gsl_vector *sur_amp_at_nodes = gsl_vector_alloc(N_amp);
 +  gsl_vector *sur_phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
 +
++  // Allocate workspace for the kernel function
++  gsl_vector *work = gsl_vector_alloc(5); // 5 points
++
 +  retcode |= GPR_evaluation_5D(
 +    q, chi1, chi2, lambda1, lambda2,
 +    sur->hyp_amp,
@@ -876,8 +885,11 @@ index 0000000..ed631de
 +    sur->kinv_dot_y_phi,
 +    sur->x_train,
 +    sur_amp_at_nodes,
-+    sur_phi_at_nodes_tmp
++    sur_phi_at_nodes_tmp,
++    work
 +  );
++
++  gsl_vector_free(work);
 +
 +  // Prepend the point [mf_min, 0] to the phase nodes
 +  // This has already been done in the setup for mf_phi
