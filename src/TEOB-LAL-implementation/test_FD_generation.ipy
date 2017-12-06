@@ -1,0 +1,42 @@
+import numpy as np
+import lal
+import lalsimulation as LS
+
+def FD_waveform_test(Mtot, x, approximant, fHigh=16384.0):
+    q = 1.0/x[0]
+    chi1 = x[1]
+    chi2 = x[2]
+    lambda1 = x[3]
+    lambda2 = x[4]
+    
+    phiRef, deltaF, fLow, fHigh, fRef, distance, inclination = 0, 0.1, 20, 0, 20, 1, 0
+    m1 = q/(1.0+q)*Mtot
+    m2 = 1.0/(1.0+q)*Mtot
+    m1SI, m2SI, chi1, chi2, lambda1, lambda2, nk_max = m1*lal.MSUN_SI, m2*lal.MSUN_SI, chi1, chi2, lambda1, lambda2, -1
+
+    longAscNodes, eccentricity, meanPerAno = 0,0,0
+
+    LALpars = lal.CreateDict()
+    LS.SimInspiralWaveformParamsInsertTidalLambda1(LALpars, lambda1)
+    LS.SimInspiralWaveformParamsInsertTidalLambda2(LALpars, lambda2)
+
+    # Nyquist frequency is set by fHigh
+    # Can set deltaF = 0 to figure out required frequency spacing
+    hp, hc = LS.SimInspiralFD(m1SI, m2SI,
+                     0.0, 0.0, chi1,
+                     0.0, 0.0, chi2,
+                     distance, inclination, phiRef, 
+                     longAscNodes, eccentricity, meanPerAno, 
+                     0.0,
+                     fLow, 16384, fRef,
+                     LALpars,
+                     approximant)
+
+    fHz = np.arange(hp.data.length)*hp.deltaF
+    h = hp.data.data + 1j*hc.data.data
+
+
+x = np.array([1.0/1.5, 0.35, 0.32, 5000.0, 5000.0])
+Mtot=40.0
+
+%timeit FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fHigh=2048.0)
