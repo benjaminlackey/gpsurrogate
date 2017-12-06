@@ -1,4 +1,4 @@
-From 5aa7ec0b118b5c92b16182381c6e79b51d151c87 Mon Sep 17 00:00:00 2001
+From 2a768a1b8bef9a6ad2511bebe958ae0572f0dc86 Mon Sep 17 00:00:00 2001
 From: Michael Puerrer <Michael.Puerrer@ligo.org>
 Date: Tue, 5 Dec 2017 19:38:44 +0100
 Subject: [PATCH] Implement SEOBNRv4T surrogate model
@@ -10,12 +10,12 @@ stars including overall tidal deformability using universal relations.
  lalsimulation/src/LALSimIMR.h                   |    6 +
  lalsimulation/src/LALSimIMREOBNRv2.h            |   10 +
  lalsimulation/src/LALSimIMRSEOBNRROMUtilities.c |    2 +-
- lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 1171 +++++++++++++++++++++++
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 1172 +++++++++++++++++++++++
  lalsimulation/src/LALSimIMRSpinAlignedEOB.c     |    2 +-
  lalsimulation/src/LALSimInspiral.c              |   15 +
  lalsimulation/src/LALSimInspiral.h              |    2 +
  lalsimulation/src/Makefile.am                   |    1 +
- 8 files changed, 1207 insertions(+), 2 deletions(-)
+ 8 files changed, 1208 insertions(+), 2 deletions(-)
  create mode 100644 lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
 
 diff --git a/lalsimulation/src/LALSimIMR.h b/lalsimulation/src/LALSimIMR.h
@@ -71,10 +71,10 @@ index da4c183..dd24c07 100644
  UNUSED static REAL8 Interpolate_Coefficent_Tensor(
 diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
 new file mode 100644
-index 0000000..98add8d
+index 0000000..ed631de
 --- /dev/null
 +++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
-@@ -0,0 +1,1171 @@
+@@ -0,0 +1,1172 @@
 +/*
 + *  Copyright (C) 2017 Michael Puerrer, Ben Lackey
 + *  Reduced Order Model for SEOBNRv4T spin-aligned tidal effective-one-body model
@@ -917,6 +917,7 @@ index 0000000..98add8d
 +  gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_amp, 0),
 +                  gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
 +
++  gsl_vector_free(spline_amp_values);
 +  gsl_vector_free(PN_amp_at_nodes);
 +  gsl_vector_free(PN_phi_at_nodes);
 +  gsl_vector_free(sur_amp_at_nodes);
