@@ -1,0 +1,265 @@
+From b986b0723eba3d276b4cd0cadeb4aaea5fa65e15 Mon Sep 17 00:00:00 2001
+From: Michael Puerrer <Michael.Puerrer@ligo.org>
+Date: Fri, 8 Dec 2017 16:28:52 +0100
+Subject: [PATCH 2/3] Major rewrite: use sparse grids for TF2 everywhere and
+ add corrections
+
+---
+ lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c | 138 ++++++++++++++----------
+ 1 file changed, 79 insertions(+), 59 deletions(-)
+
+diff --git a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+index 9d46301..b633a3f 100644
+--- a/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
++++ b/lalsimulation/src/LALSimIMRSEOBNRv4TSurrogate.c
+@@ -115,6 +115,8 @@ typedef int (*load_dataPtr)(const char*, gsl_vector *, gsl_vector *, gsl_matrix
+ 
+ /**************** Internal functions **********************/
+ 
++UNUSED static void print_gsl_frequency_series(const char filename[], gsl_vector *x, gsl_vector *y);
++
+ static gsl_vector *gsl_vector_prepend_value(gsl_vector *v, double value);
+ 
+ double kernel(
+@@ -222,6 +224,16 @@ static int TaylorF2Amplitude1PN(
+ 
+ /********************* Definitions begin here ********************/
+ 
++UNUSED static void print_gsl_frequency_series(const char filename[], gsl_vector *x, gsl_vector *y) {
++  FILE *fp = fopen(filename, "w");
++  fprintf(stderr, "print_gsl_frequency_series: %s: %zu %zu\n", filename, x->size, y->size);
++  assert(x->size == y->size);
++  for (size_t i=0; i<x->size; i++) {
++    fprintf(fp, "%g\t%g\n", gsl_vector_get(x, i), gsl_vector_get(y, i));
++  }
++  fclose(fp);
++}
++
+ static gsl_vector *gsl_vector_prepend_value(gsl_vector *v, double value) {
+ // Helper function to prepend a value to a gsl_vector
+ // Returns the augmented gsl_vector
+@@ -441,7 +453,7 @@ UNUSED static int Surrogatedata_Init_submodel(
+   ReadHDF5RealVectorDataset(root, "spline_nodes_amp", & (*submodel)->mf_amp);
+   ReadHDF5RealVectorDataset(root, "spline_nodes_phase", & (*submodel)->mf_phi);
+ 
+-  // Frequency grids for TaylorF2 below the surrogate starting frequency
++  // Frequency grids for TaylorF2
+   ReadHDF5RealVectorDataset(root, "TF2_Mf_amp", & (*submodel)->TF2_mf_amp);
+   ReadHDF5RealVectorDataset(root, "TF2_Mf_phi", & (*submodel)->TF2_mf_phi);
+ 
+@@ -705,7 +717,6 @@ static int CheckParameterSpaceBounds(
+   return XLAL_SUCCESS;
+ }
+ 
+-
+ /**
+  * Core function for computing the ROM waveform.
+  * Interpolate projection coefficient data and evaluate coefficients at desired (q, chi1, chi2).
+@@ -771,19 +782,22 @@ static int SurrogateCore(
+   int N_amp_TF2 = sur->TF2_mf_amp->size;
+   int N_phi_TF2 = sur->TF2_mf_phi->size;
+ 
+-  // allowed geometric frequency ranges for
++  // Allowed geometric frequency ranges for
+   // surrogate and supported TaylorF2 low frequency extension
+   double Mf_TF2_min = fmax(gsl_vector_get(sur->TF2_mf_amp, 0),
+-                         gsl_vector_get(sur->TF2_mf_phi,0));
++                         gsl_vector_get(sur->TF2_mf_phi, 0));
+   double Mf_TF2_max = fmin(gsl_vector_get(sur->TF2_mf_amp, N_amp_TF2-1),
+                          gsl_vector_get(sur->TF2_mf_phi, N_phi_TF2-1));
+-
++  // FIXME: rename ROM -> surrogate
+   double Mf_ROM_min = fmax(gsl_vector_get(sur->mf_amp, 0),
+-                           gsl_vector_get(sur->mf_phi,0));
++                           gsl_vector_get(sur->mf_phi, 0));
+   double Mf_ROM_max = fmin(gsl_vector_get(sur->mf_amp, N_amp-1),
+                            gsl_vector_get(sur->mf_phi, N_phi-1));
+ 
+-  XLAL_CHECK(Mf_TF2_max > Mf_ROM_min, XLAL_EFAULT); // sanity check that these regions overlap
++  // sanity checks: sparse grids for TaylorF2 need to contain the
++  // frequency range where the surrogate corrections are applied
++  XLAL_CHECK(Mf_TF2_min < Mf_ROM_min, XLAL_EFAULT);
++  XLAL_CHECK(Mf_TF2_max >= Mf_ROM_max, XLAL_EFAULT);
+ 
+   double fLow_geom = fLow * Mtot_sec;
+   double fHigh_geom = fHigh * Mtot_sec;
+@@ -813,7 +827,7 @@ static int SurrogateCore(
+   gsl_vector *sur_phi_at_nodes_tmp = gsl_vector_alloc(N_phi - 1); // Will prepend a point below
+ 
+   // Allocate workspace for the kernel function
+-  gsl_vector *work = gsl_vector_alloc(5); // 5 points
++  gsl_vector *work = gsl_vector_alloc(5);
+ 
+   retcode |= GPR_evaluation_5D(
+     q, chi1, chi2, lambda1, lambda2,
+@@ -829,53 +843,39 @@ static int SurrogateCore(
+ 
+   gsl_vector_free(work);
+ 
+-  // Prepend the point [mf_min, 0] to the phase nodes
+-  // This has already been done in the setup for mf_phi
+-  gsl_vector *sur_phi_at_nodes = gsl_vector_prepend_value(sur_phi_at_nodes_tmp, 0.0);
+-
+-  double dquadmon1 = 0.0;
+-  double dquadmon2 = 0.0;
+-  gsl_vector *PN_phi_at_nodes = NULL;
+-  retcode |= TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->mf_phi, &PN_phi_at_nodes);
+-
+-  gsl_vector *PN_amp_at_nodes = NULL;
+-  retcode |= TaylorF2Amplitude1PN(eta, sur->mf_amp, &PN_amp_at_nodes);
+-
+   if(retcode != 0) {
+     gsl_vector_free(sur_amp_at_nodes);
+     gsl_vector_free(sur_phi_at_nodes_tmp);
+-    gsl_vector_free(PN_amp_at_nodes);
+-    gsl_vector_free(PN_phi_at_nodes);
+     XLAL_ERROR(retcode);
+   }
+ 
+-  // Setup 1d splines in frequency
+-  gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
+-  gsl_spline *spline_phi = gsl_spline_alloc(gsl_interp_cspline, N_phi);
+-  gsl_vector_add(sur_phi_at_nodes, PN_phi_at_nodes); // stores result in sur_phi_at_nodes
+-  gsl_spline_init(spline_phi, gsl_vector_const_ptr(sur->mf_phi, 0),
+-                  gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
++  // Prepend the point [mf_min, 0] to the phase nodes
++  // This has already been done in the setup for mf_phi
++  gsl_vector *sur_phi_at_nodes = gsl_vector_prepend_value(sur_phi_at_nodes_tmp, 0.0);
+ 
+ 
++  // Spline the surrogate amplitude and phase corrections in frequency
++  // FIXME: rename spline_amp -> spline_amp_sur, acc_amp -> acc_amp_sur and same for phi
+   gsl_interp_accel *acc_amp = gsl_interp_accel_alloc();
+   gsl_spline *spline_amp = gsl_spline_alloc(gsl_interp_cspline, N_amp);
+-  // Compute amplitude = PN_amplitude * exp(log_surrogate_amplitude)
+-  gsl_vector *spline_amp_values = gsl_vector_alloc(N_amp);
+-  for (int i=0; i<N_amp; i++) {
+-    double amp_i = gsl_vector_get(PN_amp_at_nodes, i) * exp(gsl_vector_get(sur_amp_at_nodes, i));
+-    gsl_vector_set(spline_amp_values, i, amp_i);
+-  }
+-
+   gsl_spline_init(spline_amp, gsl_vector_const_ptr(sur->mf_amp, 0),
+-                  gsl_vector_const_ptr(spline_amp_values, 0), N_amp);
++                  gsl_vector_const_ptr(sur_amp_at_nodes, 0), N_amp);
++
++  gsl_interp_accel *acc_phi = gsl_interp_accel_alloc();
++  gsl_spline *spline_phi = gsl_spline_alloc(gsl_interp_cspline, N_phi);
++  gsl_spline_init(spline_phi, gsl_vector_const_ptr(sur->mf_phi, 0),
++                  gsl_vector_const_ptr(sur_phi_at_nodes, 0), N_phi);
++
++print_gsl_frequency_series("sur_amp_at_nodes.txt", sur->mf_amp, sur_amp_at_nodes);
++print_gsl_frequency_series("sur_phi_at_nodes.txt", sur->mf_amp, sur_phi_at_nodes);
+ 
+-  gsl_vector_free(spline_amp_values);
+-  gsl_vector_free(PN_amp_at_nodes);
+-  gsl_vector_free(PN_phi_at_nodes);
+   gsl_vector_free(sur_amp_at_nodes);
+   gsl_vector_free(sur_phi_at_nodes);
+ 
+-  // Now set up splines for low frequency extension using TayorF2
++
++  // Evaluate TaylorF2 amplitude and phase on sparse grids
++  double dquadmon1 = 0.0;
++  double dquadmon2 = 0.0;
+   gsl_vector *TF2_phi_at_nodes = NULL;
+   retcode |= TaylorF2Phasing(Mtot, q, chi1, chi2, lambda1, lambda2, dquadmon1, dquadmon2, sur->TF2_mf_phi, &TF2_phi_at_nodes);
+ 
+@@ -887,19 +887,47 @@ static int SurrogateCore(
+     gsl_vector_free(TF2_phi_at_nodes);
+     XLAL_ERROR(retcode);
+   }
++print_gsl_frequency_series("TF2_amp_at_nodes.txt", sur->TF2_mf_amp, TF2_amp_at_nodes);
++print_gsl_frequency_series("TF2_phi_at_nodes.txt", sur->TF2_mf_phi, TF2_phi_at_nodes);
+ 
+-  gsl_interp_accel *acc_phi_TF2 = gsl_interp_accel_alloc();
+-  gsl_spline *spline_phi_TF2 = gsl_spline_alloc(gsl_interp_cspline, N_phi_TF2);
+-  gsl_spline_init(spline_phi_TF2, gsl_vector_const_ptr(sur->TF2_mf_phi, 0),
+-                  gsl_vector_const_ptr(TF2_phi_at_nodes, 0), N_phi_TF2);
++  // Spline TaylorF2 amplitude and phase
+ 
++  // Add the surrogate amplitude correction to the TaylorF2 spline data where the surrogate has support in frequency
+   gsl_interp_accel *acc_amp_TF2 = gsl_interp_accel_alloc();
+   gsl_spline *spline_amp_TF2 = gsl_spline_alloc(gsl_interp_cspline, N_amp_TF2);
++  gsl_vector *spline_amp_values = gsl_vector_alloc(N_amp_TF2);
++  for (int i=0; i<N_amp_TF2; i++) {
++    double Mf = gsl_vector_get(sur->TF2_mf_amp, i);
++    double amp_i = gsl_vector_get(TF2_amp_at_nodes, i);
++    if ((Mf >= Mf_ROM_min) & (Mf <= Mf_ROM_max))
++      amp_i *= exp(gsl_spline_eval(spline_amp, Mf, acc_amp));
++    gsl_vector_set(spline_amp_values, i, amp_i);
++  }
+   gsl_spline_init(spline_amp_TF2, gsl_vector_const_ptr(sur->TF2_mf_amp, 0),
+-                  gsl_vector_const_ptr(TF2_amp_at_nodes, 0), N_amp_TF2);
++                  gsl_vector_const_ptr(spline_amp_values, 0), N_amp_TF2);
++
++  // Add the surrogate phase to the TaylorF2 spline data where the surrogate has support in frequency
++  gsl_interp_accel *acc_phi_TF2 = gsl_interp_accel_alloc();
++  gsl_spline *spline_phi_TF2 = gsl_spline_alloc(gsl_interp_cspline, N_phi_TF2);
++  gsl_vector *spline_phi_values = gsl_vector_alloc(N_phi_TF2);
++  for (int i=0; i<N_phi_TF2; i++) {
++    double Mf = gsl_vector_get(sur->TF2_mf_phi, i);
++    double phi_i = gsl_vector_get(TF2_phi_at_nodes, i);
++    if ((Mf >= Mf_ROM_min) & (Mf <= Mf_ROM_max))
++      phi_i += gsl_spline_eval(spline_phi, Mf, acc_phi);
++    gsl_vector_set(spline_phi_values, i, phi_i);
++  }
++  gsl_spline_init(spline_phi_TF2, gsl_vector_const_ptr(sur->TF2_mf_phi, 0),
++                  gsl_vector_const_ptr(spline_phi_values, 0), N_phi_TF2);
++
++print_gsl_frequency_series("amp_at_nodes.txt", sur->TF2_mf_amp, spline_amp_values);
++print_gsl_frequency_series("phi_at_nodes.txt", sur->TF2_mf_phi, spline_phi_values);
+ 
+   gsl_vector_free(TF2_amp_at_nodes);
+   gsl_vector_free(TF2_phi_at_nodes);
++  gsl_vector_free(spline_amp_values);
++  gsl_vector_free(spline_phi_values);
++
+ 
+ 
+   // Now setup LAL datastructures for waveform polarizations
+@@ -974,10 +1002,7 @@ static int SurrogateCore(
+ 
+   // Evaluate reference phase for setting phiRef correctly
+   double phase_change = 0.0;
+-  if (fRef_geom < Mf_ROM_min)
+-    phase_change = gsl_spline_eval(spline_phi_TF2, fRef_geom, acc_phi_TF2) - 2*phiRef;
+-  else
+-    phase_change = gsl_spline_eval(spline_phi, fRef_geom, acc_phi) - 2*phiRef;
++  phase_change = gsl_spline_eval(spline_phi_TF2, fRef_geom, acc_phi_TF2) - 2*phiRef;
+ 
+   // Compute BNS merger frequency
+   TidalEOBParams tidal1, tidal2;
+@@ -987,25 +1012,20 @@ static int SurrogateCore(
+   tidal2.lambda2Tidal = lambda2 * pow(tidal2.mByM,5);
+   double Momega22_BNS_mrg = XLALSimNSNSMergerFreq(&tidal1, &tidal2);
+ 
++  // The maximum frequency for which we generate waveform data can be as high as
++  // the maximum frequency covered by the surrogate or lower if the estimate of
++  // the BNS merger frequency is below this number.
+   Mf_ROM_max = gsl_vector_get(sur->mf_phi, N_phi-1);
+   double Mf_final = fmin(Momega22_BNS_mrg, Mf_ROM_max);
+ 
+   // Assemble waveform from aplitude and phase
+   for (UINT4 i=0; i<freqs->length; i++) { // loop over frequency points in sequence
+-    double A, phase;
+     double f = freqs->data[i];
+     if (f > Mf_final) continue; // We're beyond the highest allowed frequency;
+     // since freqs may not be ordered, we'll just skip the current frequency and leave zero in the buffer
+     int j = i + offset; // shift index for frequency series if needed
+-    if (f < Mf_ROM_min) {
+-      // low frequency: vanilla spline-interpolated TaylorF2
+-      A = gsl_spline_eval(spline_amp_TF2, f, acc_amp_TF2);
+-      phase = gsl_spline_eval(spline_phi_TF2, f, acc_phi_TF2) - phase_change;
+-    } else {
+-      // higher frequency: TaylorF2 + surrogate corrections
+-      A = gsl_spline_eval(spline_amp, f, acc_amp);
+-      phase = gsl_spline_eval(spline_phi, f, acc_phi) - phase_change;
+-    }
++    double A = gsl_spline_eval(spline_amp_TF2, f, acc_amp_TF2);
++    double phase = gsl_spline_eval(spline_phi_TF2, f, acc_phi_TF2) - phase_change;
+     COMPLEX16 htilde = s*amp0*A * (cos(phase) + I*sin(phase));//cexp(I*phase);
+     pdata[j] =      pcoef * htilde;
+     cdata[j] = -I * ccoef * htilde;
+-- 
+2.5.4 (Apple Git-61)
+
