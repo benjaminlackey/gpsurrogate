@@ -106,6 +106,66 @@ def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
     return ts, hp.data.data, hc.data.data
 
 #------------------------------------------------------------------------------
+
+def FD_waveform(m1, m2, s1z, s2z, lambda1, lambda2,
+                    f_min, f_max=2048.0,
+                    deltaF=0.0, distance=1.0, inclination=0.0,
+                    approximant='TEOBv4', verbose=True):
+    """Compute waveform in the Fourier domain using SimInspiralFD
+    deltaF=0 selects required frequency resolution (the inverse of the selected deltaF will be a power of 2)
+    Returns frequency in Hz and h = hp + 1j*hc
+    """
+
+    phiRef, fRef = 0.0, f_min 
+    m1SI, m2SI = m1*lal.MSUN_SI, m2*lal.MSUN_SI
+
+    longAscNodes, eccentricity, meanPerAno = 0,0,0
+
+    LALpars = lal.CreateDict()
+    LS.SimInspiralWaveformParamsInsertTidalLambda1(LALpars, lambda1)
+    LS.SimInspiralWaveformParamsInsertTidalLambda2(LALpars, lambda2)
+
+    lal_approx = LS.GetApproximantFromString(approximant)
+
+    # Nyquist frequency is set by fHigh
+    # Can set deltaF = 0 to figure out required frequency spacing; the chosen deltaF depends on fLow
+    
+    # Documentation from LALSimInspiral.c
+    #
+    #  * This routine can generate TD approximants and transform them into the frequency domain.
+    #  * Waveforms are generated beginning at a slightly lower starting frequency and tapers
+    #  * are put in this early region so that the waveform smoothly turns on.
+    #  *
+    #  * If an FD approximant is used, this routine applies tapers in the frequency domain
+    #  * between the slightly-lower frequency and the requested f_min.  Also, the phase of the
+    #  * waveform is adjusted to introduce a time shift.  This time shift should allow the
+    #  * resulting waveform to be Fourier transformed into the time domain without wrapping
+    #  * the end of the waveform to the beginning.
+    #  *
+    #  * This routine assumes that f_max is the Nyquist frequency of a corresponding time-domain
+    #  * waveform, so that deltaT = 0.5 / f_max.  If deltaF is set to 0 then this routine computes
+    #  * a deltaF that is small enough to represent the Fourier transform of a time-domain waveform.
+    #  * If deltaF is specified but f_max / deltaF is not a power of 2, and the waveform approximant
+    #  * is a time-domain approximant, then f_max is increased so that f_max / deltaF is the next
+    #  * power of 2.  (If the user wishes to discard the extra high frequency content, this must
+    #  * be done separately.)
+    
+    hp, hc = LS.SimInspiralFD(m1SI, m2SI,
+                     0.0, 0.0, s1z,
+                     0.0, 0.0, s2z,
+                     distance, inclination, phiRef, 
+                     longAscNodes, eccentricity, meanPerAno, 
+                     deltaF,
+                     f_min, f_max, fRef,
+                     LALpars,
+                     lal_approx)
+
+    fHz = np.arange(hp.data.length)*hp.deltaF
+    h = hp.data.data + 1j*hc.data.data
+    
+    return fHz, h
+
+#------------------------------------------------------------------------------
 class domain:
     """
     Store parameter ranges for 5D model domain
@@ -313,6 +373,68 @@ def example_waveform():
                         approximant='TEOBv4', verbose=True)
     return t, hp, hc
 
+
+#------------------------------------------------------------------------------
+
+def TEOB_process_array_FD(i, M, 
+            q, chi1, chi2, lambda1, lambda2,
+            f_min, iota, outdir, comm,
+            fs, distance, approximant='TEOBv4',
+            use_Nyquist_grid_near_merger=True,
+            allow_skip=True, verbose=True,
+            f_max=2048.0, deltaF=0.0):
+    '''
+    Helper function for workers
+    Assumes m1 >= m2
+    '''
+    args = [i, M, comm.Get_rank(), q, chi1, chi2, lambda1, lambda2, f_min,
+            iota, fs, distance]
+
+    config_str = 'TEOB_FD_%d.npy'%i
+
+    if os.path.isfile(outdir+config_str) and allow_skip:
+        if verbose:
+            print '*** Skipping existing TEOB configuration for parameters:', \
+                args
+        return
+    try:
+        print 'Generate wf via SimInspiralFD:', args
+        print q
+        m1 = M * q/(1.0+q)
+        m2 = M * 1.0/(1.0+q)
+        fHz, h = FD_waveform(m1, m2, chi1, chi2, lambda1, lambda2,
+                    f_min, f_max=f_max,
+                    deltaF=deltaF, distance=distance, inclination=iota,
+                    approximant=approximant, verbose=True)
+
+        # Save raw data
+        config_str_raw = 'TEOB_FD_%d.npy'%i
+        data_save_raw = np.array([fHz, h])
+        np.save(outdir+config_str_raw, data_save_raw)
+
+        if verbose:
+            print '*** TEOB_process_array_FD finished for parameters:', args
+    except Exception as e:
+        print '***********************************************************************'
+        print '*** TEOB_process_array_FD failed for parameters:', args
+        print '*** Error %s' % e
+        print '***********************************************************************'
+
+        f = open('FAILED_process_array_FD_PARAMS.txt', 'a')
+        print args
+        s = '%.16e'%(args[1])
+        for arg in args[2:]:
+            if (type(arg) == np.unicode) or (type(arg) == str):
+                s += ' '+str(arg)
+            elif type(arg) == np.ndarray:
+                for a in arg:
+                    s += ' %.16e'%(a)
+            else:
+                s += ' %.16e'%(arg)
+        f.write('%s\n'%s)
+
+        traceback.print_tb(sys.exc_info()[2])
+ 
 #------------------------------------------------------------------------------
 def TEOB_process_array_TD(i, M, 
             q, chi1, chi2, lambda1, lambda2,
@@ -460,6 +582,7 @@ def main():
     iota = opts['iota']
     distance = opts['distance_MPC']*1e6
     approximant = str(opts['approximant'])
+    use_FD = opts['use_FD']
     
     try:
         verbose = opts['verbose']
@@ -526,11 +649,19 @@ def main():
         if (rank == 0) and verbose: print 'Chunk %d out of %d.' %(j,m)
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
         # Note: We expect q <= 1. TEOB_process_array_TD() uses the opposite convention.
-        TEOB_process_array_TD(i, M, 
+        if not use_FD:
+            TEOB_process_array_TD(i, M, 
                     1.0/q, chi1, chi2, lambda1, lambda2,
                     f_min, iota, tmpdir, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
+        else:
+            TEOB_process_array_FD(i, M, 
+                    1.0/q, chi1, chi2, lambda1, lambda2,
+                    f_min, iota, tmpdir, comm,
+                    fs, distance, approximant=approximant,
+                    allow_skip=True, verbose=True,
+                    f_max=opts['f_max'], deltaF=opts['deltaF'])
 
     # Remaining configurations
     if (rank == 0) and verbose: print 'Remaining partial chunk'
@@ -538,18 +669,26 @@ def main():
     i = j + rank
     if (i < n):
         q, chi1, chi2, lambda1, lambda2 = cfgs[i]
-        TEOB_process_array_TD(i, M, 
+        if not use_FD:
+            TEOB_process_array_TD(i, M, 
                     1.0/q, chi1, chi2, lambda1, lambda2,
                     f_min, iota, tmpdir, comm,
                     fs, distance, approximant=approximant,
                     allow_skip=True, verbose=True)
+        else:
+           TEOB_process_array_FD(i, M, 
+                    1.0/q, chi1, chi2, lambda1, lambda2,
+                    f_min, iota, tmpdir, comm,
+                    fs, distance, approximant=approximant,
+                    allow_skip=True, verbose=True,
+                    f_max=opts['f_max'], deltaF=opts['deltaF'])
 
     if rank == 0: print 'Waiting on other procs...'
     comm.Barrier()
     if rank == 0: print '=============================================================='
 
     # Load all .npy and save as hdf5
-    if rank == 0:
+    if (rank == 0) and not use_FD:
         print 'Loading npy files for all configurations'
 
         # FIXME: add git branch and hash
@@ -599,9 +738,9 @@ def main():
 
         fh5.close()
     
-        print '=============================================================='
-        print 'All Done!'
-        print '=============================================================='
+    print '=============================================================='
+    print 'All Done!'
+    print '=============================================================='
 
 if __name__ == "__main__":
     main()
