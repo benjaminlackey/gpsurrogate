@@ -1,0 +1,35 @@
+prefix = '/home/mpuer/pe/local/'
+moduleset = [ 'daswg', 'lsc_mpuerrer', 'github', 'sourceforge', 'gnu', 'gnome', 'bitbucket', 'nds2', 'healpix' ]
+modulesets_dir = '/home/mpuer/pe/modulesets'
+checkoutroot = '/home/mpuer/pe/src'
+branches['lal'] = (None,'master')
+branches['laldetchar'] = (None,'master')
+branches['lalframe'] = (None,'master')
+branches['lalmetaio'] = (None,'master')
+branches['lalxml'] = (None,'master')
+branches['lalburst'] = (None,'master')
+branches['lalpulsar'] = (None,'master')
+branches['lalstochastic'] = (None,'master')
+branches['lalinspiral'] = (None,'master')
+branches['lalsimulation'] = (None,'master')
+branches['lalinference'] = (None,'master')
+branches['lalapps'] = (None,'master')
+branches['glue'] = (None,'master')
+branches['pylal'] = (None,'master')
+branches['ligo'] = (None,'master')
+
+intel_executables = ['icc','icpc','ifort','mpiicc','mpiicpc','mpiifort','xiar']
+
+from distutils.spawn import find_executable
+def is_in_path(name):
+    """Check whether `name` is on PATH."""
+    return find_executable(name) is not None
+
+if all([is_in_path(name) for name in intel_executables]):
+   icc = True
+
+del name
+del intel_executables
+
+os.environ['LAL_DATA_PATH'] = '/home/mpuer/ROM_data/'
+
