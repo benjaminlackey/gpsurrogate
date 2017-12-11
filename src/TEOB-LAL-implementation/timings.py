@@ -3,6 +3,7 @@
 import numpy as np
 import lal
 import lalsimulation as LS
+import sys
 
 
 def FD_waveform_test(Mtot, x, approximant, fLow=20.0, fHigh=16384.0, deltaF=0):
@@ -160,11 +161,12 @@ def inner(_it, _timer%(init)s):
             print "Compiler time: %.2f s" % tc
 
     print 'Finished ', stmt, number, repeat, best, tc, retval_best
+    sys.stdout.flush()
 
     return number, repeat, best, tc, retval_best
 
 
-f_mins = np.arange(20.0, 100.0, 5)
+f_mins = np.arange(10.0, 100.0, 5)
 Mtot = 2*1.35
 x = np.array([1.0/1.5, 0.35, -0.12, 2000.0, 2750.0])
 xnT = np.array([1.0/1.5, 0.35, -0.12, 0.0, 0.0])
@@ -178,11 +180,7 @@ tim_TF2 = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.TaylorF2, fLow=
  for f_min in f_mins])
 np.save('tim_TF2', tim_TF2)
 
-ttim_SEOBNRv4T = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.TEOBv4, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
- for f_min in f_mins])
-np.save('tim_SEOBNRv4T', tim_SEOBNRv4T)
-
-im_SEOBNRv4_ROM = np.array([timeit_ipython("FD_waveform_test(Mtot, xnT, LS.SEOBNRv4_ROM, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
+tim_SEOBNRv4_ROM = np.array([timeit_ipython("FD_waveform_test(Mtot, xnT, LS.SEOBNRv4_ROM, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
 np.save('tim_SEOBNRv4_ROM', tim_SEOBNRv4_ROM)
 
@@ -193,6 +191,10 @@ np.save('tim_SEOBNRv4_ROM_NRTidal', tim_SEOBNRv4_ROM_NRTidal)
 tim_IMRPhenomD_NRTidal = np.array([timeit_ipython("FD_waveform_test(Mtot, xNSBH, LS.IMRPhenomD_NRTidal, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
 np.save('tim_IMRPhenomD_NRTidal', tim_IMRPhenomD_NRTidal)
+
+tim_SEOBNRv4T = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.TEOBv4, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
+ for f_min in f_mins])
+np.save('tim_SEOBNRv4T', tim_SEOBNRv4T)
 
 print 'All done.'
 
