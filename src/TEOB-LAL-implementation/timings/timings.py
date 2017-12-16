@@ -172,9 +172,9 @@ x = np.array([1.0/1.5, 0.35, -0.12, 2000.0, 2750.0])
 xnT = np.array([1.0/1.5, 0.35, -0.12, 0.0, 0.0])
 xNSBH = np.array([1.0/1.5, 0.35, -0.12, 0.0, 2500.0])
 
-#tim_sur = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
-# for f_min in f_mins])
-#np.save('tim_sur', tim_sur)
+tim_sur = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
+ for f_min in f_mins])
+np.save('tim_sur', tim_sur)
 
 tim_TF2 = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.TaylorF2, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
