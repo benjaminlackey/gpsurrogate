@@ -1,6 +1,7 @@
 {
     "outdir": "/work/mpuer/projects/gpsurrogate/QM/20Hz/validation/",
     "domain": "TD",
+    "use_FD": false,
     "Total_mass_MSUN": 2.0,
     "Sampling_rate_Hz": 32768.0,
     "f_min": 20.0,
