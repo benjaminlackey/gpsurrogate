@@ -2,10 +2,11 @@
 
 # coding: utf-8
 
-# Hack so we doo not pick up lal packages in /usr/lib/python2.7/dist-packages
+# Hack so we do not pick up lal packages in /usr/lib/python2.7/dist-packages
 import sys
-sys.path.insert(0, '/home/mpuer/lsc/TEOBBNS/lib/python2.7/site-packages')
-sys.path.insert(1, '/home/mpuer/.local/lib/python2.7/site-packages/')
+#sys.path.insert(0, '/home/mpuer/lsc/TEOBBNS/lib/python2.7/site-packages')
+#sys.path.insert(0, '/home/mpuer/SEOBNRv4T/lib/python2.7/site-packages')
+#sys.path.insert(1, '/home/mpuer/.local/lib/python2.7/site-packages/')
 
 import lal
 import lalsimulation as LS
@@ -38,13 +39,13 @@ from tqdm import *
 def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
                     f_min, 
                     delta_t=1.0/16384.0, distance=1.0, inclination=0.0,
-                    approximant='TEOBv4', verbose=True):
+                    approximant='SEOBNRv4T', verbose=True):
     """EOB waveform with aligned spin and tidal interactions. 
     l=3 tidal interaction and l=2,3 f-mode calculated with universal relations.
     
     Parameters
     ----------
-    approximant : 'TEOBv2' or 'TEOBv4'
+    approximant : 'TEOBv2' or 'TEOBv4' or the new names 'SEOBNRv2T' or 'SEOBNRv4T'.
         Based on the inspiral model given by 'SEOBNRv2' or 'SEOBNRv4'.
     
     Returns
@@ -64,8 +65,8 @@ def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
     meanPerAno = 0.
     
     # Set the EOB approximant
-    if (approximant not in ['TEOBv2', 'TEOBv4']):
-        raise Exception, "Approximant must be 'TEOBv2' or 'TEOBv4'."
+    if (approximant not in ['TEOBv2', 'TEOBv4', 'SEOBNRv2T', 'SEOBNRv4T']):
+        raise Exception, "Approximant must be 'TEOBv2' or 'TEOBv4' or 'SEOBNRv2T' or 'SEOBNRv4T'."
     lal_approx = LS.GetApproximantFromString(approximant)
     
     # Insert matter parameters
@@ -110,7 +111,7 @@ def spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
 def FD_waveform(m1, m2, s1z, s2z, lambda1, lambda2,
                     f_min, f_max=2048.0,
                     deltaF=0.0, distance=1.0, inclination=0.0,
-                    approximant='TEOBv4', verbose=True):
+                    approximant='SEOBNRv4T', verbose=True):
     """Compute waveform in the Fourier domain using SimInspiralFD
     deltaF=0 selects required frequency resolution (the inverse of the selected deltaF will be a power of 2)
     Returns frequency in Hz and h = hp + 1j*hc
@@ -340,7 +341,7 @@ def time_grid_for_longest_waveform(Mtot, f_min, outfile, deg=3, abstol=5e-5):
     t, hp, hc = spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
                         f_min,
                         distance=1.0, inclination=0.0, delta_t=1.0/16384.0,
-                        approximant='TEOBv4', verbose=False)
+                        approximant='SEOBNRv4T', verbose=False)
     # post-process TD data
     h = hp - 1j * hc
     amp = np.abs(h)
@@ -370,7 +371,7 @@ def example_waveform():
     t, hp, hc = spin_tidal_eob(m1, m2, s1z, s2z, lambda1, lambda2,
                         f_min,
                         distance=1.0, inclination=0.0, delta_t=1.0/16384.0,
-                        approximant='TEOBv4', verbose=True)
+                        approximant='SEOBNRv4T', verbose=True)
     return t, hp, hc
 
 
@@ -379,7 +380,7 @@ def example_waveform():
 def TEOB_process_array_FD(i, M, 
             q, chi1, chi2, lambda1, lambda2,
             f_min, iota, outdir, comm,
-            fs, distance, approximant='TEOBv4',
+            fs, distance, approximant='SEOBNRv4T',
             use_Nyquist_grid_near_merger=True,
             allow_skip=True, verbose=True,
             f_max=2048.0, deltaF=0.0):
