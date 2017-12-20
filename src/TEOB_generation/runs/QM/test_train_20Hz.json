@@ -1,0 +1,13 @@
+{
+    "outdir": "/work/mpuer/projects/gpsurrogate/QM/20Hz/train/",
+    "domain": "TD",
+    "Total_mass_MSUN": 2.0,
+    "Sampling_rate_Hz": 32768.0,
+    "f_min": 20.0,
+    "iota": 0.0,
+    "distance_MPC": 1.0,
+    "random" : false,
+    "verbose": false,
+    "approximant": "SEOBNRv4T",
+    "cfgfile": "/home/mpuer/projects/gpsurrogate/src/TEOB_generation/runs/set1/params_trainset_corners_lhd.txt"
+}
