@@ -10,7 +10,7 @@ import lalsimulation
 
 from constants import *
 import waveform as wave
-
+import taylorf2
 
 ################################################################################
 #                         Names of available approximants                      #
@@ -46,9 +46,10 @@ def print_fd_approximants():
 #            Wrappers for lalsimulation TD and FD waveform generators          #
 ################################################################################
 
-def lalsim_td_waveform(long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
-                       phi_ref=0.0, f_ref=None,
-                       phase_order=-1, amplitude_order=-1, spin_order=-1, tidal_order=-1, **p):
+def lalsim_td_waveform(
+    long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
+    phi_ref=0.0, f_ref=None,
+    phase_order=-1, amplitude_order=-1, spin_order=-1, tidal_order=-1, **p):
     """Wrapper for lalsimulation.SimInspiralChooseTDWaveform.
     Simplified version of pycbc.waveform.get_td_waveform wrapper.
 
@@ -100,9 +101,11 @@ def lalsim_td_waveform(long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
     return wave.Waveform.from_hp_hc(xs, hp.data.data, hc.data.data)
 
 
-def lalsim_fd_waveform(long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
-                       phi_ref=0.0, f_ref=None,
-                       phase_order=-1, amplitude_order=-1, spin_order=-1, tidal_order=-1, **p):
+def lalsim_fd_waveform(
+    long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
+    phi_ref=0.0, f_ref=None,
+    phase_order=-1, amplitude_order=-1, spin_order=-1, tidal_order=-1,
+    quad1=None, quad2=None, **p):
     """Wrapper for lalsimulation.SimInspiralChooseTDWaveform.
     Simplified version of pycbc.waveform.get_td_waveform wrapper.
 
@@ -132,6 +135,18 @@ def lalsim_fd_waveform(long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
         lalsimulation.SimInspiralWaveformParamsInsertTidalLambda1(lal_pars, p['lambda1'])
     if p['lambda2']:
         lalsimulation.SimInspiralWaveformParamsInsertTidalLambda2(lal_pars, p['lambda2'])
+    # Add spin-induced quadrupole terms. Default is universal relations.
+    # dQuadMon1 = quad1 - 1
+    # dQuadMon2 = quad2 - 1
+    if quad1==None:
+        quad1 = taylorf2.quad_of_lambda_fit(p['lambda1'])
+    if quad2==None:
+        quad2 = taylorf2.quad_of_lambda_fit(p['lambda2'])
+    lalsimulation.SimInspiralWaveformParamsInsertdQuadMon1(lal_pars, quad1-1.0)
+    lalsimulation.SimInspiralWaveformParamsInsertdQuadMon2(lal_pars, quad2-1.0)
+    print quad1, quad2
+    print 'dQuadMon1 =', lalsimulation.SimInspiralWaveformParamsLookupdQuadMon1(lal_pars)
+    print 'dQuadMon2 =', lalsimulation.SimInspiralWaveformParamsLookupdQuadMon2(lal_pars)
 
     # Set Approximant (C enum structure) corresponding to approximant string
     lal_approx = lalsimulation.GetApproximantFromString(p['approximant'])
@@ -147,24 +162,23 @@ def lalsim_fd_waveform(long_asc_nodes=0.0, eccentricity=0.0, mean_per_ano=0.0,
         float(p['delta_f']), float(p['f_min']), float(p['f_max']), float(f_ref),
         lal_pars, lal_approx)
 
-    #return hp, hc
     # Extract data from lalsimulation's structures
     # The first data point in hp.data.data corresponds to f=0 not f=f_min
-    # TODO: Should you just truncate data below f_min here? Not sure.
-    xs = hp.deltaF*np.arange(hp.data.length)
-    return wave.Waveform.from_hp_hc(xs, hp.data.data, hc.data.data)
+    fs = hp.deltaF*np.arange(hp.data.length)
+    return wave.Waveform.from_hp_hc(fs, hp.data.data, hc.data.data)
 
 
 ################################################################################
 #          lalsimulation TD and FD waveforms in dimensionless units            #
 ################################################################################
 
-def dimensionless_td_waveform(approximant='SpinTaylorT4', q=1.0,
-                              spin1x=0.0, spin1y=0.0, spin1z=0.0,
-                              spin2x=0.0, spin2y=0.0, spin2z=0.0,
-                              lambda1=0.0, lambda2=0.0,
-                              amplitude_order=-1, phase_order=-1,
-                              mf_min=0.001, delta_tbym=10.0):
+def dimensionless_td_waveform(
+    approximant='SpinTaylorT4', q=1.0,
+    spin1x=0.0, spin1y=0.0, spin1z=0.0,
+    spin2x=0.0, spin2y=0.0, spin2z=0.0,
+    lambda1=0.0, lambda2=0.0,
+    amplitude_order=-1, phase_order=-1, spin_order=-1, tidal_order=-1,
+    mf_min=0.001, delta_tbym=10.0):
     """Generate dimensionless time-domain waveforms.
     Take dimensionless arguments and return dimensionless waveform.
     Spins are defined at the reference frequency which is set to mf_lower here.
@@ -200,22 +214,21 @@ def dimensionless_td_waveform(approximant='SpinTaylorT4', q=1.0,
         lambda1=lambda1, lambda2=lambda2,
         distance=distance, inclination=inclination,
         amplitude_order=amplitude_order, phase_order=phase_order,
+        spin_order=spin_order, tidal_order=tidal_order,
         delta_t=delta_t, f_min=f_min)
-
-    # # Zero the start time and phase.
-    # hphys.add_x(-hphys.x[0])
-    # hphys.add_phase(remove_start_phase=True)
 
     # physical -> dimensionless:
     return wave.physical_to_dimensionless_time(hphys, mtot, distance)
 
 
-def dimensionless_fd_waveform(approximant='TaylorF2', q=1.0,
-                              spin1x=0.0, spin1y=0.0, spin1z=0.0,
-                              spin2x=0.0, spin2y=0.0, spin2z=0.0,
-                              lambda1=0.0, lambda2=0.0,
-                              amplitude_order=-1, phase_order=-1,
-                              mf_min=0.001, mf_max=MF_ISCO, delta_mf=1.0e-6):
+def dimensionless_fd_waveform(
+    approximant='TaylorF2', q=1.0,
+    spin1x=0.0, spin1y=0.0, spin1z=0.0,
+    spin2x=0.0, spin2y=0.0, spin2z=0.0,
+    lambda1=0.0, lambda2=0.0,
+    amplitude_order=-1, phase_order=-1, spin_order=-1, tidal_order=-1,
+    quad1=None, quad2=None,
+    mf_min=0.001, mf_max=MF_ISCO, delta_mf=1.0e-6):
     """Generate dimensionless frequency-domain waveforms.
     Take dimensionless arguments and return dimensionless waveform.
     Spins are defined at the reference frequency which is set to mf_lower here.
@@ -254,6 +267,8 @@ def dimensionless_fd_waveform(approximant='TaylorF2', q=1.0,
         lambda1=lambda1, lambda2=lambda2,
         distance=distance, inclination=inclination,
         amplitude_order=amplitude_order, phase_order=phase_order,
+        spin_order=spin_order, tidal_order=tidal_order,
+        quad1=quad1, quad2=quad2,
         delta_f=delta_f, f_min=f_min, f_max=f_max)
 
     # physical -> dimensionless:

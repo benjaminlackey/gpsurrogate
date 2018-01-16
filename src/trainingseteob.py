@@ -138,20 +138,20 @@ class ConditionedWaveform(object):
     def log_spaced_in_frequency_domain(self, trunc_i, trunc_f, npoints=10000):
         wave.resample_uniform(self.h, xi=trunc_i, xf=trunc_f, npoints=npoints, spacing='log', order=2)
 
-    def difference_with_taylorf2(self, params):
-        """Compare with TaylorF2 waveform.
-        """
-        q, spin1z, spin2z, lambda1, lambda2 = params
-        mf = self.h.x
-        h_ref = taylorf2.dimensionless_taylorf2_waveform(
-            mf=mf, q=q,
-            spin1z=spin1z, spin2z=spin2z,
-            lambda1=lambda1, lambda2=lambda2)
-
-        h_ref.add_phase(remove_start_phase=True)
-        npoints = len(mf)
-        dh = train.lnamp_phase_difference(self.h, h_ref, npoints=npoints, spacing='log', order=2)
-        return h_ref, dh
+    # def difference_with_taylorf2(self, params):
+    #     """Compare with TaylorF2 waveform.
+    #     """
+    #     q, spin1z, spin2z, lambda1, lambda2 = params
+    #     mf = self.h.x
+    #     h_ref = taylorf2.dimensionless_taylorf2_waveform(
+    #         mf=mf, q=q,
+    #         spin1z=spin1z, spin2z=spin2z,
+    #         lambda1=lambda1, lambda2=lambda2)
+    #
+    #     h_ref.add_phase(remove_start_phase=True)
+    #     npoints = len(mf)
+    #     dh = train.lnamp_phase_difference(self.h, h_ref, npoints=npoints, spacing='log', order=2)
+    #     return h_ref, dh
 
 
 def moving_average_geometric_range(fs, ys, dfbyf, fbound_low=None, fbound_high=None):
@@ -204,7 +204,7 @@ def moving_average_geometric_range(fs, ys, dfbyf, fbound_low=None, fbound_high=N
     return ymovavg
 
 
-def difference_with_taylorf2(h, params):
+def difference_with_taylorf2(h, params, quad1=None, quad2=None):
     """Compare with TaylorF2 waveform.
     """
     q, spin1z, spin2z, lambda1, lambda2 = params
@@ -212,7 +212,8 @@ def difference_with_taylorf2(h, params):
     h_ref = taylorf2.dimensionless_taylorf2_waveform(
         mf=mf, q=q,
         spin1z=spin1z, spin2z=spin2z,
-        lambda1=lambda1, lambda2=lambda2)
+        lambda1=lambda1, lambda2=lambda2,
+        quad1=quad1, quad2=quad2)
 
     h_ref.add_phase(remove_start_phase=True)
     npoints = len(mf)
@@ -243,6 +244,7 @@ def condition_eob_waveform(
     trunc_i, trunc_f, npoints=10000,
     win='planck',
     filter_dfbyf_amp=None, filter_dfbyf_phase=None,
+    quad1=None, quad2=None,
     plots=False):
     """Generate a conditioned Frequency-domain waveform from an EOB waveform with arbitrary time samples.
     -Resample the waveform.
@@ -307,7 +309,7 @@ def condition_eob_waveform(
     wave.resample_uniform(htilde, xi=winon_i, npoints=npoints, spacing='log', order=2)
 
     # Compare with TaylorF2.
-    hf2, dh = difference_with_taylorf2(htilde, params)
+    hf2, dh = difference_with_taylorf2(htilde, params, quad1=quad1, quad2=quad2)
 
     # Match start with TaylorF2
     subtract_linear_fit(dh, fit_i, fit_f)
@@ -454,6 +456,7 @@ def condition_eob_training_set_from_list(
     trunc_i, trunc_f, npoints=10000,
     win='planck',
     filter_dfbyf_amp=None, filter_dfbyf_phase=None,
+    quad1=None, quad2=None, 
     plots=False):
     """Make a conditioned WaveformSet with waveforms from h_list, params.
     """
@@ -474,6 +477,7 @@ def condition_eob_training_set_from_list(
             win=win,
             filter_dfbyf_amp=filter_dfbyf_amp,
             filter_dfbyf_phase=filter_dfbyf_phase,
+            quad1=quad1, quad2=quad2,
             plots=plots)
 
         h_ts.set_waveform(i, h_cond, p)
