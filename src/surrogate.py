@@ -496,7 +496,7 @@ def reconstruct_amp_phase_difference_spline(
 
 
 class GPSplineSurrogate(object):
-    def __init__(self, mfs, mf_amp, mf_phase, damp_gp_list, dphase_gp_list, order):
+    def __init__(self, mfs, mf_amp, mf_phase, damp_gp_list, dphase_gp_list, order, quad1, quad2, spin_spin):
         # Lists of GPR functions
         self.damp_gp_list = damp_gp_list
         self.dphase_gp_list = dphase_gp_list
@@ -510,9 +510,15 @@ class GPSplineSurrogate(object):
         # All frequencies for the uniform-in-log sampling
         self.mfs = mfs
         self.order = order
+        # Details of how to include the QM terms
+        self.quad1 = quad1
+        self.quad2 = quad2
+        self.spin_spin = spin_spin
 
     @classmethod
-    def load(cls, nodes_filename, damp_gp_filename, dphase_gp_filename, order=3, npoints=10000):
+    def load(
+        cls, nodes_filename, damp_gp_filename, dphase_gp_filename,
+        order=3, npoints=10000, quad1=None, quad2=None, spin_spin=True):
         """Load surrogate model from 4 hdf5 data files.
         """
         mf_amp, mf_phase = load_amp_phase_nodes(nodes_filename)
@@ -520,7 +526,9 @@ class GPSplineSurrogate(object):
         dphase_gp_list = gpr.load_gaussian_process_regression_list(dphase_gp_filename)
         # Start at approximately 1Hz (mf=1.0e-5) and go up to last spline node
         mfs = np.logspace(-5.0, np.log10(mf_phase[-1]), npoints)
-        return GPSplineSurrogate(mfs, mf_amp, mf_phase, damp_gp_list, dphase_gp_list, order)
+        return GPSplineSurrogate(
+            mfs, mf_amp, mf_phase, damp_gp_list, dphase_gp_list,
+            order, quad1, quad2, spin_spin)
 
     ############# Evaluate waveform quantities in geometric units #############
 
@@ -532,7 +540,8 @@ class GPSplineSurrogate(object):
         h_ref = taylorf2.dimensionless_taylorf2_waveform(
             mf=self.mfs, q=q,
             spin1z=s1, spin2z=s2,
-            lambda1=lambda1, lambda2=lambda2)
+            lambda1=lambda1, lambda2=lambda2,
+            quad1=self.quad1, quad2=self.quad2, spin_spin=self.spin_spin)
 
         # Reference waveform has zero starting phase
         h_ref.add_phase(remove_start_phase=True)
