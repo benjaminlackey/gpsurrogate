@@ -92,7 +92,13 @@ Fast and accurate waveform models are necessary for measuring the properties of 
 
 
 %% ________________________________________________________
+
 \red{Choose point-mass or point-particle.}
+
+\red{Use $\chi$ for dimensionless spin instead of $S$.}
+
+\red{Choose notation $\Lambda_2^A$ or $\Lambda_1$.}
+
 \section{Introduction}
 
 The detection of the merging binary neutron star (BNS) system GW170817~\cite{GW170817} by the Advanced LIGO~\cite{Harry2010} and Advanced Virgo~\cite{Acernese2009} gravitational-wave detectors, has demonstrated that the parameters of the binary can be measured with enough precision to answer fundamental physics questions such as identifying BNS mergers as a source of gamma ray bursts [[cite]], measuring the Hubble constant~\cite{GW170817Hubble}, and understanding the structure of neutron stars (NSs) through tidal interactions~\cite{GW170817}. Measuring these parameters accurately will also be necessary to properly interpret the gamma ray burst [[cite]] and optical afterglow [[cite]] that was found in conjunction. Furthermore, an estimate of the BNS merger rate of 320--4740 events Gpc$^{-3}$~yr$^{-1}$ (90\% confidence interval)~\cite{GW170817} indicates that, when second generation detectors reach design sensitivity, including KAGRA~\cite{Somiya2012} and possibly LIGO-India~\cite{IyerSouradeepUnnikrishnan2011}, we could eventually observe a population of tens or hundreds of events after a couple of years of observation~\cite{LIGORate2010}. This will allow us to estimate the NS mass distribution [[cite]], spin distribution [[cite]], and universal equation of state (EOS) that is common to all NSs\cite{DelPozzoLiAgathos2013, LackeyWade2015}. 
@@ -205,9 +211,20 @@ where $\Delta\omega = \omega_{\rm match} - \omega_{\rm freq}$. Integrating and r
 Although this post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations.
 
 
-\subsection{Approximation of higher-order tidal parameters}
+\subsection{Reducing the number of matter parameters}
 
-After rescaling with the total mass $M$, an aligned-spin EOB waveform with dynamical tides depends on 11 intrinsic parameters: the mass ratio $q=M_B/M_A\leq1$, the two dimensionless components of the spins along the Newtonian orbital angular momentum $-1 \leq S_{A,B} \leq 1$, the two adiabatic quadrupolar tidal polarizabilities $\Lambda_2^{A,B}$, the two adiabatic octupolar tidal polarizabilities $\Lambda_3^{A,B}$, and the four $\ell=2,3$ fundamental $f$-mode angular frequencies $\omega_{0\ell}^{A,B}$. To reduce the dimensionality of the intrinsic parameter space, we exploit nearly EOS-independent fits for the higher-order effects in terms of $\Lambda_2$ usually referred to as universal relations. In particular, Eq.~(60) of Ref.~\cite{Yagi:2013sva} provides a fit for $\Lambda_3$ as a function of $\Lambda_2$ with an accuracy of about 10\% depending on the EOS. This relation has been fit for a sample of EOSs and for tidal parameters in the range $1 \leq \Lambda_2\leq10^6$. This formula, however, diverges at small values of $\Lambda_2$, so we replace it with a polynomial function that vanishes at $\Lambda_2 = 0$. We require this extension to be continuous at $\Lambda_2 = 10^{-2}$, and to fit the universal relation in the range $10^{-5}\leq\Lambda_2\leq10^{-2}$. The exact relation we use is
+After rescaling with the total mass $M$, the aligned-spin EOB waveform with dynamical tides depends on 13 intrinsic parameters: the mass ratio $q=M_B/M_A\leq1$, the two dimensionless spin components along the orbital angular momentum $\chi_{A,B}$, the two spin-induced quadrupole moments $\bar Q_{A,B}$, the two adiabatic quadrupolar tidal polarizabilities $\Lambda_2^{A,B}$, the two adiabatic octupolar tidal polarizabilities $\Lambda_3^{A,B}$, and the four $\ell=2,3$ fundamental $f$-mode angular frequencies $\omega_{0\ell}^{A,B}$. To reduce the dimensionality of the intrinsic parameter space, we use nearly EOS-independent fits (universal relations) for these parameters in terms of $\Lambda_2$ as discussed below. This reduces the number of matter parameters from ten to two.
+
+Eq.~(15) of Ref.~\cite{YagiYunes2017} provides a fit for $\bar Q$ as a function of $\Lambda_2$. This relation has been fit for a sample of EOSs and for tidal parameters in the range $1 \leq \Lambda_2\leq10^4$. This formula, however, diverges at small values of $\Lambda_2$, so we replace it with a polynomial function that approaches the Kerr value of $\bar Q = 1$ at $\Lambda_2 = 0$. We require this extension to be continuous at $\Lambda_2 = 1$. The exact relation we use is
+\begin{equation}
+\bar Q = \left\{\begin{array}{ll}
+1 + f \Lambda_2 + g \Lambda_2^2 + h \Lambda_2^3\, , & 0 \leq \Lambda_2 \le 1 \\
+e^{a + b \xi + c \xi^2 + d \xi^3 + e \xi^4}\, , & \Lambda_2 > 1
+\end{array}\right.,
+\end{equation}
+where $\xi = \ln\Lambda_2$. The coefficients $\{a, b, c, d, e\} = \{ 0.194, 0.09163, 0.04812, -4.283\times 10^{-3}, 1.245\times 10^{-4} \}$ are from Table I of Ref.~\cite{YagiYunes2017}, and $\{f, g, h\} = \{0.42769, -0.32434, 0.11074\}$.
+
+Eq.~(60) of Ref.~\cite{Yagi:2013sva} provides a fit for $\Lambda_3$ as a function of $\Lambda_2$ with an accuracy of about 10\% depending on the EOS. This relation has been fit for a sample of EOSs and for tidal parameters in the range $1 \leq \Lambda_2\leq10^6$. This formula, however, diverges at small values of $\Lambda_2$, so we replace it with a polynomial function that vanishes at $\Lambda_2 = 0$. We require this extension to be continuous at $\Lambda_2 = 10^{-2}$, and to fit the universal relation in the range $10^{-5}\leq\Lambda_2\leq10^{-2}$. The exact relation we use is
 \begin{equation}
 \Lambda_3 = \left\{\begin{array}{ll}
 \Lambda_2 (f + g \Lambda_2 + h \Lambda_2^2)\, , & 0 \leq \Lambda_2 \leq 10^{-2} \\
@@ -234,17 +251,15 @@ g\, , & \Upsilon > 10
 \end{equation}
 where $\{a, b, c, d, e\} = \{0.2245, -1.5\times10^{-2}, -1.412\times10^{-3}, 1.832\times10^{-4}, -5.561\times10^{-6}\}$ and $\{f, g\}=\{0.2379, 0.1165\}$.
 
-With these relations the waveform only depends on 5 intrinsic parameters $\bx=\{q, \chi_A, \chi_B, \Lambda_2^A,\Lambda_2^B\}$. The aligned component spins are defined as $\chi_i = \hat L_N \cdot \vec S_i / m_i^2$ where $\vec S_i$ are the dimensionfull spin vectors, $\hat L_N$ the Newtonian orbital angular momentum and $m_i$ the component masses.
-We note that this list does not include the total mass $M$ of the system. The point-mass part of the model is scale-invariant, and the tidal corrections only depend on $X_A=1/(1+q)$, $X_B=q/(1+q)$ and $\Lambda_2^{A,B}$. Finally, the simple model of the post-merger signal that we employ rescales with $M$ as well. It is not clear at what point in the transition from the inspiral to the post-merger this approximation breaks down. For example, whether the merging binary undergoes prompt collapse or forms a hypermassive remnant depends sensitively on the total mass. A set of NR simulations with a fixed mass ratio and tidal parameters but different total masses (and therefore different EOSs in order to keep the tidal parameters fixed) will be needed to determine the time when this approximation breaks down.
-
-\red{State range of validity for this model.}
-
-\red{State that you will use the notation $\Lambda_1$, $\Lambda_2$ for the remainder of the paper.}
+With these relations the waveform only depends on the five intrinsic parameters $\bx=\{q, \chi_A, \chi_B, \Lambda_2^A,\Lambda_2^B\}$. 
+%The aligned component spins are defined as $\chi_i = \hat L_N \cdot \vec S_i / m_i^2$ where $\vec S_i$ are the dimensionfull spin vectors, $\hat L_N$ the Newtonian orbital angular momentum and $m_i$ the component masses.
+We note that this list does not include the total mass $M$ of the system. The point-mass part of the model is scale-invariant, and the tidal corrections only depend on $X_A=1/(1+q)$, $X_B=q/(1+q)$ and $\Lambda_2^{A,B}$. Finally, the simple model of the post-merger signal that we employ rescales with $M$ as well. It is not clear at what point in the transition from the inspiral to the post-merger this approximation breaks down. For example, whether the merging binary undergoes prompt collapse or forms a hypermassive remnant depends sensitively on the total mass. NR simulations will be needed to determine when after the merger this approximation breaks down.
 
 %% ________________________________________________________
 \section{Surrogate model}
 
-In this section we describe how we decompose the EOB waveform into smooth, slowly-varying functions and train a surrogate model for these functions. We will work with the frequency-domain waveform $\tilde h(Mf; \bx)$. This is favorable for data analysis which is usually done in the frequency domain. It also allows us to extend the model down to arbitrarily low frequencies with analytic, frequency-domain PN approximations. Unfortunately, Fourier transforming a finite length, discretely sampled waveform leads to a surrogate with more noise. We will show below, however, that sufficient filtering can solve this problem.
+In this section we describe how we decompose the EOB waveform into smooth, slowly-varying functions and train a surrogate model for these functions. We will work with the frequency-domain waveform $\tilde h(Mf; \bx)$. This is favorable for data analysis which is usually done in the frequency domain. It also allows us to extend the model down to arbitrarily low frequencies with analytic, frequency-domain PN approximations. Unfortunately, Fourier transforming a finite length, discretely sampled waveform leads to a surrogate with more noise. We will show below, however, that sufficient filtering can solve this problem. The \texttt{SEOBNRv4T} waveform model, as implemented, works for mass ratios in the range $q \in [1/3, 1]$, spins $\chi_{1,2} \in [-0.5, 0.5]$ and tidal parameters $\Lambda_{1,2} \in [0, 5000]$. Our surrogate of this model, \texttt{SEOBNRv4T\_surrogate}, will be valid for the same range of parameters.
+
 
 
 \subsection{Decomposition of the waveform}
@@ -268,7 +283,9 @@ such that
 \tilde h(Mf; \bx) = \tilde h_{\rm F2}(Mf; \bx) e^{\Delta\ln(A)(Mf; \bx) + i  \Delta\Phi(Mf; \bx)}.
 \label{eq:hdecomp}
 \end{align}
-These residuals are also shown in Fig.~\ref{fig:hoff}. For the amplitude residual, we use a log-ratio instead of a ratio because it guarantees that interpolation errors will not lead to a negative amplitude for the reconstructed waveform (Eq.~\eqref{eq:hdecomp}). In addition, because the waveform amplitude spans several orders of magnitude after the merger frequency, the log-ratio captures this behavior. Comparing the phase $\Phi$ and phase residual $\Delta\Phi$ in Fig.~\ref{fig:hoff}, we find that the range in $\Delta\Phi$ is a few orders of magnitude smaller than the range in $\Phi$ except at very high frequencies. In Fig.~\ref{fig:dhofs}, we show the amplitude and phase residuals at three fixed frequencies as functions of the waveform parameter $\chi_1$. These quantities are smooth functions of $\bx$, implying that interpolation as a function of $\bx$ should work. The exception is the amplitude residual at very high frequencies where the amplitude is small and numerical noise is significant.
+The exact functional form of the TaylorF2 waveform is given in Appendix~\ref{sec:taylorf2}, and the residuals are shown in Fig.~\ref{fig:hoff}. 
+
+For the amplitude residual, we use a log-ratio instead of a ratio because it guarantees that interpolation errors will not lead to a negative amplitude for the reconstructed waveform (Eq.~\eqref{eq:hdecomp}). In addition, because the waveform amplitude spans several orders of magnitude at high frequencies, the log-ratio better captures this behavior. Comparing the phase $\Phi$ and phase residual $\Delta\Phi$ in Fig.~\ref{fig:hoff}, we find that the range in $\Delta\Phi$ is a few orders of magnitude smaller than the range in $\Phi$ except at very high frequencies. In Fig.~\ref{fig:dhofs}, we show the amplitude and phase residuals at three fixed frequencies as functions of the waveform parameter $\chi_1$. These quantities are smooth functions of $\bx$, implying that interpolation as a function of $\bx$ should work. The exception is the amplitude residual at very high frequencies where the amplitude is small and numerical noise is significant.
 
 \begin{figure}[htb]
 \centering
@@ -277,16 +294,11 @@ These residuals are also shown in Fig.~\ref{fig:hoff}. For the amplitude residua
 \label{fig:dhofs}
 \end{figure}
 
-The explicit expressions for the amplitude and phase of the TaylorF2 waveform are as follows. For the amplitude we use the 1PN correction to the leading order waveform.
+Finally, we have found that the functions $\Delta\ln A(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$ sometimes vary rapidly as a function of the tidal parameters $\Lambda_1$ and $\Lambda_2$ for tidal parameters in the range [0, 1000]. We therefore perform a change of variables that stretches out the parameter space for small values of the tidal parameters:
 \begin{equation}
-A_{\rm F2} = \sqrt{\frac{5\pi\eta}{24}} x^{-7/4} \left[ 1 + \left(-\frac{323}{224} + \frac{451\eta}{168} \right)x \right],
+\xi = \log_{10}(\Lambda/100 + 1).
 \end{equation}
-where $x=(\pi M f)^{2/3}$ is the standard PN parameter. This differs slightly from the decomposition used by \texttt{LAL}~\cite{lal}. The phase has the schematic form
-\begin{align}
-\Phi_{\rm F2} =& -2\pi f t_c + \phi_c + \frac{\pi}{4} - \frac{3}{128\eta}x^{-5/2} \left[1 + \right. \\
-                        & \left. {\rm PP}(\eta) + {\rm Spin}(\eta, \chi_1, \chi_2) + {\rm Tidal}(\eta, \Lambda_1, \Lambda_2)  \right].
-\end{align}
-We use the point particle terms ${\rm PP}(\eta)$ to 3.5PN order in Eq.~(3.18) of Ref.~\cite{BuonannoIyerOchsner2009}, the aligned spin terms ${\rm Spin}(\eta, \chi_1, \chi_2)$ to 3PN order~\cite{BoheMarsatBlanchet2013}, and the tidal terms ${\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$ to 6PN order~\cite{VinesFlanaganHinderer2011}. These terms for the phase are exactly as used in the \texttt{LAL} waveform \texttt{TaylorF2}. \MP{add git hash? LAL's TF2 will change in the future when new terms become available.}
+With $\bx=\{q, \chi_A, \chi_B, \xi_A,\xi_B\}$, the functions $\Delta\ln A(Mf; \bx)$ and $\Delta\Phi(Mf; \bx)$ are smoother functions of the parameters, making them easier to fit.
 
 
 \subsection{Conditioning the training set waveforms}
@@ -557,12 +569,12 @@ We compare this mismatch to that of th
 
 To demonstrate that we can correctly recover the behavior of the original unfiltered time-domain EOB waveform, we inverse Fourier transform the surrogate and compare it to the EOB waveform. In Fig.~\ref{fig:maxmismatchtd} we compare the surrogate to the test set waveform that had the largest mismatch. We align the two waveforms in time and phase by maximizing the overlap at early times in the interval $t/M \in [-2\times 10^5, -1\times 10^5]$ [[cite Read et al. for details.]]. The two waveforms are nearly identical except during the last $\sim 2$ cycles.
 
-\begin{figure}[htb]
+\begin{figure*}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{hmaxerror.pdf}
+\includegraphics[width=0.99\textwidth]{hmaxerror.pdf}
 \caption{Inverse Fourier transformed surrogate (green dashed) for the parameters $\bx$ that had the largest mismatch with the test-set EOB waveforms (black). The two waveforms are aligned in the time domain in the interval $t/M \in [-2\times 10^5, -1\times 10^5]$.}
 \label{fig:maxmismatchtd}
-\end{figure}
+\end{figure*}
 
 
 \subsection{Timing}
@@ -609,6 +621,53 @@ The second effect is precession for non-aligned spins. Although none of the EOB 
 BL thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the Institute for Nuclear Theory where many of the methods used here were discussed. We also thank Sylvain Marsat for correcting numerical instabilities in the original \texttt{SEOBNRv4T} code in \texttt{LAL}. The authors were supported by... 
 
 \end{acknowledgments}
+
+\appendix
+\section{TaylorF2 reference waveform}
+\label{sec:taylorf2}
+
+The explicit expressions for the amplitude and phase of the TaylorF2 waveform are as follows. For the amplitude we use the 1PN correction to the leading order waveform.
+\begin{equation}
+A_{\rm F2} = \sqrt{\frac{5\pi\eta}{24}} x^{-7/4} \left[ 1 + \left(-\frac{323}{224} + \frac{451\eta}{168} \right)x \right],
+\end{equation}
+where $x=(\pi M f)^{2/3}$ is the standard PN parameter. This differs slightly from the decomposition used by \texttt{LAL}~\cite{lal}. The phase has the schematic form
+\begin{align}
+\Phi_{\rm F2} =& -2\pi f t_c + \phi_c + \frac{\pi}{4} - \frac{3}{128\eta}x^{-5/2} \left[1 + \right. \\
+                        & \left. {\rm PP}(\eta) + {\rm Spin}(\eta, \chi_1, \chi_2) + {\rm Tidal}(\eta, \Lambda_1, \Lambda_2)  \right].
+\end{align}
+We use the point particle terms ${\rm PP}(\eta)$ to 3.5PN order in Eq.~(3.18) of Ref.~\cite{BuonannoIyerOchsner2009}, the aligned spin terms ${\rm Spin}(\eta, \chi_1, \chi_2)$ to 3PN order~\cite{BoheMarsatBlanchet2013}, and the tidal terms ${\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$ to 6PN order~\cite{VinesFlanaganHinderer2011}. These terms for the phase are exactly as used in the \texttt{LAL} waveform \texttt{TaylorF2}. 
+
+The spin terms are
+
+\red{Because the \texttt{SEOBNRv4T} waveform does not include 3PN spin-spin effects, we remove the 3PN spin-spin term in the \texttt{TaylorF2} waveform as well. The main reason for doing this is because including only common physical effects in both \texttt{SEOBNRv4T} and \texttt{TaylorF2} makes the residual $\Delta\Phi(Mf; \bx)$ smaller and have less variation, making it easier to fit at a given error requirement.}
+
+
+$SL = X_1^2\chi_1 + X_2^2\chi_2$
+
+$d\Sigma L = (X_1-X_2)(X_2\chi_2-X_1\chi_1)$
+
+$\gamma = \left(\frac{554345}{1134}+\frac{110\eta}{9}\right)SL + \left(\frac{13915}{84} - \frac{10\eta}{3}\right)d\Sigma L$
+
+$SS15 = \frac{188}{3}SL + 25 d\Sigma L$
+
+$SS2 = -10 \Sigma (not same sigma)$
+
+$SS25 = -\gamma -3\gamma\ln(v)$
+
+$SS3 = \frac{\pi}{3}\left[3760(X_1^2\chi_1 + X_2^2\chi_2) + 1490(X_1-X_2)(X_2\chi_2 - X_1\chi_1)\right]$
+
+\begin{equation}
+\tilde\Lambda = \frac{16}{13} \frac{(X_1+12X_2)X_1^4\Lambda_1 + (12X_1+X_2)X_2^4\Lambda_2}{(X_1+X_2)^5}
+\end{equation}
+
+\begin{align}
+\delta\tilde\Lambda =& \frac{(1319X_1^2 - 7996X_1X_2 - 11005X_2^2)X_1^4\Lambda_1}{1319(X_1+X_2)^6} \\
+& + \frac{(11005X_1^2 + 7996X_1X_2 - 1319X_2^2)X_2^4\Lambda_2}{1319(X_1+X_2)^6}
+\end{align}
+
+$a_5 = -\frac{39}{2}\tilde\Lambda$
+
+$a_6 = -\frac{3115}{64}\tilde\Lambda + \frac{6595}{364}(X_1-X_2)\delta\tilde\Lambda$
 
 
 %% ________________________________________________________

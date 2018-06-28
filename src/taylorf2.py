@@ -187,17 +187,17 @@ def taylorf2_phase_30pn_spin(eta, chi1, chi2, quad1, quad2, spin_spin=True):
         ss3 = (326.75/1.12 + 557.5/1.8*eta)*eta*chi1L*chi2L
         ss3 += ((4703.5/8.4 + 2935.0/6.0*X1 - 120.0*X1**2)*quad1 + (-4108.25/6.72 - 108.5/1.2*X1 + 125.5/3.6*X1**2)) * X1**2 * chi1sq
         ss3 += ((4703.5/8.4 + 2935.0/6.0*X2 - 120.0*X2**2)*quad2 + (-4108.25/6.72 - 108.5/1.2*X2 + 125.5/3.6*X2**2)) * X2**2 * chi2sq
-    elif spin_spin=='point':
-        # Use the value for point particles
-        quad1 = 1.0
-        quad2 = 1.0
-        ss3 = (326.75/1.12 + 557.5/1.8*eta)*eta*chi1L*chi2L
-        ss3 += ((4703.5/8.4 + 2935.0/6.0*X1 - 120.0*X1**2)*quad1 + (-4108.25/6.72 - 108.5/1.2*X1 + 125.5/3.6*X1**2)) * X1**2 * chi1sq
-        ss3 += ((4703.5/8.4 + 2935.0/6.0*X2 - 120.0*X2**2)*quad2 + (-4108.25/6.72 - 108.5/1.2*X2 + 125.5/3.6*X2**2)) * X2**2 * chi2sq
+    # elif spin_spin=='point':
+    #     # Use the value for point particles
+    #     quad1 = 1.0
+    #     quad2 = 1.0
+    #     ss3 = (326.75/1.12 + 557.5/1.8*eta)*eta*chi1L*chi2L
+    #     ss3 += ((4703.5/8.4 + 2935.0/6.0*X1 - 120.0*X1**2)*quad1 + (-4108.25/6.72 - 108.5/1.2*X1 + 125.5/3.6*X1**2)) * X1**2 * chi1sq
+    #     ss3 += ((4703.5/8.4 + 2935.0/6.0*X2 - 120.0*X2**2)*quad2 + (-4108.25/6.72 - 108.5/1.2*X2 + 125.5/3.6*X2**2)) * X2**2 * chi2sq
     else:
         ss3 = 0.0
 
-    #print ss3
+    #print 'ss3={}'.format(ss3)
 
     a6 = np.pi * (3760.0*SL + 1490.0*dSigmaL)/3.0 + ss3
     return a6
@@ -225,7 +225,9 @@ def taylorf2_phase_35pn_spin(eta, chi1, chi2):
     return a7
 
 
-def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2, quad1=None, quad2=None, spin_spin=True):
+def taylorf2_phase(
+    mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2,
+    quad1=None, quad2=None, spin_spin=True):
     """3.5PN point-particle phase.
     FFT sign convention is $\tilde h(f) = \int h(t) e^{-2 \pi i f t} dt$
     where $h(t) = h_+(t) + i h_\times(t)$.
@@ -239,7 +241,7 @@ def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2, quad1=Non
     tlam = lamtilde_of_eta_lam1_lam2(eta, lambda1, lambda2)
     dtlam = deltalamtilde_of_eta_lam1_lam2(eta, lambda1, lambda2)
 
-    # Calculate the coefficients once
+    # Calculate the point particle coefficients
     a00 = 3.0/(128.0*eta)
 
     a10 = 3715.0/756.0 + 55.0*eta/9.0
@@ -261,17 +263,16 @@ def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2, quad1=Non
 
     a35 = (77096675.0/254016.0 + (378515.0*eta)/1512.0 - (74045.0*eta**2)/756.0)*np.pi
 
-
+    # Add spin coefficients
     a15 += taylorf2_phase_15pn_spin(eta, chi1, chi2)
     a20 += taylorf2_phase_20pn_spin(eta, chi1, chi2, quad1, quad2)
     s25, s25ln = taylorf2_phase_25pn_spin(eta, chi1, chi2)
     a25 += s25
     a25ln += s25ln
-    # a30 += taylorf2_phase_30pn_spin(eta, chi1, chi2, quad1, quad2)
-    # a30 += taylorf2_phase_30pn_spin(eta, chi1, chi2, 1.0, 1.0)
     a30 += taylorf2_phase_30pn_spin(eta, chi1, chi2, quad1, quad2, spin_spin=spin_spin)
     a35 += taylorf2_phase_35pn_spin(eta, chi1, chi2)
 
+    # Add the tidal coefficients
     a50 = -39.0*tlam/2.0
     a60 = -3115.0*tlam/64.0 + 6595.0*np.sqrt(1.0-4.0*eta)*dtlam/364.0
 
@@ -281,8 +282,6 @@ def taylorf2_phase(mf, tbymc, phic, eta, chi1, chi2, lambda1, lambda2, quad1=Non
 
     # Now calculate phase for each freq
     x = (np.pi*mf)**(2.0/3.0)
-
-
     phi = -2.0*np.pi*mf*tbymc + phic + np.pi/4.0
     phi -= a00*x**(-5.0/2.0)*(1.0 + a10*x + a15*x**1.5 + a20*x**2.0 \
                              + (a25+a25ln*np.log(x))*x**2.5 \
@@ -306,5 +305,7 @@ def dimensionless_taylorf2_waveform(
     #amp = taylorf2_amp(mf, eta)
     # Use the 1pn amplitude
     amp = taylorf2_amp_1pn(mf, eta)
-    phase = taylorf2_phase(mf, tbymc, phic, eta, spin1z, spin2z, lambda1, lambda2, quad1, quad2, spin_spin=spin_spin)
+    phase = taylorf2_phase(
+        mf, tbymc, phic, eta, spin1z, spin2z, lambda1, lambda2,
+        quad1=quad1, quad2=quad2, spin_spin=spin_spin)
     return wave.Waveform.from_amp_phase(mf, amp, phase)
