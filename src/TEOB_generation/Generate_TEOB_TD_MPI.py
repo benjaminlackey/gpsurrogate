@@ -606,8 +606,10 @@ def main():
         print 'Loading configurations from textfile', cfgfile
         cfgs = np.loadtxt(cfgfile)
         if cfgs.shape[1] != 5:
-            raise ValueError("Expected configurations in file %s to contain 5 columns "
-            +"(q, spin1z, spin2z, lambda1, lambda2)."%cfgfile)
+            print "Expected configurations in file %s to contain 5 columns "
+            +"(q, spin1z, spin2z, lambda1, lambda2)."%cfgfile
+            print "WARNING: will discard anything beyond the first 5 columns."
+            cfgs = cfgs[:,:-1]
         if np.min(cfgs.T[0]) > 1.0:
             raise ValueError("Expected in file %s mass-ratio <= 1"%cfgfile)
     elif opts['corners']:
