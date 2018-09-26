@@ -284,12 +284,12 @@ def condition_eob_waveform(
     """
     condition = ConditionedWaveform(h)
 
-    # Resample the waveform
-    condition.resample_uniform(delta_t)
-
     # Window the waveform
     condition.window_freq_on(winon_i, winon_f, win=win)
 
+    # Resample the waveform
+    condition.resample_uniform(delta_t)
+    
     if plots:
         # Windowed time-domain waveform
         fig, ax = wave.plot_waveforms([condition.h], hc=True, xi=h.x[-1]-1000, npoints=10000)
@@ -477,7 +477,7 @@ def condition_eob_training_set_from_list(
             win=win,
             filter_dfbyf_amp=filter_dfbyf_amp,
             filter_dfbyf_phase=filter_dfbyf_phase,
-            quad1=quad1, quad2=quad2, spin_spin=spin_spin, 
+            quad1=quad1, quad2=quad2, spin_spin=spin_spin,
             plots=plots)
 
         h_ts.set_waveform(i, h_cond, p)

@@ -322,7 +322,7 @@ def fourier_transform_uniform_sampled_waveform(h):
 
 ##################### Functions for plotting waveforms ####################
 
-def plot_waveforms(waveforms, xi=-np.inf, xf=np.inf, npoints=10000, amp=True, hp=True, hc=False):
+def plot_waveforms(waveforms, xi=-np.inf, xf=np.inf, npoints=10000, amp=True, hp=True, hc=False, order=2):
     """
     """
     fig, axes = plt.subplots(1, figsize=(16, 3))
@@ -330,7 +330,7 @@ def plot_waveforms(waveforms, xi=-np.inf, xf=np.inf, npoints=10000, amp=True, hp
     for h in waveforms:
         xiplot = max(xi, h.x[0])
         xfplot = min(xf, h.x[-1])
-        hcomp = h.interpolate_complex()
+        hcomp = h.interpolate_complex(order=order)
         times = np.linspace(xiplot, xfplot, npoints)
         hs = hcomp(times)
         if amp:

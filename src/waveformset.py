@@ -138,23 +138,33 @@ def waveform_set_from_list(filename, h_list, params_list):
     h_set.close()
 
 
-def join_waveform_sets(filename1, filename2, filename_join):
+def join_waveform_sets(filename1, filename2, filename_join, list1=None, list2=None):
     """Join two HDF5WaveformSets together into a new HDF5WaveformSet.
+
+    parameters
+    ----------
+    list1 : list of waveform indices to use in WaveformSet 1.
+    list2 : list of waveform indices to use in WaveformSet 2.
     """
     h_set1 = HDF5WaveformSet(filename1)
     h_set2 = HDF5WaveformSet(filename2)
     h_join = HDF5WaveformSet(filename_join)
 
+    if list1 is None:
+        list1 = list(range(len(h_set1)))
+    if list2 is None:
+        list2 = list(range(len(h_set2)))
+
     j = 0
     # Write the waveforms in h_set1 to h_join
-    for i in range(len(h_set1)):
+    for i in list1:
         h = h_set1.get_waveform(i, data='waveform')
         p = h_set1.get_waveform(i, data='parameters')
         h_join.set_waveform(j, h, p)
         j += 1
 
     # Append the waveforms in h_set2 to h_join
-    for i in range(len(h_set2)):
+    for i in list2:
         h = h_set2.get_waveform(i, data='waveform')
         p = h_set2.get_waveform(i, data='parameters')
         h_join.set_waveform(j, h, p)

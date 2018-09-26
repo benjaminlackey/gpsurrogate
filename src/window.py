@@ -131,18 +131,27 @@ def window_freq_on(h, freqi, freqf, win='planck', order=2, eps=1.0e-4):
     toff = interpolate_time_of_frequency(h, order=order)
     fmin = toff.get_knots()[0]
     fmax = toff.get_knots()[-1]
-    if freqi<(1.0-eps)*fmin:
-        raise Exception, 'freqi='+str(freqi)+' is lower than lowest frequency '+str(fmin)+'.'
-    if freqf>(1.0+eps)*fmax:
-        raise Exception, 'freqi='+str(freqf)+' is higher than highest frequency '+str(fmax)+'.'
 
-    xi = float(toff(freqi))
-    xf = float(toff(freqf))
+    # Get the starting time for windowing. Make surue you don't go below the starting time of the waveform.
+    if freqi >= fmin:
+        xi = float(toff(freqi))
+    else:
+        xi = h.x[0]
+        print 'Warning: freqi={:} < fmin={:}. Using starting time instead.'.format(freqi, fmin)
+
+    # Get the ending time for windowing. Make surue you don't go above the ending time of the waveform.
+    if freqf <= fmax:
+        xf = float(toff(freqf))
+    else:
+        xf = h.x[-1]
+        print 'Warning: freqf={:} > fmax={:}. Using ending time instead.'.format(freqf, fmax)
+
+    # Do the windowing with the chosen start and end times
     return window_on(h, xi, xf, win=win)
 
 
-def window_freq_off(h, freqi, freqf, win='planck', order=2, eps=1.0e-4):
-    """Smoothly turn off the waveform amplitude from A(x) to 0 over the frequency window [freqi, freqf].
+def window_freq_off(h, freqi, freqf, win='planck', order=2):
+    """Smoothly turn on the waveform amplitude from 0 to A(x) over the frequency window [freqi, freqf].
     eps :
         Fractional tolerance when determining if [freqi, freqf] are within
         the range of frequencies of h.
@@ -150,11 +159,59 @@ def window_freq_off(h, freqi, freqf, win='planck', order=2, eps=1.0e-4):
     toff = interpolate_time_of_frequency(h, order=order)
     fmin = toff.get_knots()[0]
     fmax = toff.get_knots()[-1]
-    if freqi<(1.0-eps)*fmin:
-        raise Exception, 'freqi='+str(freqi)+' is lower than lowest frequency '+str(fmin)+'.'
-    if freqf>(1.0+eps)*fmax:
-        raise Exception, 'freqi='+str(freqf)+' is higher than highest frequency '+str(fmax)+'.'
 
-    xi = float(toff(freqi))
-    xf = float(toff(freqf))
+    # Get the starting time for windowing. Make surue you don't go below the starting time of the waveform.
+    if freqi >= fmin:
+        xi = float(toff(freqi))
+    else:
+        xi = h.x[0]
+        print 'Warning: freqi={:} < fmin={:}. Using starting time instead.'.format(freqi, fmin)
+
+    # Get the ending time for windowing. Make surue you don't go above the ending time of the waveform.
+    if freqf <= fmax:
+        xf = float(toff(freqf))
+    else:
+        xf = h.x[-1]
+        print 'Warning: freqf={:} > fmax={:}. Using ending time instead.'.format(freqf, fmax)
+
+    # Do the windowing with the chosen start and end times
     return window_off(h, xi, xf, win=win)
+
+
+# def window_freq_on(h, freqi, freqf, win='planck', order=2, eps=1.0e-4):
+#     """Smoothly turn on the waveform amplitude from 0 to A(x) over the frequency window [freqi, freqf].
+#     eps :
+#         Fractional tolerance when determining if [freqi, freqf] are within
+#         the range of frequencies of h.
+#     """
+#     toff = interpolate_time_of_frequency(h, order=order)
+#     fmin = toff.get_knots()[0]
+#     fmax = toff.get_knots()[-1]
+#     if freqi<(1.0-eps)*fmin:
+#         raise Exception, 'freqi='+str(freqi)+' is lower than lowest frequency '+str(fmin)+'.'
+#     if freqf>(1.0+eps)*fmax:
+#         raise Exception, 'freqi='+str(freqf)+' is higher than highest frequency '+str(fmax)+'.'
+#
+#     xi = float(toff(freqi))
+#     xf = float(toff(freqf))
+#     print xi, xf
+#     return window_on(h, xi, xf, win=win)
+#
+#
+# def window_freq_off(h, freqi, freqf, win='planck', order=2, eps=1.0e-4):
+#     """Smoothly turn off the waveform amplitude from A(x) to 0 over the frequency window [freqi, freqf].
+#     eps :
+#         Fractional tolerance when determining if [freqi, freqf] are within
+#         the range of frequencies of h.
+#     """
+#     toff = interpolate_time_of_frequency(h, order=order)
+#     fmin = toff.get_knots()[0]
+#     fmax = toff.get_knots()[-1]
+#     if freqi<(1.0-eps)*fmin:
+#         raise Exception, 'freqi='+str(freqi)+' is lower than lowest frequency '+str(fmin)+'.'
+#     if freqf>(1.0+eps)*fmax:
+#         raise Exception, 'freqi='+str(freqf)+' is higher than highest frequency '+str(fmax)+'.'
+#
+#     xi = float(toff(freqi))
+#     xf = float(toff(freqf))
+#     return window_off(h, xi, xf, win=win)
