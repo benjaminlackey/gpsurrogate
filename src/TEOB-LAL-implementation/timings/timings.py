@@ -167,10 +167,14 @@ def inner(_it, _timer%(init)s):
 
 
 f_mins = np.arange(10.0, 100.0, 5)
-Mtot = 2*1.35
-x = np.array([1.0/1.5, 0.35, -0.12, 2000.0, 2750.0])
-xnT = np.array([1.0/1.5, 0.35, -0.12, 0.0, 0.0])
-xNSBH = np.array([1.0/1.5, 0.35, -0.12, 0.0, 2500.0])
+Mtot = 2*1.4
+q = 1.0/1.01
+chi1 = 0.1
+chi2 = 0.1
+lambda1 = 1286.0
+lambda2 = 1286.0
+x = np.array([q, chi1, chi2, lambda1, lambda2])
+xnT = np.array([q, chi1, chi2, 0, 0])
 
 tim_sur = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
@@ -184,15 +188,15 @@ tim_SEOBNRv4_ROM = np.array([timeit_ipython("FD_waveform_test(Mtot, xnT, LS.SEOB
  for f_min in f_mins])
 np.save('tim_SEOBNRv4_ROM', tim_SEOBNRv4_ROM)
 
-tim_SEOBNRv4_ROM_NRTidal = np.array([timeit_ipython("FD_waveform_test(Mtot, xNSBH, LS.SEOBNRv4_ROM_NRTidal, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
+tim_SEOBNRv4_ROM_NRTidal = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.SEOBNRv4_ROM_NRTidal, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
 np.save('tim_SEOBNRv4_ROM_NRTidal', tim_SEOBNRv4_ROM_NRTidal)
 
-tim_IMRPhenomD_NRTidal = np.array([timeit_ipython("FD_waveform_test(Mtot, xNSBH, LS.IMRPhenomD_NRTidal, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
+tim_IMRPhenomD_NRTidal = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.IMRPhenomD_NRTidal, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
 np.save('tim_IMRPhenomD_NRTidal', tim_IMRPhenomD_NRTidal)
 
-tim_SEOBNRv4T = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.TEOBv4, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
+tim_SEOBNRv4T = np.array([timeit_ipython("FD_waveform_test(Mtot, x, LS.SEOBNRv4T, fLow=%f, fHigh=2048.0, deltaF=0)" %(f_min)) 
  for f_min in f_mins])
 np.save('tim_SEOBNRv4T', tim_SEOBNRv4T)
 
