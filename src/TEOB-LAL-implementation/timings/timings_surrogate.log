@@ -1,0 +1,38 @@
+number 10
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=20.0, fHigh=2048.0, deltaF=0) 10 3 0.141405892372 0.001131 0.00390625
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=10.000000, fHigh=2048.0, deltaF=0.000488) 50 3 1.53280395985 7.10000000002e-05 0.000488
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=15.000000, fHigh=2048.0, deltaF=0.001953) 50 3 0.383971400261 6.79999999988e-05 0.001953
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=20.000000, fHigh=2048.0, deltaF=0.003906) 50 3 0.197572441101 6.79999999988e-05 0.003906
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=25.000000, fHigh=2048.0, deltaF=0.007812) 50 3 0.0937096977234 6.60000000039e-05 0.007812
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=30.000000, fHigh=2048.0, deltaF=0.015625) 50 3 0.0383089828491 6.79999999988e-05 0.015625
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=35.000000, fHigh=2048.0, deltaF=0.015625) 50 3 0.0382595014572 6.70000000014e-05 0.015625
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=40.000000, fHigh=2048.0, deltaF=0.031250) 50 3 0.022785358429 6.70000000014e-05 0.03125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=45.000000, fHigh=2048.0, deltaF=0.031250) 50 3 0.0227494001389 6.60000000039e-05 0.03125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=50.000000, fHigh=2048.0, deltaF=0.031250) 50 3 0.0227385187149 8.60000000102e-05 0.03125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=55.000000, fHigh=2048.0, deltaF=0.062500) 50 3 0.0150429391861 6.70000000014e-05 0.0625
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=60.000000, fHigh=2048.0, deltaF=0.062500) 50 3 0.0150236034393 6.60000000039e-05 0.0625
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=65.000000, fHigh=2048.0, deltaF=0.062500) 50 3 0.0150335597992 6.40000000089e-05 0.0625
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=70.000000, fHigh=2048.0, deltaF=0.125000) 50 3 0.011183719635 6.40000000089e-05 0.125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=75.000000, fHigh=2048.0, deltaF=0.125000) 50 3 0.0111768817902 6.40000000089e-05 0.125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=80.000000, fHigh=2048.0, deltaF=0.125000) 50 3 0.0111600399017 6.19999999572e-05 0.125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=85.000000, fHigh=2048.0, deltaF=0.125000) 50 3 0.0111763572693 6.2000000014e-05 0.125
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=90.000000, fHigh=2048.0, deltaF=0.250000) 50 3 0.00924948215485 6.70000000014e-05 0.25
+number 50
+Finished  FD_waveform_test(Mtot, x, LS.SEOBNRv4T_surrogate, fLow=95.000000, fHigh=2048.0, deltaF=0.250000) 50 3 0.00923384189606 6.0000000019e-05 0.25
