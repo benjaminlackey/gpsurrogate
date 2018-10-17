@@ -606,7 +606,7 @@ Finally, to demonstrate that we can correctly recover the behavior of the origin
 \begin{figure*}[htb]
 \centering
 \includegraphics[width=0.99\textwidth]{hmaxerror.pdf}
-\caption{Inverse Fourier transformed surrogate (red dashed) for the parameters $\{q, \chi_1, \chi_2, \Lambda_1, \Lambda_2\} = \{0.61, -0.23, -0.33, 180, 4390\}$ that have the largest mismatch with the test-set EOB waveforms (black). The two waveforms are aligned in the time domain, before the start of the plot, in the interval $(t-t_{\rm merger})/M \in [-10^7, -10^6]$.}
+\caption{Inverse Fourier transformed surrogate (red dashed) for the parameters $\{q, \chi_1, \chi_2, \Lambda_1, \Lambda_2\} = \{0.61, -0.23, -0.33, 180, 4390\}$ that have the largest mismatch with the test-set EOB waveforms (black). The two waveforms are aligned in the time domain, before the start of the plot, in the interval $(t-t_{\rm Merger})/M \in [-10^7, -10^6]$.}
 \label{fig:maxmismatchtd}
 \end{figure*}
 
@@ -681,7 +681,9 @@ Finally, we can compare this systematic error to the statistical error which we 
 
 \subsection{GW170817}
 
+Having confirmed that the surrogate accurately recovers the injected waveform parameters, we now perform a parameter estimation run for GW170817. In the PE paper and catalog papers~\cite{}, the SEOBNRv4T surrogate was used with the parallelized PE code RapidPE. However, there were uncertainties about its ability to accurately recover the tidal parameter.
 
+We use the priors discussed in~cite{O2CatalogPaper}. 
 
 %% ________________________________________________________
 \section{Discussion and future work}
