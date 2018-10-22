@@ -17,6 +17,28 @@
 \newcommand{\ee}{\end{equation}}
 \newcommand{\bsube}{\begin{subequations}}
 \newcommand{\esube}{\end{subequations}}
+%
+\newcommand{\nin}{\noindent}
+\newcommand{\nnm}{\nonumber}
+\newcommand{\doe}{\partial}
+%\newcommand{\be}{\begin{equation}}
+%\newcommand{\ee}{\end{equation}}
+\newcommand{\bea}{\begin{eqnarray}}
+\newcommand{\eea}{\end{eqnarray}}
+\newcommand{\bdm}{\begin{displaymath}}
+\newcommand{\edm}{\end{displaymath}}
+\newcommand{\bse}{\begin{subequations}}
+\newcommand{\ese}{\end{subequations}}
+\newcommand{\tb}{\textbf}
+\newcommand{\mr}{\mathrm}
+\newcommand{\tr}{\textrm}
+\newcommand{\mc}{\mathcal}
+\newcommand{\mb}{\mathbf}
+\newcommand{\py}{\phantom{yo}}
+\newcommand{\ve}{\varepsilon}
+\newcommand{\ind}{\indices}
+\newcommand{\bs}{\boldsymbol}
+\newcommand{\st}{{}^{*\!}}
 
 %\def\l{\ell}
 %\def\blambda{{\bm \lambda}}
@@ -43,7 +65,7 @@
 \definecolor{gray}{rgb}{0.8242,0.8242,0.8242}
 %%
 \newcommand{\MP}[1]{{\textcolor{blue}{\texttt{MP: #1}} }}
-\newcommand{\bs}[1]{{\textcolor{green}{\texttt{SB: #1}} }}
+%\newcommand{\bs}[1]{{\textcolor{green}{\texttt{SB: #1}} }}
 \newcommand{\bl}[1]{{\textcolor{blue}{\texttt{BL: #1}} }}
 \newcommand{\cg}[1]{{\textcolor{orange}{{CG: #1}} }}
 \newcommand{\cvdb}[1]{{\textcolor{purple}{\texttt{CVDB: #1}} }}
@@ -214,7 +236,76 @@ h_{\ell m}^{\textrm{insp-plunge}} = h_{\ell m}^{\textrm{pm}} + h_{\ell m}^{\text
 \end{equation} 
 where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}. The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the gravitational-wave flux (Eqs.~(5) and~(6) of Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived. The Hamiltonian equations of motion with this radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. We only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
 
-%Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a 1000th of the leading-order estimate for $\dot{r}$, that is $\propto 64/5 \nu/r^4$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$.  
+%Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a 1000th of the leading-order estimate for $\dot{r}$, that is $\propto 64/5 \nu/r^4$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$. 
+
+\subsection{Quadrupole-monopole terms}
+
+
+When we have a binary with two material bodies, like two neutron stars, 1 and 2, which have spin-induced mass quadrupole moments $Q_{1,\mr{SS}}^{ij}=-\kappa_1 S_1^{\langle i}S_1^{j\rangle}/m_1$, similarly with $1\to 2$, as opposed to the case with two black holes where $\kappa_1=\kappa_2=1$, the SEOB model should be modified as follows in order to take this into account at leading order.
+
+The SEOB effective Hamiltonian is given by (5.70) of \cite{Barausse:2009xi} as
+\be
+H_\mr{eff}=H_S+\beta^ip_i+\alpha\sqrt{\mu^2+\gamma^{ij}p_ip_j+\mc Q_4(p)}+H^\mr{BBH}_\mr{extra},
+\ee
+where
+\be
+H^\mr{BBH}_\mr{extra}=\frac{1}{2r^3}(3n_in_j-\delta_{ij})\frac{\mu}{M}S_*^iS_*^j,\qquad\qquad S_*^i=\frac{m_2}{m_1} S_1^i+\frac{m_1}{m_2}S_2^i.
+\ee
+This should be replaced with
+\begin{alignat}{3}
+H^\mr{BNS}_\mr{extra}&=\frac{1}{2r^3}(3n_in_j-\delta_{ij})\bigg[\frac{\mu}{M}S_*^iS_*^j+(\kappa_1-1)\frac{m_2}{m_1}S_1^i S_1^j+(\kappa_2-1)\frac{m_1}{m_2}S_2^i S_2^j\bigg] \label{eq:HBNSextra}
+\\\nnm
+&=\frac{1}{2r^3}(3n_in_j-\delta_{ij})\bigg[2\frac{\mu}{M}S_1^iS_2^j+\left(\kappa_1-1+\frac{m_2^2}{M^2}\right)\frac{m_2}{m_1}S_1^i S_1^j+\left(\kappa_2-1+\frac{m_1^2}{M^2}\right)\frac{m_1}{m_2}S_2^i S_2^j\bigg].
+\end{alignat}
+This could also be expressed solely in terms of $\bs S_*$ and $\bs S=\bs S_1+\bs S_2$, instead of $\bs S_1$ and $\bs S_2$, but then the mass difference $m_1-m_2$ would appear in denominators, which might cause problems with dividing by zero in the equal mass case.
+
+In the waveform, since we are focusing only on the leading 2PN order, the only contribution to consider will be in the mode $h_{22}$. The \emph{total} leading-order spin-squared contribution, for aligned-spin circular orbits, is given by
+\be
+h_{22}^\tr{LO-SS}=-\frac{8\nu M^3\omega^2}{R}\sqrt{\frac{\pi}{5}}e^{-2i\Phi}\mc A,
+\ee
+and the corresponding contribution to the flux is
+\be
+\mc F^\tr{LO-SS}=\frac{32\nu^2}{5}x^7\left[2\mc A+\frac{1}{16M^2}\left(\frac{S_1}{m_1}-\frac{S_2}{m_2}\right)^2\,\right],\qquad\qquad x=(M\omega)^{2/3},
+\ee
+where, for a BBH,
+\be\label{eq:ABBH}
+\mc A^\mr{BBH}=\frac{1}{M^2}\left(\frac{S_1^2}{m_1^2}+2\frac{S_1S_2}{m_1m_2}+\frac{S_2^2}{m_2^2}\right).
+\ee
+For a BNS, this should be replaced with
+\be\label{eq:ABNS}
+\mc A^\mr{BNS}=\frac{1}{M^2}\left(\kappa_1\frac{S_1^2}{m_1^2}+2\frac{S_1S_2}{m_1m_2}+\kappa_2\frac{S_2^2}{m_2^2}\right).
+\ee
+The $h_{22}$ then matches (4.26), (4.27b), (3.4) of \cite{Buonanno:2012rv}, and the flux matches e.g.\ (6.18)--(6.19) of \cite{Marsat:2014xea}.
+
+In the EOB factorized waveform (see e.g. (17) in~\cite{Taracchini:2012ig}), spin contributions in the effective source, tail factors and phase contribution would enter only at higher order, so that the only modification is in the $\rho_{22}$ factor. We have simply
+\be\label{eq:rho22}
+	\rho_{22}^{\textrm{LO-SS}} = \frac{1}{2}\mathcal{A} v^{4} \,,
+\ee
+with $\mathcal{A}$ the quantity given by~\eqref{eq:ABBH} or~\eqref{eq:ABNS} and $v=x^{1/2}$.
+
+%Though this should be ultimately irrelevant for our purposes, just for completeness, recall the following:  The LO-SS terms in the EOB effective Hamiltonian, specifically the $S_\mr{Kerr}^2$ terms, are not in the usual PN ``gauge.''  This is seen e.g.\ in (5.55) and (5.60) of \cite{Barausse:2009xi}; the last three lines of (5.60) are equivalent  to zero via a  canonical transformation [the one in (5.15), (5.20)].  If all we care about is getting the SS terms in the Hamiltonian correct at LO, regardless of gauge, then the above prescriptions are sufficient, even though some SS terms are in a different gauge than others.  (The BBH SEOB Hamiltonian already has this feature anyway.)
+
+In the Hamiltonian, we separate in Eq.~\eqref{eq:HBNSextra} the additional contribution for BNS, as
+\be
+	\Delta H_{\rm SS}^{\rm BNS} = H^{\rm BNS}_{\rm extra} - H^{\rm BBH}_{\rm extra} = \frac{1}{2r^3}(3n_in_j-\delta_{ij})\bigg[(\kappa_1-1)\frac{m_2}{m_1}S_1^i S_1^j+(\kappa_2-1)\frac{m_1}{m_2}S_2^i S_2^j\bigg] \,.
+\ee
+This contribution is computed by the function \texttt{XLALSimIMRTEOBdeltaHssQuadMonLO}, called inside \texttt{XLALSimIMRSpinEOBHamiltonian} in \texttt{LALSimIMRSpinEOBHamiltonian.c}. The expression implemented is kept generic although the $S\cdot n$ terms are zero for aligned spins.
+
+In the factorized waveform, after subtracting the quadratic-in-spin contribution for BBH, the additional contribution for BNS in~\eqref{eq:rho22} is given by:
+\be
+  \Delta \rho_{22}^{\rm BNS} = \rho_{22}^{\rm SS} - (\rho_{22}^{\rm SS})_{\kappa_{1,2}=1} = v^{4}\left[ \left(\chi_s^2+\chi_a^2\right) \left(\frac{\delta  \kappa_a}{2} -\kappa_s \nu+\frac{\kappa_s}{2} +\nu-\frac{1}{2}\right) + \chi_a \chi_s \left(-2 \nu  \kappa_a+\kappa_a-\delta +\delta  \kappa_s\right) \right]\,,
+\ee
+where we used the variables $\kappa_{s,a} \equiv (\kappa_{1} \pm \kappa_{2})/2$, $\chi_{s,a} \equiv (\chi_{1} \pm \chi_{2})/2$. One can readily check that this is zero in the binary black hole case, for $\kappa_{s}=1$ and $\kappa_{a}=0$. This contribution is added, if at least one of the $\kappa_{1,2}$ is different from one, in the function \texttt{XLALSimIMREOBCalcSpinFacWaveformCoefficients} of \texttt{LALSimIMRSpinEOBFactorizedWaveform.c}
+
+To compute the quadrupole-monopole parameters $\kappa_{1,2}$ entering these contributions (represented by their deviation from 1 as \texttt{dQuadMon1}, \texttt{dQuadMon2}), we use a fit taken from~\cite{Yagi:2016bkt} (see Eq.~(15), with coefficients given in the third row of Table~I), with an extension to ensure the black-hole limit with a $C^{2}$-continuity at the matching point at a dimensionless quadrupolar tidal deformability $\overline{\lambda}_{2}=1$ (chosen arbitrarily). This extended universal relation reads
+\be
+	\kappa(\overline{\lambda}_{2}) = 
+	  \begin{cases}
+	    \exp \left[\sum_{i=0}^{4} a_{i}\xi^{i} \right] & \text{ if } \overline{\lambda}_{2} \geq 1 \,,\\
+	    1 + 0.428\overline{\lambda}_{2} - 0.324\overline{\lambda}_{2}^{2} + 0.111\overline{\lambda}_{2}^{3} & \text{ if } 0 \leq \overline{\lambda}_{2} < 1 \,,
+	  \end{cases}
+\ee
+with $\{a_{i}\}_{i=0,\dots, 4} = \{0.1940, 0.09163, 0.04812, -4.283.10^{-3}, 1.245.10^{-4}\}$, $\xi = \ln \overline{\lambda}_{2}$, and where we rounded off the numerical coefficients of the quadratic extension. This universal relation is implemented in \texttt{XLALSimUniversalRelationQuadMonVSlambda2Tidal} in \texttt{LALSimUniversalRelations.c}. 
 
 \subsection{Post-merger waveform}
 
