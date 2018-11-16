@@ -74,7 +74,8 @@
 %% +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 \begin{document}
 
-\title{Surrogate waveform model using Gaussian process regression for an aligned-spin effective one body model of binary neutron star inspirals}
+%\title{Surrogate waveform model using Gaussian process regression for an aligned-spin effective one body model of binary neutron star inspirals}
+\title{Surrogate model for an aligned-spin effective one body waveform model of binary neutron star inspirals using Gaussian process regression}
 
 \author{
 Benjamin D. Lackey, 
@@ -727,8 +728,15 @@ Finally, we can compare this systematic error to the statistical error which we 
 \includegraphics[width=0.39\textwidth]{q.pdf}\\
 \includegraphics[width=0.39\textwidth]{chieff.pdf}\\
 \includegraphics[width=0.39\textwidth]{tildelambda.pdf}
-\caption{Marginalized PDFs for two waveform injections with zero noise. The parameters are identical except for the distances which are set such that the network SNRs are 30 (blue) or 60 (red). The shaded regions give the 90\% credible interval. The vertical solid black line represents the injected parameter value. The vertical dashed lines represent the parameter value with maximum likelihood.}
+\caption{Marginalized PDFs for waveform injections with zero noise. The parameters are identical except for the distances which are set such that the network SNRs are 30 (blue) or 60 (red). The shaded regions give the 90\% credible interval. The  dashed black line represents the injected parameter value.}
 \label{fig:pe}
+\end{figure}
+
+\begin{figure}[htb]
+\centering
+\includegraphics[width=0.39\textwidth]{chieff_q.pdf}
+\caption{1d and 2d marginalized PDFs. The shaded regions for the 1d PDFs give the 90\% credible interval. The contours for the 2d PDFs give the 90\% credible regions. The dashed black lines and circle represent the injected parameter value.}
+\label{fig:2dpe}
 \end{figure}
 
 %\begin{table}[htb]
