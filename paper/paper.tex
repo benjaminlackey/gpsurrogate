@@ -702,25 +702,21 @@ In Fig.~\ref{fig:timing}, we show the surrogate evaluation time as a function of
 
 \subsection{Injection runs}
 
-As a final test of the surrogate accuracy, we perform parameter estimation runs where we inject the original, time-domain \texttt{SEOBNRv4T} waveform and recover the injected parameters with the \texttt{SEOBNRv4T\_surrogate} template. We use the design sensitivity PSDs for the two advanced LIGO detectors~\cite{Aasi:2013wya} and the advanced Virgo detector~\cite{virgoPSD}. We choose as our waveform parameters $m_1=m_2=1.4M_\odot$, $\chi_1=\chi_2=0.1$, and $\Lambda_1=\Lambda_2=1286$ corresponding to the equation of state named MS1b in~\cite{ReadLackey2009}. The sky location and inclination angle are fixed at an arbitrary value, and the distance is chosen such that the optimal network signal-to-noise ratio (SNR) is either 30 or 60. We inject the waveforms into zero noise data so that the recovered parameters do not depend on the specific noise realization~\cite{NissankeHolzHughes2010}.
+As a final test of the surrogate accuracy, we perform several parameter estimation runs where we inject the original, time-domain \texttt{SEOBNRv4T} waveform and recover the injected parameters with the \texttt{SEOBNRv4T\_surrogate} template. We use the design sensitivity PSDs for the two advanced LIGO detectors~\cite{Aasi:2013wya} and the advanced Virgo detector~\cite{virgoPSD}. We choose as our waveform parameters $m_1=m_2=1.4M_\odot$, $\chi_1=\chi_2=0.1$, and $\Lambda_1=\Lambda_2=1286$ corresponding to the equation of state named MS1b in~\cite{ReadLackey2009}. The sky location and inclination angle are fixed at an arbitrary value, and the distances is chosen such that the optimal network signal-to-noise ratios (SNR) are either 30, 60, or 120. We inject the waveforms into zero noise data so that the recovered parameters do not depend on the specific noise realization~\cite{NissankeHolzHughes2010}.
 
-As discussed in more detail in~\cite{BNSPE}, the posterior $p(\vec\vartheta | d)$ for the parameters $\vec\vartheta$ given the detector data $\vec d$ is given by Bayes' theorem:
+As discussed in more detail in~\cite{BNSPE}, the posterior $p(\vec\vartheta | d)$ for the parameters $\vec\vartheta$ given the detector data $\vec d$ is given by Bayes' theorem
 \begin{equation}
 p(\vec\vartheta | \vec d) \propto p(\vec\vartheta) \mathcal{L}(\vec d | \vec\vartheta),
 \end{equation}
-where $p(\vec\vartheta)$ is the prior and $\mathcal{L}(\vec d | \vec\vartheta)$ is the likelihood. We choose for our priors the sky position and orientation uniform on the unit sphere. The distance is uniform in co-moving volume. The masses, spins, and tidal parameters are uniform in the ranges $m_{1, 2} \in [0.7, 2]M_\odot$, $\chi_{1,2} \in [-0.5, 0.5]$ and $\Lambda_{1,2} \in [0, 5000]$. The mass ratio is restricted to the range $q\in[0.5, 1]$. We sample this posterior with the parallel-tempered MCMC code in \texttt{LALInference}~\cite{lal}. As was done in~\cite{BNSPE}, we sample the data and waveform at \red{4096}~Hz, such that the Nyquist frequency is \red{2048}~Hz, and integrate the likelihood function in the interval \red{$[20, 2048]$~Hz}. Approximately \red{$10^x$} iterations are needed to produce \red{$\sim 5000$} statistically independent samples. We note that the \texttt{SEOBNRv4T} waveform model still has some signal above \red{2048~Hz} (see Fig.~\ref{fig:hoff}). To test if this had any effect on the recovered posteriors, we also performed runs with a sampling frequency of \red{8192}~Hz and integrated the likelihood function in the interval \red{$[20, 4096]$}~Hz, but did not see a significant difference in marginalized posteriors.
+where $p(\vec\vartheta)$ is the prior and $\mathcal{L}(\vec d | \vec\vartheta)$ is the likelihood. 
+For the prior we choose the sky position and orientation to be uniform on the unit sphere; the distance to be uniform in co-moving volume; the masses, spins, and tidal parameters to be uniform in the ranges $m_{1, 2} \in [0.7, 2]M_\odot$, $\chi_{1,2} \in [-0.5, 0.5]$ and $\Lambda_{1,2} \in [0, 5000]$; and the mass ratio is restricted to the range $q\in[0.5, 1]$. 
+As was done in~\cite{BNSPE}, we sample the data and waveform at \red{4096}~Hz such that the Nyquist frequency is \red{2048}~Hz, and integrate the likelihood function in the interval \red{$[20, 2048]$~Hz}. We sample this posterior with the parallel-tempered MCMC code in \texttt{LALInference}~\cite{lal} which requires approximately \red{$10^x$} iterations to produce \red{10,000--20,000} statistically independent samples. 
 
-Marginalized 1-dimensional posteriors for four key parameters are shown in Fig.~\ref{fig:pe}. These are the chirp mass $\mathcal{M} = (m_1 m_1)^{3/5}/(m_1+m_2)^{1/5}$, the mass ratio $q=m_2/m_1$, the effective spin $\chi_{\rm eff} = (m_1\chi_1+m_2\chi_2)/(m_1+m_2)$ and the effective tidal deformability parameter $\tilde\Lambda = (16/13) [(1+12q)\Lambda_1 + (12+q)q^4\Lambda_2]/(1+q)^5$. We note that the peaks of the marginalized posteriors do not line up with the injected values. One reason is that the priors are not flat in these parameters. More importantly, because the posterior is bounded by the prior for many parameters, strong correlations cause a shift in other parameters. We therefore need another measure to examine the systematic error due to the surrogate.
+We note that the \texttt{SEOBNRv4T} waveform model still has some signal above \red{2048~Hz} (see Fig.~\ref{fig:hoff}). We therefore also performed runs with a sampling frequency of \red{8192}~Hz and integrated the likelihood function in the interval \red{$[20, 4096]$}~Hz. However, this did not have a noticeable effect on the recovered posteriors.
 
-For data with zero noise, the fit between the injected waveform and the template is best when the likelihood is maximum. We therefore use the difference $\Delta\vec\vartheta_{\rm sys} = \vec\vartheta_{\rm max} - \vec\vartheta_{\rm inj}$ between the parameters that maximize the likelihood $\vec\vartheta_{\rm max}$ and the injected parameters $\vec\vartheta_{\rm inj}$ as our estimate for the systematic error due to the surrogate. In Fig.~\ref{fig:pe}, the maximum sampled likelihood is dashed, and the injected value is solid. This difference is a conservative upper limit because the maximum sampled likelihood does not necessarily correspond to the actual maximum. 
-%This is especially true for strongly correlated parameters such as the pair $q$ and $\chi_{\rm eff}$. 
-Finally, we can compare this systematic error to the statistical error which we define as the 90\% credible interval shown by the shaded region. We find that the systematic error is significantly less that the statistical error, even for the SNR=60 signal.
-
-
-
-%For data with zero noise, the fit between the injected waveform and the template is best when the likelihood is maximum. However, as a result of the priors that are bounded and not flat for some parameters, the posterior, and especially the marginalized posteriors, will not be maximized at the injected parameters even with a perfect template. We therefore use the difference between the parameters that maximize the likelihood $\vec\vartheta_{\rm max}$ and the injected parameters $\vec\vartheta_{\rm inj}$ as our estimate for the systematic error due to the surrogate. 
-%
-%Marginalized 1-dimensional posteriors for four key parameters are shown in Fig.~\ref{fig:pe}. These are the chirp mass $\mathcal{M} = (m_1 m_1)^{3/5}/(m_1+m_2)^{1/5}$, the mass ratio $q=m_2/m_1$, the effective spin $\chi_{\rm eff} = (m_1\chi_1+m_2\chi_2)/(m_1+m_2)$ and the effective tidal deformability parameter $\tilde\Lambda = (16/13) [(1+12q)\Lambda_1 + (12+q)q^4\Lambda_2]/(1+q)^5$. The maximum value of the likelihood found for each run is dashed, and the injected value is solid. Because the sampled parameters do not necessarily contain the parameters for the maximum likelihood, the difference between these parameters $\Delta\vec\vartheta_{\rm sys} = \vec\vartheta_{\rm max} - \vec\vartheta_{\rm inj}$ is an upper bound on the systematic error that results from using the surrogate as the template instead of the original \texttt{SEOBNRv4T} waveform. We can compare this systematic error to the statistical error $\Delta\vec\vartheta_{\rm stat}$ from the finite sensitivity of the detectors. Here, we will $\Delta\vec\vartheta_{\rm stat}$ as half the width of the 90\% credible interval. Table~\ref{tab:syserrors} shows that the systematic error is small compared to the statistical errors even for the injection with SNR=60.
+We show marginalized 1-dimensional posteriors for four key parameters in Fig.~\ref{fig:1dpe}. These are the chirp mass $\mathcal{M} = (m_1 m_2)^{3/5}/(m_1+m_2)^{1/5}$, the mass ratio $q=m_2/m_1$, the effective spin $\chi_{\rm eff} = (m_1\chi_1+m_2\chi_2)/(m_1+m_2)$ and the effective tidal deformability parameter $\tilde\Lambda = (16/13) [(1+12q)\Lambda_1 + (12+q)q^4\Lambda_2]/(1+q)^5$. As the SNR increases, the peaks of the 1-d marginalized posteriors become more closely aligned with the injected value. However, the distributions are noticeably asymmetric and are not centered on the injected values. 
+This results mainly because prior boundaries on some parameters, such as the mass ratio $q$, shift the marginalized PDFs for correlated parameters.
+This effect is strongest for the interaction between $\chi_{\rm eff}$ and $q$, shown in Fig.~\ref{fig:2dpe}, where the injected value $q=1$ is at the boundary of the prior. Although the injected parameter $(\chi_{\rm eff}, q) = (0.1, 1)$ lies on the ridge of maximum density in the marginalized 2-d PDF, the marginalized 1-d PDF for $\chi_{\rm eff}$ is noticeably offset. To counteract this effect in Fig.~\ref{fig:1dpe}, we also take a thin cross section containing the injected value of $q=1$ by cutting samples outside the interval $q \in [0.9, 1]$. This causes the peaks of the other 1-d distributions to be much closer to the injected values. We consider the difference between these peaks and the injected values to be a conservative bound on the size of the statistical errors due to errors in the surrogate model.
 
 \begin{figure}[htb]
 \centering
@@ -728,32 +724,16 @@ Finally, we can compare this systematic error to the statistical error which we 
 \includegraphics[width=0.39\textwidth]{q.pdf}\\
 \includegraphics[width=0.39\textwidth]{chieff.pdf}\\
 \includegraphics[width=0.39\textwidth]{tildelambda.pdf}
-\caption{Marginalized PDFs for waveform injections with zero noise. The parameters are identical except for the distances which are set such that the network SNRs are 30 (blue) or 60 (red). The shaded regions give the 90\% credible interval. The  dashed black line represents the injected parameter value.}
-\label{fig:pe}
+\caption{Marginalized 1-d PDFs for waveform injections with zero noise. The parameters are identical except for the distances which are chosen such that the network SNRs are 30 (blue), 60 (green), or 120 (red). The black PDF only includes samples for the SNR=120 injection that satisfy $q>0.9$. The shaded regions give the 90\% credible interval. The dashed black line represents the injected parameter value.}
+\label{fig:1dpe}
 \end{figure}
 
 \begin{figure}[htb]
 \centering
 \includegraphics[width=0.39\textwidth]{chieff_q.pdf}
-\caption{1d and 2d marginalized PDFs. The shaded regions for the 1d PDFs give the 90\% credible interval. The contours for the 2d PDFs give the 90\% credible regions. The dashed black lines and circle represent the injected parameter value.}
+\caption{Marginalized 1-d and 2-d PDFs for the parameters $\chi_{\rm eff}$ and $q$ for the injections with SNRs of 30 (blue) and 120 (red). The shaded regions for the 1-d PDFs give the 90\% credible interval. The contours for the 2-d PDFs give the 90\% credible regions. The dashed black lines and circle represent the injected parameter value.}
 \label{fig:2dpe}
 \end{figure}
-
-%\begin{table}[htb]
-%\centering    
-%\caption{Estimated systematic errors due to surrogate model and statistical errors from finite detector sensitivity. The ratio $\Delta\vec\vartheta_{\rm sys} /\Delta\vec\vartheta_{\rm stat}$ is given for the two injections with network SNRs of 30 and 60.} 
-%\begin{tabular}{ccc}        
-%\hline
-%$\vartheta$ & SNR=30 & SNR=60 \\
-%\hline
-%$\mathcal{M}$ &  $<$ & $<$ \\
-%$q$ & $<$  & $<$ \\
-%$\chi_{\rm eff}$ & $<$  & $<$ \\
-%$\tilde\Lambda$ &  $<$ & $<$ \\
-%\hline
-%\end{tabular}
-%\label{tab:syserrors}
-%\end{table}
 
 \subsection{GW170817}
 
