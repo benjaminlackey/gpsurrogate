@@ -160,7 +160,7 @@ where $\Delta_u^{\textrm{pm}}$ is the 4PN-accurate point-mass EOB term (Eq.~(2.2
  &- 15\,\Lambda_{3,\textrm{dyn}}^{A}(u)X_A^6X_B\,u^8 \left[1 + \left(-2 + \frac{15}{2}X_A\right)u + \left(\frac{8}{3} - \frac{311}{24}X_A + \frac{110}{3}X_A^2\right) u^2\right] + (A \leftrightarrow B)\,.
 \end{align}
 \end{widetext}
-Here, $M_{A,B}$ are the masses of bodies $A$ and $B$, $M = M_A + M_B$ is the total mass, $X_{A,B}=M_{A,B}/M$, $u=1/r$ is the inverse of the ($M$-rescaled) EOB radial coordinate $r$, and $\Lambda_{\ell,\textrm{dyn}}^{A,B}(u)$ are the dimensionless $2^{\ell}$-polar dynamical tidal polarizabilities. Within the dynamical tides model, the tidal polarizabilities are not constant, but rather depend on the orbital separation and on the values of the $f$-mode frequencies $\hat{\omega}_{0\ell}^{A,B}$\footnote{Here, $\hat{\omega}_{0\ell}^{A,B}=M_{A,B}\omega_{0\ell}^{A,B}$, where $\omega_{0\ell}^{A,B}$ is the frequency in geometrized units.}. In particular, the dimensionless dynamical tidal polarizability reads
+Here, $m_{A,B}$ are the masses of bodies $A$ and $B$, $M = m_A + m_B$ is the total mass, $X_{A,B}=m_{A,B}/M$, $u=1/r$ is the inverse of the ($M$-rescaled) EOB radial coordinate $r$, and $\Lambda_{\ell,\textrm{dyn}}^{A,B}(u)$ are the dimensionless $2^{\ell}$-polar dynamical tidal polarizabilities. Within the dynamical tides model, the tidal polarizabilities are not constant, but rather depend on the orbital separation and on the values of the $f$-mode frequencies $\hat{\omega}_{0\ell}^{A,B}$\footnote{Here, $\hat{\omega}_{0\ell}^{A,B}=m_{A,B}\omega_{0\ell}^{A,B}$, where $\omega_{0\ell}^{A,B}$ is the frequency in geometrized units.}. In particular, the dimensionless dynamical tidal polarizability reads
 \begin{equation}
 \Lambda_{\ell,\textrm{dyn}}^{A,B}(u)=\Lambda_{\ell}^{A,B}\hat{k}_{\ell, \textrm{dyn}}(u;\hat{\omega}_{0\ell}^{A,B})\,,
 \end{equation}
@@ -168,7 +168,7 @@ where $\Lambda_{\ell}^{A,B}$ is the dimensionless adiabatic tidal polarizability
 \begin{equation}
 \Lambda_{\ell}^{A,B}=\frac{2}{(2\ell-1)!!}\frac{k^{A,B}_{\ell}}{C_{A,B}^{2\ell+1}}\,,
 \end{equation}
-with $k^{A,B}_{\ell}$ the tidal Love number and $C_{A,B}=R_{A,B}/M_{A,B}$ the NS compactness, which depends on the NS radius $R_{A,B}$. Here, $\hat{k}_{\ell, \textrm{dyn}}(u;\hat{\omega}_{0\ell}^{A,B})$ is the separation-dependent, dimensionless enhancement factor~\cite{Steinhoff:2016rfi, Dietrich:2017feu}, which depends on the value of the $f$-mode $2^\ell$-pole dimensionless angular frequency, $\hat{\omega}_{0\ell}^{A,B}$.
+with $k^{A,B}_{\ell}$ the tidal Love number and $C_{A,B}=R_{A,B}/m_{A,B}$ the NS compactness, which depends on the NS radius $R_{A,B}$. Here, $\hat{k}_{\ell, \textrm{dyn}}(u;\hat{\omega}_{0\ell}^{A,B})$ is the separation-dependent, dimensionless enhancement factor~\cite{Steinhoff:2016rfi, Dietrich:2017feu}, which depends on the value of the $f$-mode $2^\ell$-pole dimensionless angular frequency, $\hat{\omega}_{0\ell}^{A,B}$.
 
 Introducing a Keplerian orbital frequency defined from the radius variable as $M\Omega \equiv u^{3/2}$, using the notations (dropping the indices $A,B$)
 \begin{subequations}
@@ -195,10 +195,11 @@ Tidal effects also enter the radiative part of the model. In particular, the poi
 \begin{equation}
 h_{\ell m}^{\textrm{insp-plunge}} = h_{\ell m}^{\textrm{pm}} + h_{\ell m}^{\textrm{tidal}}\,,\label{hlminspplunge}
 \end{equation} 
-where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu} as
-\be
-	\hat{k}_{\ell, \rm{dyn}}^{A, \mathrm{diss}}(u; \omega_{0\ell}) = \hat{k}_{\ell, \rm{dyn}}^{A} \frac{4 x + 6 X_{B}}{3(1+2X_{B})} \,.
-\ee
+where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}.
+%\be
+%	\hat{k}_{\ell, \rm{dyn}}^{A, \mathrm{diss}}(u; \omega_{0\ell}) = \hat{k}_{\ell, \rm{dyn}}^{A} \frac{4 x + 6 X_{B}}{3(1+2X_{B})} \,.
+%\ee
+
 The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the gravitational-wave flux (Eqs.~(5) and~(6) of Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived. The Hamiltonian equations of motion with this radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. We only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
 
 %Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a 1000th of the leading-order estimate for $\dot{r}$, that is $\propto 64/5 \nu/r^4$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$. 
@@ -301,7 +302,7 @@ Although this post-merger model has not been fit to NR BNS simulations, it is in
 
 \subsection{Reducing the number of matter parameters}
 
-After rescaling with the total mass $M$, the aligned-spin EOB waveform with dynamical tides depends on 13 intrinsic parameters: the mass ratio $q=M_B/M_A\leq1$, the two dimensionless spin components along the orbital angular momentum $\chi_{A,B}$, the two spin-induced quadrupole-monopole parameters $\kappa_{A,B}$, the two adiabatic quadrupolar tidal polarizabilities $\Lambda_2^{A,B}$, the two adiabatic octupolar tidal polarizabilities $\Lambda_3^{A,B}$, and the four $\ell=2,3$ fundamental $f$-mode angular frequencies $\omega_{0\ell}^{A,B}$. To reduce the dimensionality of the intrinsic parameter space, we use nearly EOS-independent fits (universal relations) for these parameters in terms of $\Lambda_2$ as discussed below. This reduces the number of matter parameters from ten to two.
+After rescaling with the total mass $M$, the aligned-spin EOB waveform with dynamical tides depends on 13 intrinsic parameters: the mass ratio $q=m_B/m_A\leq1$, the two dimensionless spin components along the orbital angular momentum $\chi_{A,B}$, the two spin-induced quadrupole-monopole parameters $\kappa_{A,B}$, the two adiabatic quadrupolar tidal polarizabilities $\Lambda_2^{A,B}$, the two adiabatic octupolar tidal polarizabilities $\Lambda_3^{A,B}$, and the four $\ell=2,3$ fundamental $f$-mode angular frequencies $\omega_{0\ell}^{A,B}$. To reduce the dimensionality of the intrinsic parameter space, we use nearly EOS-independent fits (universal relations) for these parameters in terms of $\Lambda_2$ as discussed below. This reduces the number of matter parameters from ten to two.
 
 Eq.~(15) of Ref.~\cite{YagiYunes2017} provides a fit for $\kappa$ as a function of $\Lambda_2$. This relation has been fit for a sample of EOSs and for tidal parameters in the range $1 \leq \Lambda_2\leq10^4$. This formula, however, diverges at small values of $\Lambda_2$, so we replace it with a polynomial function that approaches the Kerr value of $\kappa = 1$ at $\Lambda_2 = 0$. We require this extension to be continuous at $\Lambda_2 = 1$. The exact relation we use is
 \begin{equation}
@@ -703,16 +704,16 @@ The authors sincerely thank Justin Vines and Tanja Hinderer for deriving the qua
 
 The explicit expressions for the amplitude and phase of the TaylorF2 waveform are as follows. For the amplitude we use the 1PN correction to the leading order waveform,
 \begin{equation}
-A_{\rm F2} = \sqrt{\frac{5\pi\eta}{24}} v^{-7/2} \left[ 1 + \left(-\frac{323}{224} + \frac{451\eta}{168} \right)v^{2} \right],
+A_{\rm F2} = -\sqrt{\frac{5\pi\eta}{24}} v^{-7/2} \left[ 1 + \left(-\frac{323}{224} + \frac{451\eta}{168} \right)v^{2} \right],
 \end{equation}
-where $v=(\pi M f)^{1/3}$ is the standard PN parameter. The phase has the schematic form
+where $v=(\pi M f)^{1/3}$ is the standard PN parameter. The sign is set following the conventions of \texttt{LAL}~\cite{lal}. The phase has the schematic form
 \begin{align}
 \Phi_{\rm F2} =& -2\pi f t_{0} + \phi_{0} + \frac{\pi}{4} - \frac{3}{128\eta}v^{-5} \left[\Phi_{\rm F2}^{\rm PP}(\eta) \right. \nonumber\\
 	& \left. \qquad + \Phi_{\rm F2}^{\rm Spin} (\eta, \chi_1, \chi_2) + \Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)  \right] \,,
 \end{align}
-where $t_{0}$ and $\phi_{0}$ are constants related to the freedom of choosing the time and phase of coalescence. We separated point particle terms $\Phi_{\rm F2}^{\rm PP}(\eta)$, spin terms $\Phi_{\rm F2}^{\rm Spin}(\eta, \chi_{1}, \chi_{2})$ and tidal terms $\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$. We include point particle terms to the highest know order of 3.5PN (see e.g.~\cite{Blanchet:2013haa}).
+where $t_{0}$ and $\phi_{0}$ are constants related to the freedom of choosing the time and phase of coalescence. We separated point particle terms $\Phi_{\rm F2}^{\rm PP}(\eta)$, spin terms $\Phi_{\rm F2}^{\rm Spin}(\eta, \chi_{1}, \chi_{2})$ and tidal terms $\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$. We include point particle terms to the highest know order of 3.5PN (see e.g.~\cite{Blanchet2014Review}).
 
-The spin terms can be decomposed into spin-orbit and spin-spin terms (ignoring cubic-in-spin contributions at 3.5PN) as $\Phi_{\rm F2}^{\rm Spin} = \Phi_{\rm F2}^{\rm SO}  + \Phi_{\rm F2}^{\rm SS} $. We include spin-orbit terms up to 3.5PN~\cite{Blanchet:2013haa}. For spin-square terms, as the \texttt{SEOBNRv4T} waveform does not include yet 3PN spin-spin effects (see Sec.~\ref{subsec:QM}), we stop at  the leading 2PN in the \texttt{TaylorF2} waveform and ignore the known 3PN terms. The main reason for doing this is because including only common physical effects in both \texttt{SEOBNRv4T} and \texttt{TaylorF2} makes the residual $\Delta\Phi(Mf; \bx)$ smaller and have less variation, making it easier to fit at a given error requirement.
+The spin terms can be decomposed into spin-orbit and spin-spin terms (ignoring cubic-in-spin contributions at 3.5PN) as $\Phi_{\rm F2}^{\rm Spin} = \Phi_{\rm F2}^{\rm SO}  + \Phi_{\rm F2}^{\rm SS} $. We include spin-orbit terms up to 3.5PN~\cite{Blanchet2014Review}. For spin-square terms, as the \texttt{SEOBNRv4T} waveform does not include yet 3PN spin-spin effects (see Sec.~\ref{subsec:QM}), we stop at  the leading 2PN in the \texttt{TaylorF2} waveform and ignore the known 3PN terms. The main reason for doing this is because including only common physical effects in both \texttt{SEOBNRv4T} and \texttt{TaylorF2} makes the residual $\Delta\Phi(Mf; \bx)$ smaller and have less variation, making it easier to fit at a given error requirement.
 
 The tidal terms $\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$ are known to 6PN order~\cite{VinesFlanaganHinderer2011}. These tidal contributions to the phase are exactly as used in the \texttt{LAL} waveform \texttt{TaylorF2}.
 
