@@ -204,6 +204,7 @@ The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculat
 %Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a 1000th of the leading-order estimate for $\dot{r}$, that is $\propto 64/5 \nu/r^4$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$. 
 
 \subsection{Spin-induced quadrupole-monopole terms}
+\label{subsec:QM}
 
 \red{[check notations have been introduced]} For the model used in this paper, \texttt{SEOBNRv4T}, spin effects are based on the point-mass model \texttt{SEOBNRv4}~\cite{Bohe:2016gbl} that was calibrated to 141 NR simulations of BBH systems with aligned spins. It includes consistently spin-orbit interactions up to 3.5PN order and spin-spin interactions up to 2PN order. In addition, the \texttt{SEOBNRv4T} model accounts for the spin-induced quadrupole moment of neutron stars~\cite{Poisson1998}, an extended-body effect distinguishing neutron stars from black holes. This effect is quadratic in the spins, appears at 2PN order as compared to the tidal effects that first appear at 5PN order, and is significant for systems with large spin~\cite{HarryHinderer2018}. Although complete PN expressions for this contribution in the dynamics and waveform are known at 3PN~\cite{Bohe:2015ana}\footnote{And at 4PN for the dynamics only, see~\cite{}.}, at the moment the effect is only consistently included at the leading 2PN order. We leave for future work an extension to higher orders\footnote{\red{complete this} We note that TaylorF2 models do include all spin-square terms at 3PN, see App.~\ref{sec:taylorf2}. They are also present in the IMRPhenomPv2+NRTides model, but not in the SEOBNRv4ROM+NRTides model. TEOBResumS is also limited to the leading 2PN order.}.
 
@@ -692,7 +693,7 @@ This model notably does not include precession for non-aligned spins. Although n
 %% ________________________________________________________
 \begin{acknowledgments}
 
-The authors sincerely thank Zoheyr Doctor, Bhooshan Gadre, and Prayush Kumar for reviewing and testing the implementation of \texttt{SEOBNRv4T\_surrogate} in \texttt{LAL}. BL also thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the University of Washington for helpful advice at the start of this work.
+The authors sincerely thank Justin Vines and Tanja Hinderer for deriving the quadrupole-monopole corrections needed in the model. The authors are grateful to Zoheyr Doctor, Bhooshan Gadre, and Prayush Kumar for reviewing and testing the implementation of \texttt{SEOBNRv4T\_surrogate} in \texttt{LAL}. BL also thanks the participants of the Bayesian Methods in Nuclear Physics workshop at the University of Washington for helpful advice at the start of this work.
 
 \end{acknowledgments}
 
@@ -700,18 +701,18 @@ The authors sincerely thank Zoheyr Doctor, Bhooshan Gadre, and Prayush Kumar for
 \section{TaylorF2 reference waveform}
 \label{sec:taylorf2}
 
-The explicit expressions for the amplitude and phase of the TaylorF2 waveform are as follows. For the amplitude we use the 1PN correction to the leading order waveform.
+The explicit expressions for the amplitude and phase of the TaylorF2 waveform are as follows. For the amplitude we use the 1PN correction to the leading order waveform,
 \begin{equation}
 A_{\rm F2} = \sqrt{\frac{5\pi\eta}{24}} v^{-7/2} \left[ 1 + \left(-\frac{323}{224} + \frac{451\eta}{168} \right)v^{2} \right],
 \end{equation}
-where $v=(\pi M f)^{1/3}$ is the standard PN parameter. This differs slightly from the decomposition used by \texttt{LAL}~\cite{lal} \red{[explain]}. The phase has the schematic form
+where $v=(\pi M f)^{1/3}$ is the standard PN parameter. The phase has the schematic form
 \begin{align}
 \Phi_{\rm F2} =& -2\pi f t_{0} + \phi_{0} + \frac{\pi}{4} - \frac{3}{128\eta}v^{-5} \left[\Phi_{\rm F2}^{\rm PP}(\eta) \right. \nonumber\\
 	& \left. \qquad + \Phi_{\rm F2}^{\rm Spin} (\eta, \chi_1, \chi_2) + \Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)  \right] \,,
 \end{align}
-where $t_{0}$ and $\phi_{0}$ are constants related to the freedom of choosing the time and phase of coalescence. We separated point particle terms $\Phi_{\rm F2}^{\rm PP}(\eta)$, spin terms $\Phi_{\rm F2}^{\rm Spin}(\eta, \chi_{1}, \chi_{2})$ and tidal terms $\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$. We include point particle terms to the highest know order of 3.5PN~\cite{}.
+where $t_{0}$ and $\phi_{0}$ are constants related to the freedom of choosing the time and phase of coalescence. We separated point particle terms $\Phi_{\rm F2}^{\rm PP}(\eta)$, spin terms $\Phi_{\rm F2}^{\rm Spin}(\eta, \chi_{1}, \chi_{2})$ and tidal terms $\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$. We include point particle terms to the highest know order of 3.5PN (see e.g.~\cite{Blanchet:2013haa}).
 
-The spin terms can be decomposed into spin-orbit and spin-spin terms (ignoring cubic-in-spin contributions at 3.5PN~\cite{}) as $\Phi_{\rm F2}^{\rm Spin} = \Phi_{\rm F2}^{\rm SO}  + \Phi_{\rm F2}^{\rm SS} $. We include spin-orbit terms up to 3.5PN~\cite{}. For spin-square terms, as the \texttt{SEOBNRv4T} waveform does not include yet 3PN spin-spin effects (see Sec.~\ref{}), we stop at  the leading 2PN in the \texttt{TaylorF2} waveform and ignore the known 3PN terms. The main reason for doing this is because including only common physical effects in both \texttt{SEOBNRv4T} and \texttt{TaylorF2} makes the residual $\Delta\Phi(Mf; \bx)$ smaller and have less variation, making it easier to fit at a given error requirement.
+The spin terms can be decomposed into spin-orbit and spin-spin terms (ignoring cubic-in-spin contributions at 3.5PN) as $\Phi_{\rm F2}^{\rm Spin} = \Phi_{\rm F2}^{\rm SO}  + \Phi_{\rm F2}^{\rm SS} $. We include spin-orbit terms up to 3.5PN~\cite{Blanchet:2013haa}. For spin-square terms, as the \texttt{SEOBNRv4T} waveform does not include yet 3PN spin-spin effects (see Sec.~\ref{subsec:QM}), we stop at  the leading 2PN in the \texttt{TaylorF2} waveform and ignore the known 3PN terms. The main reason for doing this is because including only common physical effects in both \texttt{SEOBNRv4T} and \texttt{TaylorF2} makes the residual $\Delta\Phi(Mf; \bx)$ smaller and have less variation, making it easier to fit at a given error requirement.
 
 The tidal terms $\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_1, \Lambda_2)$ are known to 6PN order~\cite{VinesFlanaganHinderer2011}. These tidal contributions to the phase are exactly as used in the \texttt{LAL} waveform \texttt{TaylorF2}.
 
@@ -719,14 +720,14 @@ For completeness, we give below explicit expressions of the PN coefficients ente
 
 The point particle terms coefficients up to 3.5PN can be found e.g. in Eq.~(3.18) of Ref.~\cite{BuonannoIyerOchsner2009}. The non-zero coefficients read
 \begin{align}
-	a_{2} &= \frac{55 \nu }{9}+\frac{3715}{756} \nonumber\\
+	a_{2} &= \frac{55 \eta }{9}+\frac{3715}{756} \nonumber\\
 	a_{3} &= -16 \pi \nonumber\\
-	a_{4} &= \frac{3085 \nu ^2}{72}+\frac{27145 \nu }{504}+\frac{15293365}{508032} \nonumber\\
-	a_{5} &= -\frac{65 \pi  \nu }{9}-\frac{65}{3} \pi  \nu   \ln v +\frac{38645}{252} \pi   \ln v +\frac{38645 \pi }{756} \nonumber\\
-	a_{6} &= -\frac{127825 \nu ^3}{1296}+\frac{76055 \nu ^2}{1728}+\frac{2255 \pi ^2 \nu }{12} \nonumber\\ 
-	& -\frac{15737765635 \nu }{3048192}-\frac{6848  \ln v }{21}-\frac{640 \pi ^2}{3}-\frac{6848 \gamma_{E} }{21} \nonumber\\ 
+	a_{4} &= \frac{3085 \eta ^2}{72}+\frac{27145 \eta }{504}+\frac{15293365}{508032} \nonumber\\
+	a_{5} &= -\frac{65 \pi  \eta }{9}-\frac{65}{3} \pi  \eta   \ln v +\frac{38645}{252} \pi   \ln v +\frac{38645 \pi }{756} \nonumber\\
+	a_{6} &= -\frac{127825 \eta ^3}{1296}+\frac{76055 \eta ^2}{1728}+\frac{2255 \pi ^2 \eta }{12} \nonumber\\ 
+	& -\frac{15737765635 \eta }{3048192}-\frac{6848  \ln v }{21}-\frac{640 \pi ^2}{3}-\frac{6848 \gamma_{E} }{21} \nonumber\\ 
 	& +\frac{11583231236531}{4694215680}-\frac{13696 \log (2)}{21} \nonumber\\
-	a_{7} &= -\frac{74045 \pi  \nu ^2}{756}+\frac{378515 \pi  \nu }{1512}+\frac{77096675 \pi }{254016}
+	a_{7} &= -\frac{74045 \pi  \eta ^2}{756}+\frac{378515 \pi  \eta }{1512}+\frac{77096675 \pi }{254016}
 \end{align}
 
 The spin-orbit and spin-spin corrections have the structure
@@ -737,36 +738,36 @@ The spin-orbit and spin-spin corrections have the structure
 \begin{widetext}
 The non-zero spin-orbit coefficients are
 \begin{align}
-	b_{3} &= \frac{113 \delta   \chi_a }{3}+\left(\frac{113}{3}-\frac{76 \nu }{3}\right)  \chi_s \nonumber\\
-	b_{5} &=  \chi_s  \left(\frac{340 \nu ^2}{9}+\frac{24260 \nu }{81}+\frac{340}{3} \nu ^2  \ln v +\frac{24260}{27} \nu   \ln v -\frac{732985  \ln v }{756}-\frac{732985}{2268}\right) \nonumber\\
-	& \quad + \chi_a  \left(-\frac{140 \delta  \nu }{9}-\frac{732985 \delta }{2268}-\frac{140}{3} \delta  \nu   \ln v -\frac{732985}{756} \delta   \ln v \right)  \nonumber\\
-	b_{6} &= \frac{2270 \pi  \delta   \chi_a }{3}+\left(\frac{2270 \pi }{3}-520 \pi  \nu \right)  \chi_s \nonumber\\
-	b_{7} &=  \chi_a  \left(-\frac{1985 \delta  \nu ^2}{48}+\frac{26804935 \delta  \nu }{6048}-\frac{25150083775 \delta }{3048192}\right)+\left(\frac{5345 \nu ^3}{36}-\frac{1042165 \nu ^2}{3024}+\frac{10566655595 \nu }{762048}-\frac{25150083775}{3048192}\right)  \chi_s \,,
+	b_{3} &= \frac{113 \delta   \chi_a }{3}+\left(\frac{113}{3}-\frac{76 \eta }{3}\right)  \chi_s \nonumber\\
+	b_{5} &=  \chi_s  \left(\frac{340 \eta ^2}{9}+\frac{24260 \eta }{81}+\frac{340}{3} \eta ^2  \ln v +\frac{24260}{27} \eta   \ln v -\frac{732985  \ln v }{756}-\frac{732985}{2268}\right) \nonumber\\
+	& \quad + \chi_a  \left(-\frac{140 \delta  \eta }{9}-\frac{732985 \delta }{2268}-\frac{140}{3} \delta  \eta   \ln v -\frac{732985}{756} \delta   \ln v \right)  \nonumber\\
+	b_{6} &= \frac{2270 \pi  \delta   \chi_a }{3}+\left(\frac{2270 \pi }{3}-520 \pi  \eta \right)  \chi_s \nonumber\\
+	b_{7} &=  \chi_a  \left(-\frac{1985 \delta  \eta ^2}{48}+\frac{26804935 \delta  \eta }{6048}-\frac{25150083775 \delta }{3048192}\right)+\left(\frac{5345 \eta ^3}{36}-\frac{1042165 \eta ^2}{3024}+\frac{10566655595 \eta }{762048}-\frac{25150083775}{3048192}\right)  \chi_s \,,
 \end{align}
 while the leading-order quadratic-in-spin term reads
 \begin{align}
-	c_{4} &= \chi_s ^2 \left(-50 \delta   \kappa_a +100  \kappa_s  \nu -50  \kappa_s -\frac{195 \nu }{2}-\frac{5}{8}\right) + \chi_a   \chi_s  \left(-100 \delta   \kappa_s -\frac{5 \delta }{4}+200  \kappa_a  \nu -100  \kappa_a \right) \nonumber\\
-	& + \chi_a ^2 \left(-50 \delta   \kappa_a +100  \kappa_s  \nu -50  \kappa_s +100 \nu -\frac{5}{8}\right) \,.
+	c_{4} &= \chi_s ^2 \left(-50 \delta   \kappa_a +100  \kappa_s  \eta -50  \kappa_s -\frac{195 \eta }{2}-\frac{5}{8}\right) + \chi_a   \chi_s  \left(-100 \delta   \kappa_s -\frac{5 \delta }{4}+200  \kappa_a  \eta -100  \kappa_a \right) \nonumber\\
+	& + \chi_a ^2 \left(-50 \delta   \kappa_a +100  \kappa_s  \eta -50  \kappa_s +100 \eta -\frac{5}{8}\right) \,.
 \end{align}
-As explained above, to be consistent with the fact that this PN information has not yet been incorporated in \texttt{SEOBNRv4T}, we do not include the next-to-leading 3PN term, which for reference is given by
+As explained above, to be consistent with the fact that this PN information has not yet been incorporated in \texttt{SEOBNRv4T}, we do not include the next-to-leading 3PN term, which for reference is given by~\cite{Bohe:2015ana}
 \begin{align}
-	c_{6} &=  \chi_s ^2 \left(-\frac{1495 \delta   \kappa_a  \nu }{6}+\frac{26015 \delta   \kappa_a }{28}-240  \kappa_s  \nu ^2-\frac{44255  \kappa_s  \nu }{21}+\frac{26015  \kappa_s }{28}+\frac{3415 \nu ^2}{9}+\frac{829705 \nu }{504}-\frac{1344475}{2016}\right) \nonumber\\
-	& + \chi_a   \chi_s  \left(-\frac{1495 \delta   \kappa_s  \nu }{3}+\frac{26015 \delta   \kappa_s }{14}+\frac{745 \delta  \nu }{18}-\frac{1344475 \delta }{1008}-480  \kappa_a  \nu ^2-\frac{88510  \kappa_a  \nu }{21}+\frac{26015  \kappa_a }{14}\right) \nonumber\\
-	& + \chi_a ^2 \left(-\frac{1495 \delta   \kappa_a  \nu }{6}+\frac{26015 \delta   \kappa_a }{28}-240  \kappa_s  \nu ^2-\frac{44255  \kappa_s  \nu }{21}+\frac{26015  \kappa_s }{28}-240 \nu ^2+\frac{267815 \nu }{252}-\frac{1344475}{2016}\right)\,.
+	c_{6} &=  \chi_s ^2 \left(-\frac{1495 \delta   \kappa_a  \eta }{6}+\frac{26015 \delta   \kappa_a }{28}-240  \kappa_s  \eta ^2-\frac{44255  \kappa_s  \eta }{21}+\frac{26015  \kappa_s }{28}+\frac{3415 \eta ^2}{9}+\frac{829705 \eta }{504}-\frac{1344475}{2016}\right) \nonumber\\
+	& + \chi_a   \chi_s  \left(-\frac{1495 \delta   \kappa_s  \eta }{3}+\frac{26015 \delta   \kappa_s }{14}+\frac{745 \delta  \eta }{18}-\frac{1344475 \delta }{1008}-480  \kappa_a  \eta ^2-\frac{88510  \kappa_a  \eta }{21}+\frac{26015  \kappa_a }{14}\right) \nonumber\\
+	& + \chi_a ^2 \left(-\frac{1495 \delta   \kappa_a  \eta }{6}+\frac{26015 \delta   \kappa_a }{28}-240  \kappa_s  \eta ^2-\frac{44255  \kappa_s  \eta }{21}+\frac{26015  \kappa_s }{28}-240 \eta ^2+\frac{267815 \eta }{252}-\frac{1344475}{2016}\right)\,.
 \end{align}
 \end{widetext}
 
-Finally, the tidal contributions to the phasing are given by~\cite{VinesFlanaganHinderer2011}
+Finally, the tidal contributions to the phasing take the form~\cite{VinesFlanaganHinderer2011}
 \begin{equation}
-	\Phi_{\rm Tidal}^{\rm SS}(\eta, \Lambda_{1}, \Lambda_{2}) = d_{10} v^{10} + d_{12} v^{12} + \mathcal{O}(v^{13})
+	\Phi_{\rm F2}^{\rm Tidal}(\eta, \Lambda_{1}, \Lambda_{2}) = d_{10} v^{10} + d_{12} v^{12} + \mathcal{O}(v^{13}) \,.
 \end{equation}
-Introducing convenient mass-weighted combinations of the tidal parameters, expressed using $X_{1} = m_{1}/(m_{1} + m_{2})$ and $X_{2} = m_{2}/(m_{1} + m_{2})$, \red{[to be checked]}
+Introducing convenient mass-weighted combinations of the tidal parameters, expressed using $X_{1} = m_{1}/(m_{1} + m_{2})$ and $X_{2} = m_{2}/(m_{1} + m_{2})$,
 \begin{align}
-	\tilde\Lambda &= \frac{16}{13} \frac{(X_1+12X_2)X_1^4\Lambda_1 + (12X_1+X_2)X_2^4\Lambda_2}{(X_1+X_2)^5} \nonumber\\
-	\delta\tilde\Lambda =& \frac{(1319X_1^2 - 7996X_1X_2 - 11005X_2^2)X_1^4\Lambda_1}{1319(X_1+X_2)^6} \\
-& + \frac{(11005X_1^2 + 7996X_1X_2 - 1319X_2^2)X_2^4\Lambda_2}{1319(X_1+X_2)^6} \,,
+	\tilde\Lambda &= \frac{16}{13} \left[(12 - 11 X_1)X_1^4\Lambda_1 + (12 - 11 X_2)X_2^4\Lambda_2 \right] \nonumber\\
+	\delta\tilde\Lambda =& \frac{1}{1319} \left[(-11005 + 14014 X_1 - 1690 X_{1}^{2})X_1^4\Lambda_1 \right. \nonumber\\ 
+	& \left. \quad\quad + (11005 - 14014 X_2 + 1690 X_{2}^{2}) X_2^4\Lambda_2 \right] \,,
 \end{align}
-the coefficients are given by \red{[to be checked]}
+the coefficients are given by
 \begin{align}
 	d_{10} &= -\frac{39}{2}\tilde\Lambda \nonumber\\
 	d_{12} &= -\frac{3115}{64}\tilde\Lambda + \frac{6595}{364}(X_1-X_2)\delta\tilde\Lambda \,.
