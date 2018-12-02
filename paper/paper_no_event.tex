@@ -256,9 +256,9 @@ When translating the above for the EOB factorized waveform (see e.g. (17) in~\ci
 \ee
 with $\mathcal{A}$ the quantity given by~\eqref{eq:ABBH} for a BBH or~\eqref{eq:ABNS} for a BNS. 
 
-\subsection{Post-merger waveform}
+\subsection{Waveform termination}
 
-We now look for a suitable time $t_{\rm match}$ to stop the numerical integration and match with a post-merger waveform. In the point-mass model, \texttt{SEOBNRv4}, nonquasicircular corrections to the inspiral-plunge signal guarantee that the waveform peaks, and $t_{\rm match}$ is chosen to be the time of the peak amplitude $t_{\rm peak}^{\rm amp}$. Here, we do not use nonquasicircular corrections tuned to BNS simulations, so we have less control over the behavior of Eq.~(\ref{hlminspplunge}) in the late inspiral. We therefore choose the following definition for $t_{\rm match}$. Let $t_{\rm peak}^{\rm amp}$ be the earliest time when the amplitude $|h_{22}^{\textrm{insp-plunge}}|$ of the (2, 2) mode peaks, and let $t_{\rm peak}^{\rm freq}$ be the time when the frequency $\omega_{22}^{\rm insp-plunge}$ of the (2, 2) mode peaks. Then,
+We now look for a suitable time $t_{\rm match}$ to stop the numerical integration and match with an effective post-merger waveform. In the point-mass model, \texttt{SEOBNRv4}, nonquasicircular corrections to the inspiral-plunge signal guarantee that the waveform peaks, and $t_{\rm match}$ is chosen to be the time of the peak amplitude $t_{\rm peak}^{\rm amp}$. Here, although we include nonquasicircular corrections, they are computed as in the BBH case and are not tuned to BNS simulations, so we have less control over the behavior of Eq.~(\ref{hlminspplunge}) in the late inspiral. We therefore choose the following definition for $t_{\rm match}$. Let $t_{\rm peak}^{\rm amp}$ be the earliest time when the amplitude $|h_{22}^{\textrm{insp-plunge}}|$ of the (2, 2) mode peaks, and let $t_{\rm peak}^{\rm freq}$ be the time when the frequency $\omega_{22}^{\rm insp-plunge}$ of the (2, 2) mode peaks. Then,
 \begin{equation}
 t_{\textrm{match}} = \min \left(t_{\textrm{peak}}^{\textrm{amp}},t_{\textrm{peak}}^{\textrm{freq}}\right)\,.\label{tmatch}
 \end{equation}
@@ -269,7 +269,7 @@ For some waveforms, the amplitude does not peak. In this case, we choose $t_{\rm
 %Ref.~\cite{Dietrich:2017feu} carried out comprehensive comparisons of this model to state-of-the-art NR simulations of coalescing nonspinning BNSs with different mass ratios and equations of state. The model can accurately describe the GW phasing up to the last cycle before merger for systems with soft equation of state, while improvements are still needed for systems with stiff equation of state. \red{[[To what accuracy? Is this paragraph already in the intro and can be deleted?]]} 
 
 
-In BNS simulations, the waveform rapidly tapers to zero amplitude in 1--2 gravitational-wave cycles after reaching peak amplitude. The BNS system then either undergoes prompt collapse or post-merger oscillations of the remnant. We model this tapering in terms of analytic functions for the amplitude $A^{\textrm{post-mrg}}(t)$ and phase $\phi^{\textrm{post-mrg}}(t)$ such that $h_{22}^{\textrm{post-mrg}}(t) = A^{\textrm{post-mrg}}(t) \exp{[i\phi^{\textrm{post-mrg}}(t)]}$. 
+In BNS simulations, the waveform rapidly decreases in amplitude in 1--2 gravitational-wave cycles after reaching peak amplitude. The BNS system then either undergoes prompt collapse or post-merger oscillations of the remnant. We do not attempt to model post-merger oscillations, and instead model an approximate peak emission and a subsequenct tapering to zero. This signal will be represented in terms of analytic functions for the amplitude $A^{\textrm{post-mrg}}(t)$ and phase $\phi^{\textrm{post-mrg}}(t)$ such that $h_{22}^{\textrm{post-mrg}}(t) = A^{\textrm{post-mrg}}(t) \exp{[i\phi^{\textrm{post-mrg}}(t)]}$. 
 
 For the amplitude, we smoothly extend the waveform after $t_{\rm match}$ with a linear fit, and then taper the resulting amplitude. The linear extension is defined by
 \begin{align}
@@ -284,20 +284,20 @@ W(t) = \frac{1}{1+\exp{[(t- t^{22}_{\textrm{match}}-15M)/\tau]}}\,.
 \end{equation}
 The final amplitude after windowing is then given by $|h_{22}(t)| = \hat A(t) W(t)$.
 
-For the phase, we smoothly extend the waveform frequency such that it agrees with the inspiral frequency at a time $t_{\rm freq} = t_{\rm match} - 20M$ before the matching time $t_{\rm match}$, but then stretches out the frequency evolution such that it only approaches $\omega_{\rm match}$ asymptotically. We define this frequency evolution as
+For the phase, we smoothly extend the waveform frequency such that it agrees with the inspiral frequency at a time $t_{\rm freq} = t_{\rm match} - 12M$ before the matching time $t_{\rm match}$, but then stretches out the frequency evolution such that it only approaches $\omega_{\rm match}$ asymptotically. We define this frequency evolution as
 \begin{align}
-\omega(t) = \omega_{\rm match} - \Delta\omega \exp\left[ -(t - t_{\rm freq}) / (20M) \right],
+\omega(t) = \omega_{\rm match} - \Delta\omega \exp\left[ -(t - t_{\rm freq}) / (12M) \right],
 \end{align}
 where $\Delta\omega = \omega_{\rm match} - \omega_{\rm freq}$. Integrating the frequency, and requiring continuity at $t_{\rm freq}$, results in the final expression for the phase
 \begin{align}
 \phi_{22}(t) = \left\{\begin{array}{ll}
 \phi_{22}^{\textrm{insp-plunge}}(t), & t \leq t_{\rm freq} \,, \\
-\phi_{\rm freq} + \omega_{\rm match}(t - t_{\rm freq}) + 20M \Delta\omega \left\{ \right. & \\
-  \left. \exp\left[ -(t - t_{\rm freq}) / (20M) \right] - 1\right\} \,,& t > t_{\rm freq} \, .
+\phi_{\rm freq} + \omega_{\rm match}(t - t_{\rm freq}) + 12M \Delta\omega \left\{ \right. & \\
+  \left. \exp\left[ -(t - t_{\rm freq}) / (12M) \right] - 1\right\} \,,& t > t_{\rm freq} \, .
 \end{array}\right.
 \end{align}
 
-Although this post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations.
+Although this effective post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations.
 
 
 \subsection{Reducing the number of matter parameters}
