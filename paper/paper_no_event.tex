@@ -168,13 +168,38 @@ where $\Lambda_{\ell}^{A,B}$ is the dimensionless adiabatic tidal polarizability
 \begin{equation}
 \Lambda_{\ell}^{A,B}=\frac{2}{(2\ell-1)!!}\frac{k^{A,B}_{\ell}}{C_{A,B}^{2\ell+1}}\,,
 \end{equation}
-with $k^{A,B}_{\ell}$ the tidal Love number and $C_{A,B}=R_{A,B}/M_{A,B}$ the NS compactness, which depends on the NS radius $R_{A,B}$. Here, $\hat{k}_{\ell, \textrm{dyn}}(u;\hat{\omega}_{0\ell}^{A,B})$ is the separation-dependent, dimensionless enhancement factor (Eq.~(11) of Ref.~\cite{Dietrich:2017feu}), which depends on the value of the $f$-mode $2^\ell$-pole dimensionless angular frequency, $\hat{\omega}_{0\ell}^{A,B}$. This enhancement factor is 1 for low orbital frequencies, and increases to $\sim 2$ as $\ell$ times the orbital frequency approaches the $f$-mode frequency. 
+with $k^{A,B}_{\ell}$ the tidal Love number and $C_{A,B}=R_{A,B}/M_{A,B}$ the NS compactness, which depends on the NS radius $R_{A,B}$. Here, $\hat{k}_{\ell, \textrm{dyn}}(u;\hat{\omega}_{0\ell}^{A,B})$ is the separation-dependent, dimensionless enhancement factor~\cite{Steinhoff:2016rfi, Dietrich:2017feu}, which depends on the value of the $f$-mode $2^\ell$-pole dimensionless angular frequency, $\hat{\omega}_{0\ell}^{A,B}$.
 
-Tidal effects also enter the dissipative part of the model. In particular, the point-mass $\ell=2,3$ inspiral-plunge waveform modes are corrected by tidal terms
+Introducing a Keplerian orbital frequency defined from the radius variable as $M\Omega \equiv u^{3/2}$, using the notations (dropping the indices $A,B$)
+\begin{subequations}
+\begin{align}
+	x = \frac{\hat{\omega}_{0\ell}}{m\Omega} \,, \; \epsilon \equiv \frac{256\eta}{5} \left( \frac{\hat{\omega}_{0\ell}}{m} \right)^{5/3} \,, \; \hat{t} \equiv \frac{8}{5\sqrt{\epsilon}} \left[ 1 - x^{5/3} \right] \,,
+\end{align}
+\end{subequations}
+the dynamical enhancement factor  of~\cite{Steinhoff:2016rfi, Dietrich:2017feu} reads
+\be\label{eq:kldyn}
+	\hat{k}_{\ell, \rm{dyn}}(u; \omega_{0\ell}) = a_{\ell} + b_{\ell} \left[ f(x) +\sqrt{\frac{\pi}{3 \epsilon}} x^{2} \mathcal{Q} \right]\,,
+\ee
+with $a_{\ell}$, $b_{\ell}$ constant coefficients with relevant values $\{a_{2}, b_{2}\} = \{1/4, 3/4\}$ and $\{a_{3}, b_{3}\} = \{3/8, 5/8\}$. These expressions are used in practice for $\ell= m$. Here, we have rewritten the first two resonant terms of Eq.~(11) of~\cite{Dietrich:2017feu} as
+\be\label{eq:deff}
+	f(x) = x^{2} \left[ \frac{1}{x^{2} - 1} + \frac{5}{6} \frac{1}{1 - x^{5/3}} \right] \,.
+\ee
+Although the two terms are individually divergent\footnote{This requires to single out the near-resonance region in a numerical implementation.} at the resonance $x=1$, the function $f(x)$ is actually  regular, taking the value $f(1) = -1/12$. The last term in~\eqref{eq:kldyn} above reads
+\begin{align}
+	\mathcal{Q} &= \cos\left( \frac{3}{8} \hat{t}^{2} \right) \left[ 1 + 2 F_{S} \left( \frac{\sqrt{3}}{2\sqrt{\pi}} \hat{t} \right) \right] \nonumber\\
+	& - \sin\left( \frac{3}{8} \hat{t}^{2} \right) \left[ 1 + 2 F_{C} \left( \frac{\sqrt{3}}{2\sqrt{\pi}} \hat{t} \right) \right] \,,
+\end{align}
+with $F_{S}$, $F_{C}$ the Fresnel sine and cosine functions. This term is regular at resonance $\hat{t} = 0$. The enhancement factor~\eqref{eq:kldyn} is 1 for low orbital frequencies, and increases to $\sim 2$ as $\ell$ times the orbital frequency approaches the $f$-mode frequency.
+
+Tidal effects also enter the radiative part of the model. In particular, the point-mass $\ell=2,3$ inspiral-plunge waveform modes are corrected by tidal terms
 \begin{equation}
 h_{\ell m}^{\textrm{insp-plunge}} = h_{\ell m}^{\textrm{pm}} + h_{\ell m}^{\textrm{tidal}}\,,\label{hlminspplunge}
 \end{equation} 
-where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}. The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the gravitational-wave flux (Eqs.~(5) and~(6) of Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived. The Hamiltonian equations of motion with this radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. We only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
+where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu} as
+\be
+	\hat{k}_{\ell, \rm{dyn}}^{A, \mathrm{diss}}(u; \omega_{0\ell}) = \hat{k}_{\ell, \rm{dyn}}^{A} \frac{4 x + 6 X_{B}}{3(1+2X_{B})} \,.
+\ee
+The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the gravitational-wave flux (Eqs.~(5) and~(6) of Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived. The Hamiltonian equations of motion with this radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. We only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
 
 %Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a 1000th of the leading-order estimate for $\dot{r}$, that is $\propto 64/5 \nu/r^4$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$. 
 
