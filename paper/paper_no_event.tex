@@ -21,8 +21,6 @@
 \newcommand{\nin}{\noindent}
 \newcommand{\nnm}{\nonumber}
 \newcommand{\doe}{\partial}
-%\newcommand{\be}{\begin{equation}}
-%\newcommand{\ee}{\end{equation}}
 \newcommand{\bea}{\begin{eqnarray}}
 \newcommand{\eea}{\end{eqnarray}}
 \newcommand{\bdm}{\begin{displaymath}}
@@ -40,15 +38,6 @@
 \newcommand{\bs}{\boldsymbol}
 \newcommand{\st}{{}^{*\!}}
 
-%\def\l{\ell}
-%\def\blambda{{\bm \lambda}}
-%\def\bLambda{{\bm \Lambda}}
-%\def\blam{\bar{\lambda}}
-%\def\Lam{\Lambda}
-%\def\Lamt{\tilde{\Lambda}}
-%\def\dLamt{\tilde{\delta{\Lambda}}}
-%\def\bmu{{\bm \mu}}
-
 \def\bx{\mathbf{x}}
 \def\by{\mathbf{y}}
 \def\btheta{\boldsymbol{\theta}}
@@ -65,10 +54,7 @@
 \definecolor{gray}{rgb}{0.8242,0.8242,0.8242}
 %%
 \newcommand{\MP}[1]{{\textcolor{blue}{\texttt{MP: #1}} }}
-%\newcommand{\bs}[1]{{\textcolor{green}{\texttt{SB: #1}} }}
 \newcommand{\bl}[1]{{\textcolor{blue}{\texttt{BL: #1}} }}
-\newcommand{\cg}[1]{{\textcolor{orange}{{CG: #1}} }}
-\newcommand{\cvdb}[1]{{\textcolor{purple}{\texttt{CVDB: #1}} }}
 \newcommand{\red}[1]{\textcolor{red}{#1}}
 \newcommand{\blue}[1]{\textcolor{blue}{#1}}
 %% +++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -125,7 +111,6 @@ For the analysis of GW170817 in Refs.~\cite{BNSPE, O2Catalog}, therefore, a set 
 In this paper, we will use an implementation of the EOB formalism that treats matter effects consistently with the other parameters. It includes several dynamical effects beyond the standard adiabatic inspiral evolution and can also be tuned to numerical relativity (NR) simulations. The model, named \texttt{SEOBNRv4T}, includes the tidally induced $\ell=2$ and 3 multipole moments, the induced $\ell=2$ and 3 $f$-mode resonances~\cite{Hinderer:2016eia,Steinhoff:2016rfi}, and the spin-induced quadrupole moment that can be important for large spins~\cite{Poisson1998, HarryHinderer2018}. This model agrees with NR simulations of BNS systems to a level consistent with the numerical error of the simulations (less than 1~rad during the last $\sim 10$ orbits before merger)~\cite{DietrichHinderer2017, KiuchiKawaguchiKyutoku2017}. It also includes a prescription for tapering the end of the waveform after merger in a manner consistent with numerical simulations. We also note there is an alternative EOB model, \texttt{TEOBResumS}~\cite{NagarBernuzziDelpozzo2018, NagarMessinaRettegno2018}, that uses a different point-particle and spin prescription. For matter effects, this model includes the $\ell = 2, 3$, and 4 tidal terms and uses a method for re-summing these expressions. It also includes the spin induced-quadrupole term, but does not include the effect of dynamical tides from the induced $f$-mode resonances. 
 
 Although these EOB models are more expensive than frequency-domain models, parameter estimation results are still possible. In Refs.~\cite{BNSPE, O2Catalog}, an alternative parallelized code, \texttt{RapidPE}, was also used that approximately fits the posterior density function (PDF) for the intrinsic waveform parameters instead of directly sampling it~\cite{PankowBradyOchsner2015, LangeOshaughnessyRizzo2018}. 
-%Unfortunately, direct comparisons of the PDF between this code and traditional samplers using the same waveform models have not been published for BNS systems. It is therefore not clear how accurate this code is for measuring quantities such as the tidal parameters. 
 The measured tidal parameter using EOB waveforms and \texttt{RapidPE} were broadly consistent with the results using frequency-domain waveforms and traditional samplers (see Fig. 9 of Ref.~\cite{O2Catalog}). However, a direct comparison using identical waveforms has not yet been published for BNS systems.
 As another possible solution for doing parameter estimation with EOB models, significant work has been done to optimize some EOB implementations, and speedups of a factor of several hundred~\cite{DevineEtienneMcWilliams2016} have been achieved. Different formulations of the differential equations can also speed up integration~\cite{NagarNettegno2018}. However, many of these optimizations are specific to each waveform model, and it is not clear that sufficient speed ups can be achieved for the \texttt{SEOBNRv4T} model discussed here with dynamical tides. As an alternative to these methods, we will develop a surrogate model of \texttt{SEOBNRv4T} that bypasses the need for specialized parameter estimation tools and optimization techniques. 
 
@@ -199,13 +184,9 @@ Tidal effects also enter the radiative part of the model. In particular, the poi
 h_{\ell m}^{\textrm{insp-plunge}} = h_{\ell m}^{\textrm{pm}} + h_{\ell m}^{\textrm{tidal}}\,,\label{hlminspplunge}
 \end{equation} 
 where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}.
-%\be
-%	\hat{k}_{\ell, \rm{dyn}}^{A, \mathrm{diss}}(u; \omega_{0\ell}) = \hat{k}_{\ell, \rm{dyn}}^{A} \frac{4 x + 6 X_{B}}{3(1+2X_{B})} \,.
-%\ee
 
 The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the gravitational-wave flux (Eqs.~(5) and~(6) of Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived. The Hamiltonian equations of motion with this radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. We only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
 
-%Let $\Omega$ be the instantaneous orbital frequency, $r$ be orbital separation, $p_r$ be the radial momentum, $f_s$ be the waveform sampling frequency in Hz, $\omega_{\textrm{peak}}^{\textrm{NR}}$ be the NR fit for the (2,2)-mode amplitude peak of a BNS merger defined in Eq.~(2) of Ref.~\cite{Bernuzzi:2015rla}~\footnote{Note that this fit was tuned to NR simulations only for $0 \leq \kappa_2^T \leq 500$, where $\kappa_2^T$ is defined by Eq.~(1) of Ref.~\cite{Bernuzzi:2015rla}. In our model, for $\kappa_2^T >500$ we use the value of this fit at $\kappa_2^T=500$.}. Then the numerical integration of the orbital dynamics stops when any of the following events happens: (i) $\Omega$ peaks, (ii) $p_r$ becomes positive, (iii) $\dot{r}$ becomes positive, (iv) $\dot{p}_r$ becomes positive, (v) $r$ does not evolve more than a 1000th of the leading-order estimate for $\dot{r}$, that is $\propto 64/5 \nu/r^4$, (vi) $2\Omega$ reaches $\omega_{\textrm{peak}}^{\textrm{NR}}$, (vii) $2M\Omega$ reaches $\pi M f_s$. In order to avoid triggering these stopping conditions at low frequency, where residual orbital eccentricity due to imperfect quasicircular initial conditions could be present, we exploit the $\omega_{\textrm{peak}}^{\textrm{NR}}$ fit to define a radius below which the stopping conditions can be triggered; such threshold value is taken to be $1.5 (\omega_{\textrm{peak}}^{\textrm{NR}}/2)^{-2/3}$. 
 
 \subsection{Spin-induced quadrupole-monopole terms}
 \label{subsec:QM}
@@ -230,8 +211,6 @@ We refer to~\cite{Barausse:2009xi} for the notations and meaning of the other te
 \begin{align}
 	H^\mr{BNS}_\mr{extra} &= \frac{1}{2r^3}(3n_in_j-\delta_{ij}) \nnm\\
 	& \; \cdot \bigg[\frac{\mu}{M}S_*^iS_*^j+(\kappa_1-1)\frac{m_2}{m_1}S_1^i S_1^j+(\kappa_2-1)\frac{m_1}{m_2}S_2^i S_2^j\bigg] \label{eq:HBNSextra}
-%\\\nnm
-%&=\frac{1}{2r^3}(3n_in_j-\delta_{ij})\bigg[2\frac{\mu}{M}S_1^iS_2^j+\left(\kappa_1-1+\frac{m_2^2}{M^2}\right)\frac{m_2}{m_1}S_1^i S_1^j+\left(\kappa_2-1+\frac{m_1^2}{M^2}\right)\frac{m_1}{m_2}S_2^i S_2^j\bigg],
 \end{align}
 where we chose to use the spin variables $\bs S_1$ and $\bs S_2$ instead of $\bs S_*$ and $\bs S=\bs S_1+\bs S_2$ to avoid the occurence of the mass difference $m_{1} - m_{2}$ in denominators. This expression generalizes the black hole case and reduces to it for $\kappa_{1} = \kappa_{2} = 1$.
 
@@ -266,11 +245,6 @@ We now look for a suitable time $t_{\rm match}$ to stop the numerical integratio
 t_{\textrm{match}} = \min \left(t_{\textrm{peak}}^{\textrm{amp}},t_{\textrm{peak}}^{\textrm{freq}}\right)\,.\label{tmatch}
 \end{equation}
 For some waveforms, the amplitude does not peak. In this case, we choose $t_{\rm peak}^{\rm amp}$ to be the earliest time when the slope of the amplitude $\partial_t |h_{22}^{\rm insp-plunge}|$ reaches a minimum after having reached a peak.
-
-%In the BBH model, nonquasicircular corrections to the inspiral-plunge signal guarantee that the waveform peaks at a prescribed time and has prescribed amplitude and frequency, hence $t_{\textrm{match}}^{22}=t_{\textrm{peak}}^{\textrm{amp}}$. Here, however, we do not impose such corrections because of limited input from NR BNS simulations, therefore we have little control over the behavior of Eq.~(\ref{hlminspplunge}) in the late inspiral. This motivates our choice of $t_{\textrm{match}}^{22}$ in Eq.~(\ref{tmatch}), with the goal of reducing to the BBH prescription in the non-tidal limit and avoiding non-monotonic growth of the GW frequency in the late inspiral. To help bracket the stopping time, we exploit a fit for the (2,2)-mode peak frequency of NR BNS simulations~\cite{Bernuzzi:2015rla} to estimate the final orbital frequency of the EOB inspiral-plunge dynamics. 
-
-%Ref.~\cite{Dietrich:2017feu} carried out comprehensive comparisons of this model to state-of-the-art NR simulations of coalescing nonspinning BNSs with different mass ratios and equations of state. The model can accurately describe the GW phasing up to the last cycle before merger for systems with soft equation of state, while improvements are still needed for systems with stiff equation of state. \red{[[To what accuracy? Is this paragraph already in the intro and can be deleted?]]} 
-
 
 In BNS simulations, the waveform rapidly decreases in amplitude in 1--2 gravitational-wave cycles after reaching peak amplitude. The BNS system then either undergoes prompt collapse or post-merger oscillations of the remnant. We do not attempt to model post-merger oscillations, and instead model an approximate peak emission and a subsequenct tapering to zero. This signal will be represented in terms of analytic functions for the amplitude $A^{\textrm{post-mrg}}(t)$ and phase $\phi^{\textrm{post-mrg}}(t)$ such that $h_{22}^{\textrm{post-mrg}}(t) = A^{\textrm{post-mrg}}(t) \exp{[i\phi^{\textrm{post-mrg}}(t)]}$. 
 
@@ -344,7 +318,6 @@ g\, , & \Upsilon > 10
 where $\{a, b, c, d, e\} = \{0.2245, -1.5\times10^{-2}, -1.412\times10^{-3}, 1.832\times10^{-4}, -5.561\times10^{-6}\}$ and $\{f, g\}=\{0.2379, 0.1165\}$.
 
 With these relations the waveform only depends on the five intrinsic parameters $\bx=\{q, \chi_A, \chi_B, \Lambda_2^A,\Lambda_2^B\}$. 
-%The aligned component spins are defined as $\chi_i = \hat L_N \cdot \vec S_i / m_i^2$ where $\vec S_i$ are the dimensionfull spin vectors, $\hat L_N$ the Newtonian orbital angular momentum and $m_i$ the component masses.
 We note that this list does not include the total mass $M$ of the system. The point-mass part of the model is scale-invariant, and the tidal corrections only depend on $X_A=1/(1+q)$, $X_B=q/(1+q)$ and $\Lambda_2^{A,B}$. Finally, the simple model of the post-merger signal that we employ rescales with $M$ as well. It is not clear at what point in the transition from the inspiral to the post-merger this approximation breaks down. For example, whether the merging binary undergoes prompt collapse or forms a hypermassive remnant depends sensitively on the total mass. NR simulations will be needed to determine when after the merger this approximation is no longer valid.
 
 %% ________________________________________________________
@@ -498,7 +471,6 @@ given $y_i$ using Bayes' theorem
 p({\bm \theta} | \bx_i, y_i) \propto p({\bm \theta}) p(y_i | \bx_i, {\bm \theta}).
 \end{equation}
 The prior $p({\bm \theta})$ is typically uniform and used to set the bounds on ${\bm \theta}$. One can sample this posterior if interested in the distribution of hyperparameters $\btheta$. However, for the problem here, we simply want the maximum posterior. We do this using the \texttt{gaussian\_process} module in the \texttt{scikit-learn} package~\cite{scikit-learn}. With these optimized hyperparameters, the final interpolating function is given by Eq.~\eqref{eq:mean} and its uncertainty by Eq.~\eqref{eq:var}. 
-%We note that once the vector $(K^{-1})_{ij}y_j$ is precomputed, evaluating Eq.~\eqref{eq:mean} is a fast $\mathcal{O}(N)$ operation.
 
 
 \subsection{Surrogate waveform evaluation}
@@ -638,8 +610,8 @@ In Fig.~\ref{fig:timing}, we show the surrogate evaluation time as a function of
 
 \begin{figure}[htb]
 \centering
-\includegraphics[width=0.49\textwidth]{../src/TEOB-LAL-implementation/timings/Models_timings_FD_monotonic.pdf}
-\includegraphics[width=0.49\textwidth]{../src/TEOB-LAL-implementation/timings/SEOBNRv4T_surrogate_speedup_deltaF_monontonic.pdf}
+\includegraphics[width=0.49\textwidth]{Models_timings_FD_monotonic.pdf}
+\includegraphics[width=0.49\textwidth]{SEOBNRv4T_surrogate_speedup_deltaF_monontonic.pdf}
 \caption{Waveform evaluation time as a function of the waveform starting frequency $f_{\rm min}$. The time-domain \texttt{SEOBNRv4T} waveform was sampled at 4096~Hz then Fourier transformed. The frequency-domain waveforms used the same frequency samples as the Fourier transformed time-domain waveforms. Top panel: Evaluation times of the frequency-domain waveforms. Bottom panel: Speedup of \texttt{SEOBNRv4T\_surrogate} relative to the original \texttt{SEOBNRv4T}.}
 \label{fig:timing}
 \end{figure}
@@ -669,7 +641,7 @@ This effect is strongest for the interaction between $\chi_{\rm eff}$ and $q$ (F
 \includegraphics[width=0.49\textwidth]{q.pdf}\\
 \includegraphics[width=0.49\textwidth]{chieff.pdf}\\
 \includegraphics[width=0.49\textwidth]{tildelambda.pdf}
-\caption{Marginalized 1-d PDFs for waveform injections with zero noise. The parameters are identical except for the distances which are chosen such that the network SNRs are 30 (blue), 60 (green), or 120 (red). The black PDF only includes samples for the SNR=120 injection that satisfy $q>0.9$. The shaded regions give the 90\% credible intervals. The dashed black line represents the injected parameter value.}
+\caption{Marginalized 1-d PDFs for waveform injections with zero noise. The parameters are identical except for the distances which are chosen such that the network SNRs are 30 (blue), 60 (green), or 120 (red). The black PDFs only include samples for the SNR=120 injection that satisfy $q>0.9$. The shaded regions give the 90\% credible intervals. The dashed black line represents the injected parameter value.}
 \label{fig:1dpe}
 \end{figure}
 
@@ -790,18 +762,3 @@ the coefficients are given by
 
 \end{document}
 
-
-
-
-
-%\begin{widetext}
-%\begin{align}
-%\Lambda_{2,\textrm{dyn}}^{\textrm{(A,B)}}(u) = &\frac{\lambda_{2}^{\textrm{(1,2)}}}{M^5} \left\{\frac{1}{4} + \frac{3}{4} \left(\frac{\omega^{(1,2)}_{f,2}}{2\Omega}\right)^2\left[\frac{4\Omega^2}{(\omega^{(1,2)}_{f,2})^2 - 4\Omega^2} + \frac{10}{3Q}\right.\right. \nonumber\\
-%&\left.\left.+\sqrt{\frac{\pi}{3}}\frac{1}{\epsilon_{1,2}}\left[(1 + 2\mathcal{S}{(y_{1,2})})\cos{\left(\frac{\pi}{2}y^2_{1,2}\right)} - (1 + 2\mathcal{C}{(y_{1,2})})\sin{\left(\frac{\pi}{2}y_{1,2}^2\right)}\right]\right]\right\}\,,\\
-%\Lambda_{3,\textrm{eff}}^{\textrm{(1,2)}} (u)= &\frac{\lambda_{3}^{\textrm{(1,2)}}}{M^7} \left\{\frac{3}{8} + \frac{(\omega^{(1,2)}_{f,3})^2}{\Omega^2}\left(\frac{25}{48 O_{1,2}} + \frac{5}{72}\frac{9\Omega^2}{(\omega^{(1,2)}_{f,3})^2-9\Omega^2}\right)\right. \nonumber\\
-%&\left.+ O_{1,2}\left[\cos{(w^2)}\left(\frac{1}{2} +\mathcal{S}(sqrt2pi*w)\right) - \sin{(w^2)}\left(\frac{1}{2} + \mathcal{C}(sqrt2pi*w)\right)\right]\right\}\,,
-%\end{align}
-%\end{widetext}
-%where $\lambda_{2}^{\textrm{(1,2)}}$ are the (constant) adiabatic values of the quadrupolar tidal polarizabilities, $\lambda_{3}^{\textrm{(1,2)}}$ are the (constant) adiabatic values of the octupolar tidal polarizabilities, $\omega^{(1,2)}_{f,2}$ are the quadrupolar $f$-mode frequencies, $\omega^{(1,2)}_{f,3}$ are the octupolar $f$-mode frequencies, $\mathcal{S}$ is the Fresnel sine integral, $\mathcal{C}$ is the Fresnel cosine integral, $\epsilon_{1,2} = 2^{19/3}\nu (M\omega^{(1,2)}_{f,2})^{5/3}/5$,   $y_{1,2}=\sqrt{3/(\pi \epsilon)} Q_{1,2}/5$, and $Q_{1,2} = 4- 2^{1/3}(M\omega^{(1,2)}_{f,2})^{5/3}u^{-5/2}$. 
-%, $w_{1,2}=O_{1,2}/(4\,3^{2/3}\sqrt{10}(M\omega^{(1,2)}_{f,3})^{5/6}\sqrt{\nu})$, $O_{1,2}=5\sqrt{5\pi}/u^3(M\omega^{(1,2)}_{f,3})^{7/6}/(192\,3^{2/3}\sqrt{\nu})$.
-%
