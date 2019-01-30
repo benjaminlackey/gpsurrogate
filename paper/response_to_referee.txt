@@ -1,0 +1,131 @@
+Re: DZ12205
+   Surrogate model for an aligned-spin effective one body waveform model
+   of binary neutron star inspirals using Gaussian process regression
+   by Benjamin D. Lackey, Michael Pürrer, Andrea Taracchini, et al.
+
+Dear Dr. Lackey,
+
+The above manuscript has been reviewed by one of our referees.
+Comments from the report appear below for your consideration.
+
+When you resubmit your manuscript, please include a summary of the
+changes made and a brief response to all recommendations and
+criticisms.
+
+Yours sincerely,
+
+Joshua C. Sayre
+Associate Editor
+Physical Review D
+Email: prd@aps.org
+https://journals.aps.org/prd/
+
+----------------------------------------------------------------------
+Report of the Referee -- DZ12205/Lackey
+----------------------------------------------------------------------
+
+In this manuscript, the authors construct a surrogate for SEOBNRv4T
+using Gaussian process regression (GPR). The surrogate is intended for
+spin-aligned binary neutron star waveforms, but the techniques they
+introduce are flexible enough to accommodate precession in the future.
+
+One of the novel aspects of their work is to fit to residuals between
+SEOBNRv4T and TaylorF2 thus reducing the requirement for very high
+accuracy. They keep their TaylorF2 model as "ignorant" as SEOBNRv4T to
+make the phase residual smaller as explained in App. A. The EOB model
+includes dynamical tides from the induced f-mode resonances. They use
+the Yagi et al. I-Love-Q relations to reduce the dimension of the
+parameter space from 14 to 5 for the training sets. They then sample
+this 5-D "cube" as a Latin Hyper Cube, thus an initial 128 points + 32
+corners suffices to train the surrogate. The "training" over the 5
+parameters is done using GPR which is the other novel contribution of
+this work to the relevant literature. GPR has the additional nice
+property that it "provides a convenient estimate of its own
+uncertainty" to use the authors' words. The authors have the option of
+retraining the surrogate using 400+400 more points in the 5-D space.
+Their final choice for the best surrogate is generated from 960
+training sets using a Matern kernel for the covariance. This surrogate
+has a mismatch of at worst 4.5E-4 and a phase disagreement of <~ 1
+radian at f <~ 2 kHz. The surrogate is finally shown to be good enough
+for parameter extraction in LIGO-Virgo.
+
+The article is well written, the figures are of high quality and the
+work is original. In my opinion, this article will make a nice
+addition to the existing literature on this topic. I recommend it for
+publication modulo minor questions/comments/corrections that I list
+below.
+
+1) In the abstract, it is written the surrogate takes 0.13 seconds to
+evaluate from 20Hz, but given the flat cost of 0.01s of GPR
+interpolation at each frequency node and given the fact that there are
+roughly 40 frequency according to Sec. III.C, isn't the overall run
+time more like 40 x 0.01 + 0.13 = 0.53 second?
+
+ - The confusion is due to bad phrasing on our part. When we wrote 0.01s to evaluate each node, we meant 0.01s to evaluate all 40 nodes. We have changed the wording in Section IV.B (paragraph 2) and Section VI (paragraph 2) to clarify this.
+
+
+2) In the left column of page 2, the sentence following Refs. [32-36]
+contains the word "instead" twice, which seems redundant.
+
+ - We removed the second "instead".
+
+
+3) In the upperleft part of page 3, it is written that "up to 0.85 for
+unequal-mass (up to 0.98 for equal-mass)". Where are these values
+obtained from? According to Ref[24] of this manuscript, the equal-mass
+case seems to have been extended to possibly 0.994.
+
+4) The authors may wish to add https://arxiv.org/abs/1812.02744 to
+their list of papers that accommodate tidal effects to EOB in the
+first paragraph of page 3.
+
+ - We have added this reference to the second paragraph of Section II.A.
+ 
+ 
+5) Immediately after Eq.(9), the authors cite Damour-Nagar-Villain
+2012. It might be useful to also cite recent work of
+https://arxiv.org/abs/1805.07266 that have now extended DNV.
+
+6) Typo in the lowerleft of page 5 where the word "subsequent" has
+been written as "subsequenct".
+
+ - We have fixed this typo.
+
+
+7) Could the authors comment on why they have chosen 12M instead of
+15M in Eqs.(22-23)? Is the matching to omega_{match} made to be
+asymptotic to ensure smoother Fourier modes?
+
+8) Could the authors comment on the bifurcation of Phi in Fig. 1? It
+seems to me that there would be such a difference between the
+Lambda_A=Lambda_B=1000 corners of the parameter space vs.
+Lambda_A=Lambda_B=0 corners, but the count does not quite add up. Do
+these branches each contain 16 waveforms? It might be nice to add a
+brief explanation about this to the caption of Fig. 1 for the sake of
+the curious, but less familiar, readers.
+
+ - The bifurcation is due to the two extremes in parameter space for q. The lower 16 curves correspond to q=1, and the upper 16 curves correspond to q=1/3. This results because the mass ratio dominates over the other 4 parameters. We added a sentence to the caption of Fig. 1 to clarify this.
+
+9) For Sec IV. B regarding run times, could the authors explicitly
+provide an overall run time for the 20Hz non-spinning BNS run
+including the flat cost of ~0.01sec per frequency node for computing
+the GPR fits? According to my estimation in point 1) above, this would
+be 0.53 second which interestingly coincides with the value given by
+Table IV of 1812.02744 in their App. B. Looking at that table begs the
+question: do the authors have any idea how long their surrogate would
+take to run after being trained over a set starting from 10Hz?
+
+ - We apologize for the confusion that also resulted in comment 1 above. The times shown in Fig. 8 are in fact the total evaluation times for the waveform including evaluating the GPR fits at all nodes and resampling the final waveform at uniform frequency spacing (~0.01s for 80Hz, 0.13s for 20Hz, and ~1 s for 10Hz).
+ 
+ We have clarified that the evaluation times shown are the *total* surrogate evaluation time in Section IV.B. sentence 1 of paragraph 2. In the same paragraph, we also clarified that the 0.01s is the time needed to evaluate all 40 nodes (not just 1) as discussed in comment 1 above. 
+ 
+10) In Sec V. the authors show that their surrogate faithfully
+recovers the injected parameters. First of all, I wanted to commend
+the authors for sticking with presenting the more pain-in-the-neck q=1
+case despite the fact that this value sits on the upper bound of the q
+prior. Have the authors repeated their parameter estimation
+computations for "friendlier" values of q such as 0.8? If so, do the
+PDFs look less asymmetric and more importantly are the centres of the
+peaks of the PDFs closer to the injected values?
+
+ - At the moment one of our internal LIGO reviewers is performing an analysis with a less symmetric masses. Those runs, however, are not complete.
