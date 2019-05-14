@@ -75,6 +75,12 @@ unequal-mass (up to 0.98 for equal-mass)". Where are these values
 obtained from? According to Ref[24] of this manuscript, the equal-mass
 case seems to have been extended to possibly 0.994.
 
+  - These numbers come from Bohé et al, 2017, which discusses the
+  "SEOBNRv4" waveform model. We have updated the maximum spin used in
+  calibration for equal-mass to the correct value 0.994 as pointed out
+  by the referee.
+
+
 4) The authors may wish to add https://arxiv.org/abs/1812.02744 to
 their list of papers that accommodate tidal effects to EOB in the
 first paragraph of page 3.
