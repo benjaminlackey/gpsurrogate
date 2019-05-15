@@ -187,7 +187,7 @@ Tidal effects also enter the radiative part of the model. In particular, the poi
 \begin{equation}
 h_{\ell m}^{\textrm{insp-plunge}} = h_{\ell m}^{\textrm{pm}} + h_{\ell m}^{\textrm{tidal}}\,,\label{hlminspplunge}
 \end{equation} 
-where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf}. Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}.
+where the point-mass piece $h_{\ell m}^{\textrm{pm}}$ is discussed in Section~II.B of Ref.~\cite{Bohe:2016gbl} and the tidal piece $h_{\ell m}^{\textrm{tidal}}$ is given by Eqs. (A14)-(A17) of Ref.~\cite{Damour:2012yf} (see also the recent extension~\cite{Banihashemi:2018xfb}). Following Ref.~\cite{Dietrich:2017feu} in the computation of $h_{22}^{\textrm{tidal}}$, we include a dynamical enhancement factor that depends on the orbital separation and on the $f$-mode frequency, and is given in Eq.~(15) of Ref.~\cite{Dietrich:2017feu}.
 
 The waveform modes $h_{\ell m}^{\textrm{insp-plunge}}$ are then used to calculate the gravitational-wave flux (Eqs.~(5) and~(6) of Ref.~\cite{Dietrich:2017feu}) from which the radiation-reaction force is derived. The Hamiltonian equations of motion with this radiation-reaction force are numerically integrated beginning with the quasicircular initial conditions described in Ref.~\cite{Buonanno:2005xu}. The inspiral-plunge waveform is obtained by evaluating Eq.~(\ref{hlminspplunge}) using the solution to the orbital dynamics. We only include the dominant $(\ell,m)=(2,2)$ mode in constructing the final waveform, although we use all modes when evaluating the radiation reaction force.
 
@@ -260,13 +260,13 @@ a + b (t - t_{\rm match}), & t > t_{\rm match}\,,
 \end{array}\right.
 \end{align}
 where $a = |h_{22}^{\rm insp-plunge}(t_{\rm match})|$ and $b=\partial_t |h_{22}^{\rm insp-plunge}(t_{\rm match})|$. The tapering function is centered $15M$ after $t_{\rm match}$ and has a decay time $\tau = 2\pi / \omega_{\rm match}$ (where $\omega_{\rm match} = \omega_{22}^{\rm insp-plunge}(t_{\rm match})$) of one gravitational wave period. It is given by
-\begin{equation}
+\begin{equation}\label{eq:ampwindow}
 W(t) = \frac{1}{1+\exp{[(t- t^{22}_{\textrm{match}}-15M)/\tau]}}\,.
 \end{equation}
 The final amplitude after windowing is then given by $|h_{22}(t)| = \hat A(t) W(t)$.
 
 For the phase, we smoothly extend the waveform frequency such that it agrees with the inspiral frequency at a time $t_{\rm freq} = t_{\rm match} - 12M$ before the matching time $t_{\rm match}$, but then stretches out the frequency evolution such that it only approaches $\omega_{\rm match}$ asymptotically. We define this frequency evolution as
-\begin{align}
+\begin{align}\label{eq:omegatransition}
 \omega(t) = \omega_{\rm match} - \Delta\omega \exp\left[ -(t - t_{\rm freq}) / (12M) \right],
 \end{align}
 where $\Delta\omega = \omega_{\rm match} - \omega_{\rm freq}$. Integrating the frequency, and requiring continuity at $t_{\rm freq}$, results in the final expression for the phase
@@ -278,7 +278,7 @@ where $\Delta\omega = \omega_{\rm match} - \omega_{\rm freq}$. Integrating the f
 \end{array}\right.
 \end{align}
 
-Although this effective post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations.
+The choice of the constant transition timescales $15M$ in~\eqref{eq:ampwindow} and $12M$ in~\eqref{eq:omegatransition} is partly arbitrary and was made primarily for robustness, keeping in mind that this termination is effective. Although this effective post-merger model has not been fit to NR BNS simulations, it is in reasonable qualitative agreement with the post-merger behavior of the two equal-mass nonspinning NR BNS simulations that were analyzed in Ref.~\cite{Hinderer:2016eia}. A more sophisticated, NR-informed model of the post-merger emission will be part of future investigations.
 
 
 \subsection{Reducing the number of matter parameters}
